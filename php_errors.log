@@ -1,0 +1,118 @@
+[06-Jul-2025 01:30:31 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:31:15 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:31:18 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:32:41 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:32:42 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:32:57 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:33:25 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:33:28 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:33:35 Asia/Jakarta] Database backup error: 
+[06-Jul-2025 01:33:35 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:33:46 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:35:53 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:35:57 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:36:02 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:37:10 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:37:17 Asia/Jakarta] Database backup error: 
+[06-Jul-2025 01:37:17 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:44:23 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:44:38 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:44:48 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:44:53 Asia/Jakarta] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:73) in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\backup.php on line 72
+[06-Jul-2025 01:44:53 Asia/Jakarta] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:73) in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\backup.php on line 73
+[06-Jul-2025 01:44:53 Asia/Jakarta] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:73) in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\backup.php on line 74
+[06-Jul-2025 01:44:53 Asia/Jakarta] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:73) in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\backup.php on line 75
+[06-Jul-2025 01:44:53 Asia/Jakarta] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:73) in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\backup.php on line 76
+[06-Jul-2025 01:44:53 Asia/Jakarta] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:73) in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\backup.php on line 77
+[06-Jul-2025 01:44:53 Asia/Jakarta] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:73) in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\backup.php on line 78
+[06-Jul-2025 01:45:01 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:45:06 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:45:13 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 01:46:54 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\includes\footer.php on line 92
+[06-Jul-2025 02:03:05 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[06-Jul-2025 07:15:08 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 07:15:12 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 07:15:18 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 07:15:20 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 07:44:59 Asia/Jakarta] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'f.deleted_at' in 'where clause' in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php:75
+Stack trace:
+#0 C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php(75): PDOStatement->execute()
+#1 {main}
+  thrown in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php on line 75
+[06-Jul-2025 07:45:16 Asia/Jakarta] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'f.deleted_at' in 'where clause' in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php:75
+Stack trace:
+#0 C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php(75): PDOStatement->execute()
+#1 {main}
+  thrown in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php on line 75
+[06-Jul-2025 07:45:30 Asia/Jakarta] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'f.deleted_at' in 'where clause' in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php:75
+Stack trace:
+#0 C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php(75): PDOStatement->execute()
+#1 {main}
+  thrown in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php on line 75
+[06-Jul-2025 07:45:31 Asia/Jakarta] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'f.deleted_at' in 'where clause' in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php:75
+Stack trace:
+#0 C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php(75): PDOStatement->execute()
+#1 {main}
+  thrown in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php on line 75
+[06-Jul-2025 07:47:21 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 07:47:23 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 07:47:26 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 07:55:59 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 07:56:03 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 08:21:08 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[06-Jul-2025 08:21:14 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 7
+[06-Jul-2025 08:21:24 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 7
+[06-Jul-2025 08:30:27 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 7
+[06-Jul-2025 08:30:29 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 08:31:56 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 7
+[06-Jul-2025 08:31:58 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 08:32:51 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 7
+[06-Jul-2025 08:34:52 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 7
+[06-Jul-2025 08:46:19 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 7
+[06-Jul-2025 08:46:25 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 7
+[06-Jul-2025 08:46:37 Asia/Jakarta] PHP Warning:  Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 7
+[06-Jul-2025 09:22:34 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.pages' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\page.php on line 12
+[06-Jul-2025 09:22:39 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.pages' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\page.php on line 12
+[06-Jul-2025 09:34:59 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.navigation_items' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\index.php on line 54
+[06-Jul-2025 09:35:00 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.navigation_items' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\index.php on line 54
+[06-Jul-2025 09:35:02 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.navigation_items' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\index.php on line 54
+[06-Jul-2025 09:35:02 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.navigation_items' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\index.php on line 54
+[06-Jul-2025 09:37:58 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.navigation_items' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\index.php on line 54
+[06-Jul-2025 09:37:59 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.navigation_items' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\index.php on line 54
+[06-Jul-2025 09:54:27 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 7
+[06-Jul-2025 09:54:32 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 7
+[06-Jul-2025 09:55:09 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 7
+[06-Jul-2025 09:55:59 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 7
+[06-Jul-2025 09:56:07 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 7
+[06-Jul-2025 09:56:22 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 7
+[06-Jul-2025 09:56:41 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 7
+[06-Jul-2025 11:09:01 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.faqs' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\faqs.php on line 105
+[06-Jul-2025 11:09:33 Asia/Jakarta] PHP Error: Undefined variable $content_block_types in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\content_blocks.php on line 344
+[06-Jul-2025 11:09:33 Asia/Jakarta] PHP Error: foreach() argument must be of type array|object, null given in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\content_blocks.php on line 344
+[06-Jul-2025 11:51:42 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 7
+[06-Jul-2025 11:51:46 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.faqs' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\faqs.php on line 105
+[06-Jul-2025 11:51:49 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 11:51:51 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 11:51:54 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 11:59:46 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 12:11:01 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 12:17:45 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 9
+[06-Jul-2025 12:17:45 Asia/Jakarta] PHP Error: Undefined variable $articles in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 305
+[06-Jul-2025 12:20:51 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 9
+[06-Jul-2025 12:20:51 Asia/Jakarta] PHP Error: Undefined variable $articles in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 305
+[06-Jul-2025 12:20:56 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 7
+[06-Jul-2025 12:20:58 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.faqs' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\faqs.php on line 105
+[06-Jul-2025 12:21:00 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 12:21:01 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 12:21:06 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 12:21:08 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 12:24:59 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 12:25:00 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 12:25:02 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 9
+[06-Jul-2025 12:25:02 Asia/Jakarta] PHP Error: Undefined variable $articles in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 305
+[06-Jul-2025 12:41:12 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 9
+[06-Jul-2025 12:41:12 Asia/Jakarta] PHP Error: Undefined variable $articles in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 305
+[06-Jul-2025 12:41:16 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 7
+[06-Jul-2025 12:41:17 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 7
+[06-Jul-2025 12:41:19 Asia/Jakarta] PHP Error: Undefined variable $id in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 7
+[06-Jul-2025 12:41:21 Asia/Jakarta] PHP Exception: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'wiracenter_db2.faqs' doesn't exist in C:\Users\Smailing\Videos\wiracenter-v1-main\wiracenter-v1-main\admin\faqs.php on line 105

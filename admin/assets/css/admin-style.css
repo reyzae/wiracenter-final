@@ -1,0 +1,292 @@
+/* Custom CSS for Wiracenter Admin Dashboard */
+
+:root {
+    --primary-color: #1e90ff; /* Dodger Blue */
+    --secondary-color: #6c757d;
+    --sidebar-bg: #2c3e50; /* Darker Blue-Gray */
+    --sidebar-link-color: #ecf0f1; /* Light Gray */
+    --sidebar-link-hover: #ffffff;
+    --sidebar-link-active-bg: #1a2b3c; /* Even Darker Blue-Gray */
+    --body-bg: #f4f7f9; /* Light Gray */
+    --text-color: #333333;
+    --card-bg: #ffffff;
+    --shadow-color: rgba(0, 0, 0, 0.08);
+    --border-color: #e0e0e0;
+    --cyan-color: #00BCD4; /* Cyan color */
+    --green-color: #4CAF50; /* Green color */
+    --orange-color: #FF9800; /* Orange color */
+    --purple-color: #9C27B0; /* Purple color */
+    --sidebar-collapsed-width: 4rem; /* Width when sidebar is collapsed */
+}
+
+body.theme-dark {
+    --sidebar-bg: #1a1a2e; /* Dark Navy/Purple */
+    --body-bg: #222831; /* Dark Gray */
+    --text-color: #eeeeee;
+    --card-bg: #393e46;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --border-color: #4e545c;
+    --sidebar-link-color: #e0e0e0;
+    --sidebar-link-hover: #ffffff;
+    --sidebar-link-active-bg: #00adb5;
+}
+
+.btn-cyan {
+    background-color: var(--cyan-color);
+    border-color: var(--cyan-color);
+    color: white;
+}
+
+.btn-cyan:hover {
+    background-color: #0097A7; /* Darker cyan for hover */
+    border-color: #0097A7;
+}
+
+.btn-green {
+    background-color: var(--green-color);
+    border-color: var(--green-color);
+    color: white;
+}
+
+.btn-green:hover {
+    background-color: #43A047; /* Darker green for hover */
+    border-color: #43A047;
+}
+
+.btn-orange {
+    background-color: var(--orange-color);
+    border-color: var(--orange-color);
+    color: white;
+}
+
+.btn-orange:hover {
+    background-color: #FB8C00; /* Darker orange for hover */
+    border-color: #FB8C00;
+}
+
+.btn-purple {
+    background-color: var(--purple-color);
+    border-color: var(--purple-color);
+    color: white;
+}
+
+.btn-purple:hover {
+    background-color: #8E24AA; /* Darker purple for hover */
+    border-color: #8E24AA;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--body-bg);
+    color: var(--text-color);
+}
+
+#wrapper {
+    display: flex;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    transition: margin .25s ease-out, width .25s ease-out;
+    background-color: var(--sidebar-bg);
+    box-shadow: 2px 0 10px var(--shadow-color);
+    display: flex;
+    flex-direction: column;
+    width: 15rem; /* Default width */
+    margin-left: 0;
+}
+
+#sidebar-wrapper .sidebar-footer {
+    margin-top: auto;
+    padding: 1.5rem 1.25rem;
+}
+
+#sidebar-wrapper .sidebar-heading,
+#sidebar-wrapper .sidebar-footer,
+#sidebar-wrapper .list-group-item .menu-text {
+    transition: opacity 0.25s ease-out, visibility 0.25s ease-out;
+}
+
+#sidebar-wrapper .sidebar-heading {
+    padding: 1.5rem 1.25rem;
+    font-size: 1.2rem;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+}
+
+.sidebar-brand-text {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+#sidebar-wrapper .list-group {
+    width: 15rem;
+    flex-grow: 1;
+}
+
+#sidebar-wrapper .list-group-item {
+    border: none;
+    padding: 1.1rem 1.35rem;
+    color: var(--sidebar-link-color);
+    transition: background-color 0.3s, color 0.3s;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+#sidebar-wrapper .list-group-item .menu-text {
+    flex-grow: 1;
+    text-align: center;
+}
+
+#sidebar-wrapper .list-group-item.active {
+    background-color: var(--primary-color);
+    color: var(--sidebar-link-hover);
+}
+
+#sidebar-wrapper .list-group-item:hover {
+    background-color: var(--sidebar-link-active-bg);
+    color: var(--sidebar-link-hover);
+}
+
+/* Top Navbar */
+.navbar {
+    padding: 0.8rem 1.5rem;
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 5px var(--shadow-color);
+}
+
+.navbar .btn-primary {
+    background-color: var(--sidebar-bg);
+    border-color: var(--sidebar-bg);
+}
+
+.navbar .btn-primary:hover {
+    background-color: var(--sidebar-link-active-bg);
+    border-color: var(--sidebar-link-active-bg);
+}
+
+.navbar .navbar-nav {
+    display: flex;
+    align-items: center;
+}
+
+/* Main Content Area */
+.container-fluid.p-4 {
+    padding: 2rem !important;
+}
+
+#page-content-wrapper {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 10px;
+    background: var(--card-bg);
+    box-shadow: 0 4px 15px var(--shadow-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px var(--shadow-color);
+}
+
+.card-header {
+    background-color: var(--body-bg);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
+
+/* Stats Cards */
+.stats-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px var(--shadow-color);
+    transition: transform 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-card h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.btn-primary {
+    background-color: var(--sidebar-bg);
+    border-color: var(--sidebar-bg);
+}
+
+.btn-primary:hover {
+    background-color: var(--sidebar-link-active-bg);
+    border-color: var(--sidebar-link-active-bg);
+}
+
+.btn-outline-primary {
+    border-color: var(--sidebar-bg);
+    color: var(--sidebar-bg);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--sidebar-bg);
+    color: white;
+}
+
+/* Tables */
+.table {
+    background: var(--card-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px var(--shadow-color);
+}
+
+.table th {
+    background: #f8f9fa;
+    border: none;
+    font-weight: 600;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.badge {
+    padding: 0.5em 0.7em;
+    border-radius: 0.3rem;
+    font-weight: 600;
+}
+
+/* Alerts */
+.alert-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    width: 300px;
+}
+
+.alert {
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.collapse-icon {
+    transition: transform 0.3s ease;
+}
+
+.list-group-item[aria-expanded="true"] .collapse-icon {
+    transform: rotate(180deg);
+}
