@@ -1,71 +1,60 @@
 <?php
 require_once '../../config/config.php';
 require_once '../../config/database.php';
+requireLogin();
 
 header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $db = new Database();
-    $conn = $db->connect();
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
+    exit;
+}
 
-    $item_type = sanitize($_POST['item_type'] ?? '');
-    $item_id = $_POST['item_id'] ?? null;
-    $title = sanitize($_POST['title'] ?? '');
-    $slug = generateSlug($_POST['slug'] ?? $title);
-    $content = $_POST['content'] ?? '';
-    $status = sanitize($_POST['status'] ?? 'draft');
-    $publish_date = $_POST['publish_date'] ?? null;
+$entity_type = $_POST['entity_type'] ?? ''; // e.g., 'article', 'project', 'tool'
+$entity_id = $_POST['entity_id'] ?? null;
+$content = $_POST['content'] ?? '';
 
-    $table_name = '';
-    $content_field = '';
-    $excerpt_field = '';
+// Sanitize content using HTMLPurifier
+require_once __DIR__ . '/../../vendor/autoload.php';
+$config = HTMLPurifier_Config::createDefault();
+$purifier = new HTMLPurifier($config);
+$purified_content = $purifier->purify($content);
 
-    switch ($item_type) {
-        case 'article':
-            $table_name = 'articles';
-            $content_field = 'content';
-            $excerpt_field = 'excerpt';
-            $excerpt = sanitize($_POST['excerpt'] ?? '');
-            if (empty($excerpt)) {
-                $plain_content = strip_tags($content);
-                $excerpt = substr($plain_content, 0, 160);
-                if (strlen($plain_content) > 160) {
-                    $excerpt .= '...';
-                }
-            }
-            break;
-        case 'project':
-            $table_name = 'projects';
-            $content_field = 'content';
-            $excerpt_field = 'description'; // Projects use 'description' as excerpt
-            $excerpt = sanitize($_POST['excerpt'] ?? ''); // Use excerpt from POST for description
-            break;
-        case 'tool':
-            $table_name = 'tools';
-            $content_field = 'content';
-            $excerpt_field = 'description'; // Tools use 'description' as excerpt
-            $excerpt = sanitize($_POST['excerpt'] ?? ''); // Use excerpt from POST for description
-            break;
-        default:
-            echo json_encode(['success' => false, 'message' => 'Invalid item type.']);
-            exit;
-    }
+$db = new Database();
+$conn = $db->connect();
 
-    if ($item_id) {
-        // Update existing item
-        $sql = "UPDATE " . $table_name . " SET title=?, slug=?, " . $content_field . "=?, " . $excerpt_field . "=?, status=?, publish_date=? WHERE id=?";
-        $stmt = $conn->prepare($sql);
-        if ($stmt->execute([$title, $slug, $content, $excerpt, $status, $publish_date, $item_id])) {
-            echo json_encode(['success' => true, 'message' => 'Draft updated.']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to update draft.']);
-        }
+$table_name = '';
+switch ($entity_type) {
+    case 'article':
+        $table_name = 'articles';
+        break;
+    case 'project':
+        $table_name = 'projects';
+        break;
+    case 'tool':
+        $table_name = 'tools';
+        break;
+    default:
+        echo json_encode(['status' => 'error', 'message' => 'Invalid entity type.']);
+        exit;
+}
+
+if ($entity_id) {
+    // Update existing draft
+    $sql = "UPDATE " . $table_name . " SET draft_content = ? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    if ($stmt->execute([$purified_content, $entity_id])) {
+        echo json_encode(['status' => 'success', 'message' => 'Draft saved.']);
     } else {
-        // For new items, we cannot auto-save without an ID from the initial save.
-        // A more robust solution would involve creating a draft entry and returning its ID.
-        echo json_encode(['success' => false, 'message' => 'Cannot auto-save new item without an ID. Please save the item first.']);
+        echo json_encode(['status' => 'error', 'message' => 'Failed to save draft.']);
     }
 } else {
-    echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+    // For new entries, we can't save a draft without an ID yet.
+    // TinyMCE autosave usually works by updating an existing entry.
+    // For new entries, the content is typically in the form fields until first save.
+    echo json_encode(['status' => 'error', 'message' => 'Cannot save draft for new entity without an ID.']);
 }
+
+logActivity($_SESSION['user_id'] ?? null, 'Saved draft for ' . $entity_type, $entity_type, $entity_id);
+
 ?>

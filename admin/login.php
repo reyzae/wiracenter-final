@@ -18,25 +18,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         $db = new Database();
         $conn = $db->connect();
-        $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ? OR email = ?");
-        $stmt->execute([$username, $username]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($user && password_verify($password, $user['password'])) {
+        try {
+            $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ? OR email = ?");
+            $stmt->execute([$username, $username]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $user = false;
+            $error_message = 'Table users not found in database.';
+        }
+        if (!isset($error_message) || $error_message === '') {
+            if ($user && password_verify($password, $user['password'])) {
                 error_log('admin/login.php: Login successful for user: ' . $user['username']);
-            // Set session variables
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['user_role'] = $user['role'];
-            session_regenerate_id(true);
-            
-            logActivity($user['id'], 'User logged in');
-            
-            // Redirect to dashboard
-            redirect(ADMIN_URL . '/dashboard.php');
-        } else {
-            logActivity(null, 'Failed login attempt for username: ' . $username);
-            $error_message = 'Invalid username or password.';
+                // Set session variables
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['user_role'] = $user['role'];
+                session_regenerate_id(true);
+                
+                logActivity($user['id'], 'User logged in');
+                
+                // Redirect to dashboard
+                redirect(ADMIN_URL . '/dashboard.php');
+            } else {
+                logActivity(null, 'Failed login attempt for username: ' . $username);
+                $error_message = 'Invalid username or password.';
+            }
         }
     }
 }

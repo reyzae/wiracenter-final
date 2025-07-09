@@ -38,12 +38,16 @@ if (isset($_GET['action']) && $_GET['action'] == 'restore' && isset($_GET['id'])
     }
 
     if (!empty($table)) {
-        $stmt = $conn->prepare("UPDATE {$table} SET deleted_at = NULL WHERE id = ?");
-        if ($stmt->execute([$id])) {
-            $success_message = ucfirst($item_type) . ' restored successfully!';
-            logActivity($_SESSION['user_id'], 'Restored ' . $log_type . ' from trash', $log_type, $id);
-        } else {
-            $error_message = 'Failed to restore ' . $item_type . '.';
+        try {
+            $stmt = $conn->prepare("UPDATE {$table} SET deleted_at = NULL WHERE id = ?");
+            if ($stmt->execute([$id])) {
+                $success_message = ucfirst($item_type) . ' restored successfully!';
+                logActivity($_SESSION['user_id'], 'Restored ' . $log_type . ' from trash', $log_type, $id);
+            } else {
+                $error_message = 'Failed to restore ' . $item_type . '.';
+            }
+        } catch (PDOException $e) {
+            $error_message = 'Table ' . $table . ' not found in database.';
         }
     }
 }
@@ -80,32 +84,45 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete_permanently' && isset($
     if (!empty($table)) {
         if ($item_type == 'file') {
             // Get file info from database for file system deletion
-            $stmt = $conn->prepare("SELECT file_path FROM files WHERE id = ?");
-            $stmt->execute([$id]);
-            $file = $stmt->fetch(PDO::FETCH_ASSOC);
+            try {
+                $stmt = $conn->prepare("SELECT file_path FROM files WHERE id = ?");
+                $stmt->execute([$id]);
+                $file = $stmt->fetch(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                $file = null;
+                $error_message = 'Table files not found in database.';
+            }
 
             if ($file) {
                 $full_path = '../' . $file['file_path'];
-                $stmt = $conn->prepare("DELETE FROM {$table} WHERE id = ?");
-                if ($stmt->execute([$id])) {
-                    if (file_exists($full_path)) {
-                        unlink($full_path);
+                try {
+                    $stmt = $conn->prepare("DELETE FROM {$table} WHERE id = ?");
+                    if ($stmt->execute([$id])) {
+                        if (file_exists($full_path)) {
+                            unlink($full_path);
+                        }
+                        $success_message = ucfirst($item_type) . ' permanently deleted!';
+                        logActivity($_SESSION['user_id'], 'Permanently deleted ' . $log_type, $log_type, $id);
+                    } else {
+                        $error_message = 'Failed to permanently delete ' . $item_type . ' from database.';
                     }
-                    $success_message = ucfirst($item_type) . ' permanently deleted!';
-                    logActivity($_SESSION['user_id'], 'Permanently deleted ' . $log_type, $log_type, $id);
-                } else {
-                    $error_message = 'Failed to permanently delete ' . $item_type . ' from database.';
+                } catch (PDOException $e) {
+                    $error_message = 'Table ' . $table . ' not found in database.';
                 }
             } else {
                 $error_message = ucfirst($item_type) . ' not found.';
             }
         } else {
-            $stmt = $conn->prepare("DELETE FROM {$table} WHERE id = ?");
-            if ($stmt->execute([$id])) {
-                $success_message = ucfirst($item_type) . ' permanently deleted!';
-                logActivity($_SESSION['user_id'], 'Permanently deleted ' . $log_type, $log_type, $id);
-            } else {
-                $error_message = 'Failed to permanently delete ' . $item_type . ' from database.';
+            try {
+                $stmt = $conn->prepare("DELETE FROM {$table} WHERE id = ?");
+                if ($stmt->execute([$id])) {
+                    $success_message = ucfirst($item_type) . ' permanently deleted!';
+                    logActivity($_SESSION['user_id'], 'Permanently deleted ' . $log_type, $log_type, $id);
+                } else {
+                    $error_message = 'Failed to permanently delete ' . $item_type . ' from database.';
+                }
+            } catch (PDOException $e) {
+                $error_message = 'Table ' . $table . ' not found in database.';
             }
         }
     }
@@ -150,9 +167,15 @@ if (!empty($where_clauses)) {
 
 $final_sql .= " ORDER BY deleted_at DESC";
 
-$stmt = $conn->prepare($final_sql);
-$stmt->execute($params);
-$trashed_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$trashed_items = [];
+try {
+    $stmt = $conn->prepare($final_sql);
+    $stmt->execute($params);
+    $trashed_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $trashed_items = [];
+    $error_message = 'One or more trash tables not found in database.';
+}
 ?>
 
 <?php if ($success_message): ?>

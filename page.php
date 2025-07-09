@@ -8,15 +8,21 @@ $slug = $_GET['slug'] ?? '';
 $page = null;
 
 if (!empty($slug)) {
-    $stmt = $conn->prepare("SELECT * FROM pages WHERE slug = ? AND status = 'published'");
-    $stmt->execute([$slug]);
-    $page = $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $conn->prepare("SELECT * FROM pages WHERE slug = ? AND status = 'published'");
+        $stmt->execute([$slug]);
+        $page = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $page = null;
+        $error_message = 'Table pages not found in database.';
+    }
 }
 
 if (!$page) {
     // Redirect to 404 or show a not found message
     header("HTTP/1.0 404 Not Found");
     echo "<h1>404 Page Not Found</h1>";
+    if (!empty($error_message)) { echo '<br><span class=\'text-danger\'>' . htmlspecialchars($error_message) . '</span>'; }
     exit();
 }
 
@@ -45,9 +51,17 @@ $page_title = $page['title'];
             <?php
             $nav_db = new Database();
             $nav_conn = $nav_db->connect();
-            $nav_stmt = $nav_conn->prepare("SELECT * FROM navigation_items WHERE status = 'active' ORDER BY display_order ASC");
-            $nav_stmt->execute();
-            $nav_items = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+            $nav_items = [];
+            if ($nav_conn) {
+                try {
+                    $nav_stmt = $nav_conn->prepare("SELECT * FROM navigation_items WHERE status = 'active' ORDER BY display_order ASC");
+                    if ($nav_stmt->execute()) {
+                        $nav_items = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+                    }
+                } catch (PDOException $e) {
+                    $nav_items = [];
+                }
+            }
 
             foreach ($nav_items as $item) {
                 $is_active = false;

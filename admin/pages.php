@@ -2,15 +2,20 @@
 $page_title = 'Pages';
 include 'includes/header.php';
 
+// Inisialisasi $id agar tidak undefined
+$id = $_GET['id'] ?? null;
+
 // Global variables for TinyMCE
 $pageContentType = 'page';
 $pageContentId = json_encode($id);
+
+// Pastikan $pages selalu terdefinisi
+$pages = [];
 
 $db = new Database();
 $conn = $db->connect();
 
 $action = $_GET['action'] ?? 'list';
-$id = $_GET['id'] ?? null;
 
 $success_message = '';
 $error_message = '';
@@ -67,21 +72,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error_message = 'Failed to update page.';
             }
         }
-    } else {
-        $error_message = implode('<br>', $errors);
     }
+} else {
+    $error_message = implode('<br>', $errors);
 }
 
 // Handle delete action
 if ($action == 'delete' && $id) {
-    $stmt = $conn->prepare("UPDATE pages SET deleted_at = NOW() WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        $success_message = 'Page moved to trash successfully!';
-        logActivity($_SESSION['user_id'], 'Moved page to trash', 'page', $id);
-    } else {
-        $error_message = 'Failed to delete page.';
+    try {
+        $stmt = $conn->prepare("DELETE FROM pages WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            $success_message = 'Page deleted successfully!';
+        } else {
+            $error_message = 'Failed to delete page.';
+        }
+    } catch (PDOException $e) {
+        $error_message = 'Failed to delete page: ' . $e->getMessage();
     }
-    $action = 'list';
+    header('Location: pages.php?action=list&msg=' . urlencode($success_message ?: $error_message));
+    exit();
 }
 
 // Get page for editing
@@ -92,24 +101,21 @@ if ($action == 'edit' && $id) {
     $page = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Get all pages for listing
+// Ambil semua pages untuk listing
 if ($action == 'list') {
     $search_query = $_GET['search'] ?? '';
     $status_filter = $_GET['status_filter'] ?? '';
-    $sql = "SELECT p.*, u.username FROM pages p LEFT JOIN users u ON p.created_by = u.id WHERE p.deleted_at IS NULL";
+    $sql = "SELECT p.*, u.username FROM pages p LEFT JOIN users u ON p.created_by = u.id WHERE 1=1";
     $params = [];
-
     if (!empty($search_query)) {
         $sql .= " AND (p.title LIKE ? OR p.content LIKE ?)";
         $params[] = '%' . $search_query . '%';
         $params[] = '%' . $search_query . '%';
     }
-
     if (!empty($status_filter)) {
         $sql .= " AND p.status = ?";
         $params[] = $status_filter;
     }
-
     $sql .= " ORDER BY p.created_at DESC";
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
@@ -172,6 +178,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
     </div>
 <?php endif; ?>
 
+<?php if (isset($_GET['msg']) && $_GET['msg']) {
+    echo '<div class="alert alert-success alert-dismissible fade show">' . htmlspecialchars($_GET['msg']) . '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+} ?>
+
 <?php if ($action == 'list'): ?>
     <!-- Pages List -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -232,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                             </tr>
                         </thead>
                         <tbody>
-                        <?php if ($pages): ?>
+                        <?php if (!empty($pages)): ?>
                             <?php foreach ($pages as $page): ?>
                                 <tr>
                                     <td><input type="checkbox" name="selected_pages[]" value="<?php echo $page['id']; ?>" class="page-checkbox"></td>
@@ -304,7 +314,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                         
                         <div class="mb-3">
                             <label for="content" class="form-label">Content *</label>
-                            <textarea class="form-control tinymce" id="content" name="content" rows="20"><?php echo $page['content'] ?? ''; ?></textarea>
+                            <textarea name="content" class="tinymce" id="content" name="content" rows="20"><?php echo $page['content'] ?? ''; ?></textarea>
                         </div>
                         
                         <div class="mb-3">
@@ -318,6 +328,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-save me-2"></i><?php echo $action == 'new' ? 'Create Page' : 'Update Page'; ?>
                         </button>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Preview</h6>
+                    </div>
+                    <div class="card-body" id="preview-panel">
+                        <!-- Content will be loaded here -->
                     </div>
                 </div>
             </div>

@@ -11,9 +11,15 @@ $db = new Database();
 $conn = $db->connect();
 
 // Get all activity logs
-$stmt = $conn->prepare("SELECT al.*, u.username FROM activity_logs al LEFT JOIN users u ON al.user_id = u.id ORDER BY al.created_at DESC");
-$stmt->execute();
-$logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$logs = [];
+try {
+    $stmt = $conn->prepare("SELECT al.*, u.username FROM activity_logs al LEFT JOIN users u ON al.user_id = u.id ORDER BY al.created_at DESC");
+    $stmt->execute();
+    $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $logs = [];
+    $error_message = 'Table activity_logs not found in database.';
+}
 ?>
 
 <h1 class="h2 mb-4">Activity Logs</h1>
@@ -23,6 +29,12 @@ $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <h5 class="card-title mb-0">All Activities</h5>
     </div>
     <div class="card-body">
+        <?php if (!empty($error_message)): ?>
+            <div class="alert alert-danger alert-dismissible fade show">
+                <?php echo $error_message; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead>

@@ -1,3 +1,9 @@
+<?php
+// Pastikan variabel $id selalu terdefinisi agar tidak error jika di-include
+if (!isset($id)) {
+    $id = null;
+}
+?>
 </div>
         </div>
     </div>
@@ -5,8 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/script.js"></script>
     <script src="assets/js/admin-script.js"></script>
-    <script src="assets/js/tinymce-functions.js"></script>
     <script src="assets/js/tinymce-init.js"></script>
+    
     
     <script>
         // Toggle the sidebar

@@ -16,10 +16,16 @@ A complete personal portfolio website with a powerful Content Management System 
 - **Articles Management**: Full CRUD operations with TinyMCE editor
 - **Projects Management**: Project portfolio with technologies and links
 - **Tools Management**: Tools showcase with categories
+- **Pages Management**: Custom pages with rich content
+- **Content Blocks**: Reusable content sections
+- **FAQs Management**: Manage frequently asked questions
 - **File Management**: Upload and manage media files
 - **Site Settings**: Dynamic site configuration
 - **User Management**: Role-based access control (Admin/Editor/Viewer)
 - **Contact Messages**: View and manage contact form submissions
+- **Notifications**: In-app notification system with history
+- **Activity Logs**: Track all admin actions
+- **Trash**: Soft delete and restore content
 
 ## 🚀 Technologies Used
 
@@ -42,22 +48,22 @@ A complete personal portfolio website with a powerful Content Management System 
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/yourusername/wiracenter-portfolio.git
-cd wiracenter-portfolio
+git clone https://github.com/yourusername/wiracenter-final.git
+cd wiracenter-final
 ```
 
 ### Step 2: Database Setup
-1. Create a MySQL database named `wiracenter_portfolio`
+1. Create a MySQL database named `wiracenter_db2`
 2. Import the database schema:
 ```bash
-mysql -u username -p wiracenter_portfolio < database/schema.sql
+mysql -u username -p wiracenter_db2 < database/schema.sql
 ```
 
 ### Step 3: Configuration
 1. Update database credentials in `config/database.php`:
 ```php
 private $host = 'localhost';
-private $db_name = 'wiracenter_portfolio';
+private $db_name = 'wiracenter_db2';
 private $username = 'your_db_username';
 private $password = 'your_db_password';
 ```
@@ -80,96 +86,104 @@ chmod 755 uploads/
 ## 🔐 Default Login Credentials
 
 - **Username**: admin
-- **Password**: admin123
+- **Password**: wiracenter!
 
 > **Important**: Change the default password immediately after first login!
 
-## 📁 Project Structure
+## 📁 Project Structure (2025)
 
 ```
-wiracenter-portfolio/
-├── admin/                  # Admin dashboard
-│   ├── api/               # API endpoints
-│   ├── includes/          # Header and footer includes
-│   ├── dashboard.php      # Main dashboard
-│   ├── articles.php       # Articles management
-│   ├── projects.php       # Projects management
-│   ├── tools.php          # Tools management
-│   ├── files.php          # File management
-│   ├── settings.php       # Site settings
-│   ├── users.php          # User management
-│   └── login.php          # Admin login
-├── api/                   # Frontend API endpoints
-├── assets/                # Static assets
-│   ├── css/              # Stylesheets
-│   └── js/               # JavaScript files
-├── config/                # Configuration files
-│   ├── database.php      # Database connection
-│   └── config.php        # Main configuration
-├── database/              # Database schema
-│   └── schema.sql        # Database structure
-├── uploads/               # File uploads directory
-├── index.php             # Homepage
-├── about.php             # About page
-├── my-spaces.php         # Projects/Articles/Tools page
-├── contact.php           # Contact page
-└── README.md             # This file
+wiracenter-v1-main/
+├── admin/
+│   ├── api/                  # API endpoints (upload, notifications, stats, etc)
+│   ├── assets/
+│   │   ├── css/              # Admin styles (admin-style.css)
+│   │   └── js/               # Admin scripts (tinymce-init.js, admin-script.js)
+│   ├── includes/             # Header, footer, sidebar
+│   ├── activity_logs.php     # Activity log
+│   ├── articles.php          # Articles management
+│   ├── content_blocks.php    # Content blocks management
+│   ├── dashboard.php         # Admin dashboard
+│   ├── export_data.php       # Export data
+│   ├── faqs.php              # FAQs management
+│   ├── files.php             # File management
+│   ├── help.php              # Help & docs
+│   ├── login.php             # Admin login
+│   ├── logout.php            # Logout
+│   ├── messages.php          # Contact messages
+│   ├── navigation.php        # Navigation management
+│   ├── notifications.php     # Notification history
+│   ├── pages.php             # Pages management
+│   ├── profile.php           # User profile
+│   ├── projects.php          # Projects management
+│   ├── settings.php          # Site settings
+│   ├── tools.php             # Tools management
+│   ├── trash.php             # Trash bin
+│   ├── users.php             # User management
+│   └── backup.php            # Backup & restore
+├── api/
+│   └── contact.php           # Public contact API
+├── assets/
+│   ├── css/                  # Frontend styles (style.css)
+│   └── js/                   # Frontend scripts (script.js)
+├── config/
+│   ├── config.php            # Main config
+│   └── database.php          # DB connection
+├── database/
+│   └── schema.sql            # DB schema
+├── includes/
+│   ├── footer.php
+│   ├── header.php
+│   └── sidebar.php
+├── uploads/                  # Uploaded files
+├── index.php                 # Homepage
+├── about.php                 # About page
+├── my-spaces.php             # Projects/Articles/Tools
+├── contact.php               # Contact page
+├── project.php               # Project detail
+├── article.php               # Article detail
+├── tool.php                  # Tool detail
+├── maintenance.php           # Maintenance page
+├── README.md                 # This file
+├── change_log.md             # Changelog (auto updated)
+└── ...
 ```
 
-## 🎨 Customization
+## 🗂️ Admin Modules & Features
 
-### Adding New Content Types
-1. Create database table in `database/schema.sql`
-2. Add navigation link in `admin/includes/header.php`
-3. Create management page in `admin/`
-4. Add API endpoints in `admin/api/`
+- **Articles**: CRUD, TinyMCE, featured image, excerpt, SEO, status, schedule
+- **Projects**: CRUD, description, content, tech tags, URLs, featured image, status
+- **Tools**: CRUD, description, content, URLs, featured image, status
+- **Pages**: CRUD, custom content, status
+- **Content Blocks**: CRUD, reusable sections
+- **FAQs**: CRUD, question/answer
+- **Files**: Upload, manage, delete
+- **Navigation**: Menu management
+- **Users**: Role-based management
+- **Settings**: Site-wide config
+- **Notifications**: In-app, mark as read/delete, history
+- **Activity Logs**: Track admin actions
+- **Trash**: Soft delete/restore
+- **Backup/Export**: DB backup, export data
+- **Profile**: Update user info
+- **Help**: Docs & support
 
-### Styling
-- Custom CSS is in `assets/css/style.css`
-- CSS variables are defined in `:root` for easy theme customization
-- Bootstrap classes can be overridden
+## 🛠️ API Endpoints (Admin)
 
-### Site Settings
-All site settings can be managed through the admin dashboard:
-- Site name and description
-- Contact information
-- Hero section content
-- About page content
-- Social media links
+- `admin/api/upload_image.php` — Upload image for editor
+- `admin/api/save_draft.php` — Autosave draft content
+- `admin/api/notification_actions.php` — Mark/delete notifications
+- `admin/api/mark_notification_read.php` — Mark all as read
+- `admin/api/insert_notification.php` — Insert notification (test/dev)
+- `admin/api/stats.php` — Dashboard stats
+- `admin/api/upload.php` — General file upload
 
-## 🔧 Features in Detail
+## 🧩 Custom Scripts & Styles
 
-### Articles Management
-- Rich text editor (TinyMCE)
-- Featured images
-- Excerpt and SEO fields
-- Draft/Published status
-- Publish date scheduling
-
-### Projects Management
-- Project descriptions and content
-- Technology tags (JSON array)
-- Project and GitHub URLs
-- Featured images
-- Status management
-
-### Tools Management
-- Tool categories
-- Tool URLs
-- Descriptions and content
-- Featured images
-
-### File Management
-- Drag-and-drop upload
-- File type validation
-- File size limits
-- Database tracking
-
-### User Management
-- Three user roles: Admin, Editor, Viewer
-- Role-based permissions
-- User creation and management
-- Password hashing
+- **Admin JS**: `admin/assets/js/tinymce-init.js`, `admin/assets/js/admin-script.js`
+- **Admin CSS**: `admin/assets/css/admin-style.css`
+- **Frontend JS**: `assets/js/script.js`
+- **Frontend CSS**: `assets/css/style.css`
 
 ## 🛡️ Security Features
 
@@ -182,87 +196,34 @@ All site settings can be managed through the admin dashboard:
 
 ## 📱 Responsive Design
 
-The website is fully responsive and works on:
-- Desktop computers
-- Tablets
-- Mobile phones
-- Various screen sizes
+- Fully responsive (Bootstrap 5)
+- Desktop, tablet, mobile support
 
 ## 🎯 SEO Optimized
 
 - Clean URL structure
 - Meta tags and descriptions
-- Semantic HTML structure
-- Fast loading times
-- Mobile-friendly design
+- Semantic HTML
+- Fast loading
+- Mobile-friendly
 
-## 🔄 Updates and Maintenance
+## 📝 Changelog
 
-### Regular Updates
-- Keep PHP and MySQL updated
-- Update Bootstrap and other dependencies
-- Regular security patches
-
-### Backup
-- Regular database backups
-- File system backups
-- Version control with Git
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue on GitHub
-- Email: support@wiracenter.com
-- Documentation: Check the code comments
-
-## 🚀 Deployment
-
-### Apache Configuration
-```apache
-<Directory /path/to/wiracenter-portfolio>
-    Options Indexes FollowSymLinks
-    AllowOverride All
-    Require all granted
-</Directory>
-```
-
-### Nginx Configuration
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-    root /path/to/wiracenter-portfolio;
-    index index.php;
-    
-    location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        include fastcgi_params;
-    }
-}
-```
-
-## 🎉 Credits
-
-- **Bootstrap**: Frontend framework
-- **Font Awesome**: Icons
-- **TinyMCE**: Rich text editor
-- **PHP**: Server-side scripting
-- **MySQL**: Database management
+See `change_log.md` for detailed update history and troubleshooting log.
 
 ---
 
-**Made with ❤️ by Wiracenter**
+## ⚠️ Notes, Plans & Unsolved Troubleshoots
+
+1. **Pengembangan Live Preview**
+   - Rencana: Opsi posisi panel preview (kanan, bawah, tab, dsb) dan style lebih fleksibel.
+   - Status: Belum dikembangkan, masih basic.
+2. **Aksi action=delete blank page**
+   - Masih ada kasus redirect gagal/blank pada beberapa halaman admin setelah delete (selain articles.php).
+   - Rencana: Refactor blok delete ke paling atas file, pastikan tidak ada output sebelum header, dan konsisten redirect ke list.
+3. **Testing & Konsistensi CRUD**
+   - Pastikan semua halaman konten admin (projects, tools, pages, content_blocks, faqs) CRUD-nya konsisten seperti articles.php.
+4. **Troubleshoot lain**
+   - Lihat `change_log.md` untuk log detail troubleshooting dan patch.
+
+---

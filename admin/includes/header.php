@@ -2,6 +2,11 @@
 require_once '../config/config.php';
 requireLogin();
 
+// Pastikan variabel $page_title selalu terdefinisi agar tidak error jika di-include
+if (!isset($page_title)) {
+    $page_title = '';
+}
+
 // Get current page name
 $current_page = basename($_SERVER['PHP_SELF'], '.php');
 ?>
@@ -10,11 +15,18 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?>Admin Dashboard - <?php echo getSetting('site_name', 'Wiracenter'); ?></title>
+    <title><?php echo $page_title . ' - '; ?>Admin Dashboard - <?php echo getSetting('site_name', 'Wiracenter'); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/admin-style.css"> <!-- Updated CSS link -->
     <script src="https://cdn.tiny.cloud/1/7t4ysw5ibpvf6otxc72fed05syoih8onsdc91gce3e4sqi3a/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script>
+        // Definisikan variabel global untuk autosave TinyMCE
+        var pageContentType = '<?php echo isset($pageContentType) ? $pageContentType : (isset($current_page) ? $current_page : "content"); ?>';
+        var pageContentId = <?php echo isset($pageContentId) ? $pageContentId : (isset($id) ? json_encode($id) : 'null'); ?>;
+    </script>
+    
+    
 </head>
 <body class="theme-<?php echo getSetting('theme_mode', 'light'); ?>">
     <div class="d-flex" id="wrapper">
@@ -25,7 +37,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
                 <h4>Dashboard</h4>
             </div>
             <div class="list-group list-group-flush">
-                <a href="dashboard.php" class="list-group-item list-group-item-action bg-dark text-white <?php echo $current_page == 'dashboard' ? 'active' : ''; ?>">
+                <a href="dashboard.php" class="list-group-item list-group-item-action bg-dark text-white <?php echo $current_page == 'dashboard' ? 'active' : ''; ?> ">
                     <i class="fas fa-tachometer-alt me-2"></i><span class="menu-text">Dashboard</span>
                 </a>
 
@@ -153,7 +165,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
                                         </div>
                                     <?php endforeach; ?>
                                     <hr class="dropdown-divider">
-                                    <a class="dropdown-item text-center" href="messages.php">Open Messages</a>
+                                    <a class="dropdown-item text-center" href="notifications.php">Open Notifications</a>
                                 <?php else: ?>
                                     <a class="dropdown-item" href="#">No new notifications</a>
                                 <?php endif; ?>

@@ -7,44 +7,92 @@ $db = new Database();
 $conn = $db->connect();
 
 // Count published articles
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM articles WHERE status = 'published'");
-$stmt->execute();
-$published_articles = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+$published_articles = 0;
+try {
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM articles WHERE status = 'published'");
+    $stmt->execute();
+    $published_articles = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+} catch (PDOException $e) {
+    $published_articles = 0;
+    $error_message = 'Table articles not found in database.';
+}
 
 // Count published projects
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM projects WHERE status = 'published'");
-$stmt->execute();
-$published_projects = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+$published_projects = 0;
+try {
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM projects WHERE status = 'published'");
+    $stmt->execute();
+    $published_projects = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+} catch (PDOException $e) {
+    $published_projects = 0;
+    $error_message = 'Table projects not found in database.';
+}
 
 // Count published tools
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM tools WHERE status = 'published'");
-$stmt->execute();
-$published_tools = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+$published_tools = 0;
+try {
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM tools WHERE status = 'published'");
+    $stmt->execute();
+    $published_tools = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+} catch (PDOException $e) {
+    $published_tools = 0;
+    $error_message = 'Table tools not found in database.';
+}
 
 // Count unread messages
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM contact_messages WHERE status = 'unread'");
-$stmt->execute();
-$unread_messages = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+$unread_messages = 0;
+try {
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM contact_messages WHERE status = 'unread'");
+    $stmt->execute();
+    $unread_messages = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+} catch (PDOException $e) {
+    $unread_messages = 0;
+    $error_message = 'Table contact_messages not found in database.';
+}
 
 // Count total users
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM users");
-$stmt->execute();
-$total_users = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+$total_users = 0;
+try {
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM users");
+    $stmt->execute();
+    $total_users = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+} catch (PDOException $e) {
+    $total_users = 0;
+    $error_message = 'Table users not found in database.';
+}
 
 // Get recent articles
-$stmt = $conn->prepare("SELECT id, title, status, publish_date FROM articles ORDER BY created_at DESC LIMIT 5");
-$stmt->execute();
-$recent_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$recent_articles = [];
+try {
+    $stmt = $conn->prepare("SELECT id, title, status, publish_date FROM articles ORDER BY created_at DESC LIMIT 5");
+    $stmt->execute();
+    $recent_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $recent_articles = [];
+    $error_message = 'Table articles not found in database.';
+}
 
 // Get recent projects
-$stmt = $conn->prepare("SELECT id, title, status, publish_date FROM projects ORDER BY created_at DESC LIMIT 5");
-$stmt->execute();
-$recent_projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$recent_projects = [];
+try {
+    $stmt = $conn->prepare("SELECT id, title, status, publish_date FROM projects ORDER BY created_at DESC LIMIT 5");
+    $stmt->execute();
+    $recent_projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $recent_projects = [];
+    $error_message = 'Table projects not found in database.';
+}
 
 // Get recent messages
-$stmt = $conn->prepare("SELECT id, name, email, subject, status, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5");
-$stmt->execute();
-$recent_messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$recent_messages = [];
+try {
+    $stmt = $conn->prepare("SELECT id, name, email, subject, status, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5");
+    $stmt->execute();
+    $recent_messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $recent_messages = [];
+    $error_message = 'Table contact_messages not found in database.';
+}
 ?>
 
 <!-- Statistics Cards -->

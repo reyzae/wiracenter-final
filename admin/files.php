@@ -13,25 +13,26 @@ $error_message = '';
 // Handle delete action
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
     $id = $_GET['id'];
-    
-    // Get file info from database
-    $stmt = $conn->prepare("SELECT file_path FROM files WHERE id = ?");
-    $stmt->execute([$id]);
-    $file = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($file) {
-        $full_path = '../' . $file['file_path'];
-        
-        // Delete from database
-        $stmt = $conn->prepare("UPDATE files SET deleted_at = NOW() WHERE id = ?");
-        if ($stmt->execute([$id])) {
-            $success_message = 'File moved to trash successfully!';
-            logActivity($_SESSION['user_id'], 'Moved file to trash', 'file', $id);
+    try {
+        // Get file info from database
+        $stmt = $conn->prepare("SELECT file_path FROM files WHERE id = ?");
+        $stmt->execute([$id]);
+        $file = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($file) {
+            $full_path = '../' . $file['file_path'];
+            // Delete from database
+            $stmt = $conn->prepare("UPDATE files SET deleted_at = NOW() WHERE id = ?");
+            if ($stmt->execute([$id])) {
+                $success_message = 'File moved to trash successfully!';
+                logActivity($_SESSION['user_id'], 'Moved file to trash', 'file', $id);
+            } else {
+                $error_message = 'Failed to delete file from database.';
+            }
         } else {
-            $error_message = 'Failed to delete file from database.';
+            $error_message = 'File not found.';
         }
-    } else {
-        $error_message = 'File not found.';
+    } catch (PDOException $e) {
+        $error_message = 'Table files not found in database.';
     }
     $action = 'list';
 }
@@ -40,22 +41,24 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id']))
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
     $bulk_action = $_POST['bulk_action'];
     $selected_files = $_POST['selected_files'] ?? [];
-
     if (!empty($selected_files)) {
         $placeholders = implode(',', array_fill(0, count($selected_files), '?'));
         $success_count = 0;
         $error_count = 0;
-
         if ($bulk_action == 'delete') {
-            $stmt = $conn->prepare("UPDATE files SET deleted_at = NOW() WHERE id IN ($placeholders)");
-            if ($stmt->execute($selected_files)) {
-                $success_count = $stmt->rowCount();
-                logActivity($_SESSION['user_id'], 'Bulk moved files to trash', 'file', implode(',', $selected_files));
-            } else {
+            try {
+                $stmt = $conn->prepare("UPDATE files SET deleted_at = NOW() WHERE id IN ($placeholders)");
+                if ($stmt->execute($selected_files)) {
+                    $success_count = $stmt->rowCount();
+                    logActivity($_SESSION['user_id'], 'Bulk moved files to trash', 'file', implode(',', $selected_files));
+                } else {
+                    $error_count = count($selected_files);
+                }
+            } catch (PDOException $e) {
                 $error_count = count($selected_files);
+                $error_message = 'Table files not found in database.';
             }
         }
-
         if ($success_count > 0) {
             $success_message = $success_count . ' file(s) moved to trash successfully!';
         }
@@ -70,16 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
 // Get all files for listing
 $search_query = $_GET['search'] ?? '';
 $type_filter = $_GET['type_filter'] ?? '';
-
 $sql = "SELECT f.*, u.username FROM files f LEFT JOIN users u ON f.uploaded_by = u.id WHERE f.deleted_at IS NULL";
 $params = [];
-
 if (!empty($search_query)) {
     $sql .= " AND (f.original_name LIKE ? OR f.filename LIKE ?)";
     $params[] = '%' . $search_query . '%';
     $params[] = '%' . $search_query . '%';
 }
-
 if (!empty($type_filter)) {
     if ($type_filter == 'image') {
         $sql .= " AND f.file_type LIKE 'image/%'";
@@ -87,11 +87,16 @@ if (!empty($type_filter)) {
         $sql .= " AND f.file_type = 'application/pdf'";
     }
 }
-
 $sql .= " ORDER BY f.created_at DESC";
-$stmt = $conn->prepare($sql);
-$stmt->execute($params);
-$files = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$files = [];
+try {
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $files = [];
+    $error_message = 'Table files not found in database.';
+}
 ?>
 
 <?php if ($success_message): ?>

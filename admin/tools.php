@@ -2,175 +2,87 @@
 $page_title = 'Tools';
 include 'includes/header.php';
 
+$action = $_GET['action'] ?? 'list';
+$id = $_GET['id'] ?? null; // Inisialisasi $id di sini
+
+// Pastikan $tools selalu terdefinisi
+$tools = [];
+
+require_once __DIR__ . '/../vendor/autoload.php'; // Pindahkan ke sini
+
 // Global variables for TinyMCE
 $pageContentType = 'tool';
-$pageContentId = json_encode($id);
+$pageContentId = ($id !== null) ? json_encode($id) : 'null'; // Pastikan $id terdefinisi
 
 $db = new Database();
 $conn = $db->connect();
-
-$action = $_GET['action'] ?? 'list';
-$id = $_GET['id'] ?? null;
 
 $success_message = '';
 $error_message = '';
 
 // Handle form submissions
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $title = sanitize($_POST['title']);
-    $slug = generateSlug($_POST['slug'] ?: $title);
-    $description = sanitize($_POST['description']);
-    $content = $_POST['content'];
-    $tool_url = sanitize($_POST['tool_url']);
-    $category = sanitize($_POST['category']);
-    $status = $_POST['status'];
-    $publish_date = $_POST['publish_date'] ?: null;
-    
-    if ($action == 'new' || $action == 'edit') {
-        // Handle featured image upload
-        $featured_image = '';
-        if (!empty($_FILES['featured_image']['name'])) {
-            $uploadDir = '../' . UPLOAD_PATH;
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-            
-            $imageName = uniqid() . '_' . $_FILES['featured_image']['name'];
-            $imagePath = $uploadDir . $imageName;
-            
-            if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
-                $featured_image = $imageName;
-            }
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $action == 'new') {
+    $title = sanitize($_POST['title'] ?? '');
+    $slug = generateSlug($_POST['slug'] ?: $title, 'tools');
+    $description = $_POST['description'] ?? '';
+    $content = $_POST['content'] ?? '';
+    $status = $_POST['status'] ?? 'draft';
+    $publish_date = $_POST['publish_date'] ?? null;
+    $errors = [];
+    if (empty($title)) $errors[] = 'Title is required.';
+    if (empty($content)) $errors[] = 'Content is required.';
+    if (!in_array($status, ['draft','published','scheduled','archived'])) $errors[] = 'Invalid status.';
+    if (empty($errors)) {
+        $stmt = $conn->prepare("INSERT INTO tools (title, slug, description, content, status, publish_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $result = $stmt->execute([$title, $slug, $description, $content, $status, $publish_date, $_SESSION['user_id']]);
+        if ($result) {
+            $success_message = 'Tool created successfully!';
+            $action = 'list';
+        } else {
+            $error_message = 'Failed to create tool.';
         }
-        
-        if ($action == 'new') {
-            // Create new tool
-            $sql = "INSERT INTO tools (title, slug, description, content, featured_image, tool_url, category, status, publish_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            
-            if ($stmt->execute([$title, $slug, $description, $content, $featured_image, $tool_url, $category, $status, $publish_date, $_SESSION['user_id']])) {
-                $success_message = 'Tool created successfully!';
-                $action = 'list';
-                logActivity($_SESSION['user_id'], 'Created tool', 'tool', $conn->lastInsertId());
-                createNotification($_SESSION['user_id'], 'New tool \'' . $title . '\' has been created.', 'tools.php?action=edit&id=' . $conn->lastInsertId());
-            } else {
-                $error_message = 'Failed to create tool.';
-            }
-        } elseif ($action == 'edit' && $id) {
-            // Update existing tool
-            if ($featured_image) {
-                $sql = "UPDATE tools SET title=?, slug=?, description=?, content=?, featured_image=?, tool_url=?, category=?, status=?, publish_date=? WHERE id=?";
-                $stmt = $conn->prepare($sql);
-                $result = $stmt->execute([$title, $slug, $description, $content, $featured_image, $tool_url, $category, $status, $publish_date, $id]);
-            } else {
-                $sql = "UPDATE tools SET title=?, slug=?, description=?, content=?, tool_url=?, category=?, status=?, publish_date=? WHERE id=?";
-                $stmt = $conn->prepare($sql);
-                $result = $stmt->execute([$title, $slug, $description, $content, $tool_url, $category, $status, $publish_date, $id]);
-            }
-            
-            if ($result) {
-                $success_message = 'Tool updated successfully!';
-                $action = 'list';
-            } else {
-                $error_message = 'Failed to update tool.';
-            }
-        }
+    } else {
+        $error_message = implode('<br>', $errors);
     }
 }
 
 // Handle delete action
 if ($action == 'delete' && $id) {
-    $stmt = $conn->prepare("UPDATE tools SET deleted_at = NOW() WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        $success_message = 'Tool moved to trash successfully!';
-        logActivity($_SESSION['user_id'], 'Moved tool to trash', 'tool', $id);
-    } else {
-        $error_message = 'Failed to delete tool.';
+    try {
+        $stmt = $conn->prepare("DELETE FROM tools WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            $success_message = 'Tool deleted successfully!';
+        } else {
+            $error_message = 'Failed to delete tool.';
+        }
+    } catch (PDOException $e) {
+        $error_message = 'Failed to delete tool: ' . $e->getMessage();
     }
-    $action = 'list';
+    header('Location: tools.php?action=list&msg=' . urlencode($success_message ?: $error_message));
+    exit();
 }
 
-// Get tool for editing
-$tool = null;
-if ($action == 'edit' && $id) {
-    $stmt = $conn->prepare("SELECT * FROM tools WHERE id = ?");
-    $stmt->execute([$id]);
-    $tool = $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-// Get all tools for listing
+// Ambil semua tools untuk listing
 if ($action == 'list') {
     $search_query = $_GET['search'] ?? '';
     $status_filter = $_GET['status_filter'] ?? '';
-    $category_filter = $_GET['category_filter'] ?? '';
-    $sql = "SELECT t.*, u.username FROM tools t LEFT JOIN users u ON t.created_by = u.id WHERE t.deleted_at IS NULL";
+    $sql = "SELECT t.*, u.username FROM tools t LEFT JOIN users u ON t.created_by = u.id WHERE 1=1";
     $params = [];
-
     if (!empty($search_query)) {
-        $sql .= " AND (t.title LIKE ? OR t.description LIKE ? OR t.content LIKE ?)";
-        $params[] = '%' . $search_query . '%';
+        $sql .= " AND (t.title LIKE ? OR t.content LIKE ?)";
         $params[] = '%' . $search_query . '%';
         $params[] = '%' . $search_query . '%';
     }
-
     if (!empty($status_filter)) {
         $sql .= " AND t.status = ?";
         $params[] = $status_filter;
     }
-
-    if (!empty($category_filter)) {
-        $sql .= " AND t.category LIKE ?";
-        $params[] = '%' . $category_filter . '%';
-    }
-
     $sql .= " ORDER BY t.created_at DESC";
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-
-// Handle bulk actions
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
-    $bulk_action = $_POST['bulk_action'];
-    $selected_tools = $_POST['selected_tools'] ?? [];
-
-    if (!empty($selected_tools)) {
-        $placeholders = implode(',', array_fill(0, count($selected_tools), '?'));
-        $success_count = 0;
-        $error_count = 0;
-
-        if ($bulk_action == 'delete') {
-            $stmt = $conn->prepare("UPDATE tools SET deleted_at = NOW() WHERE id IN ($placeholders)");
-            if ($stmt->execute($selected_tools)) {
-                $success_count = $stmt->rowCount();
-                logActivity($_SESSION['user_id'], 'Bulk moved tools to trash', 'tool', implode(',', $selected_tools));
-            } else {
-                $error_count = count($selected_tools);
-            }
-        } elseif (in_array($bulk_action, ['publish', 'draft', 'archive', 'schedule'])) {
-            $new_status = str_replace(['publish', 'archive', 'schedule'], ['published', 'archived', 'scheduled'], $bulk_action);
-            $stmt = $conn->prepare("UPDATE tools SET status = ? WHERE id IN ($placeholders)");
-            $bulk_params = array_merge([$new_status], $selected_tools);
-            if ($stmt->execute($bulk_params)) {
-                $success_count = $stmt->rowCount();
-                logActivity($_SESSION['user_id'], 'Bulk updated tool status to ' . $new_status, 'tool', implode(',', $selected_tools));
-            } else {
-                $error_count = count($selected_tools);
-            }
-        }
-
-        if ($success_count > 0) {
-            $success_message = $success_count . ' tool(s) ' . str_replace(['publish', 'draft', 'archive', 'schedule'], ['published', 'drafted', 'archived', 'scheduled'], $bulk_action) . ' successfully!';
-        }
-        if ($error_count > 0) {
-            $error_message = $error_count . ' tool(s) failed to ' . $bulk_action . '.';
-        }
-    }
-    // Redirect to clear POST data and show updated list
-    redirect(ADMIN_URL . '/tools.php?action=list');
-}
 ?>
-
 <?php if ($success_message): ?>
     <div class="alert alert-success alert-dismissible fade show">
         <?php echo $success_message; ?>
@@ -184,6 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>
+
+<?php if (isset($_GET['msg']) && $_GET['msg']) {
+    echo '<div class="alert alert-success alert-dismissible fade show">' . htmlspecialchars($_GET['msg']) . '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+} ?>
 
 <h1 class="h2 mb-4">Tools</h1>
 
@@ -212,9 +128,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                         <option value="archived" <?php echo (($_GET['status_filter'] ?? '') == 'archived') ? 'selected' : ''; ?>>Archived</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <input type="text" name="category_filter" class="form-control" placeholder="Filter by category..." value="<?php echo $_GET['category_filter'] ?? ''; ?>">
-                </div>
                 <div class="col-md-auto">
                     <button type="submit" class="btn btn-primary">Filter</button>
                 </div>
@@ -241,7 +154,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                             <tr>
                                 <th><input type="checkbox" id="select-all-tools"></th>
                                 <th>Title</th>
-                                <th>Category</th>
                                 <th>Status</th>
                                 <th>Author</th>
                                 <th>Publish Date</th>
@@ -249,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                             </tr>
                         </thead>
                         <tbody>
-                        <?php if ($tools): ?>
+                        <?php if (!empty($tools)): ?>
                             <?php foreach ($tools as $tool): ?>
                                 <tr>
                                     <td><input type="checkbox" name="selected_tools[]" value="<?php echo $tool['id']; ?>" class="tool-checkbox"></td>
@@ -258,7 +170,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                                         <br>
                                         <small class="text-muted"><?php echo $tool['slug']; ?></small>
                                     </td>
-                                    <td><?php echo $tool['category']; ?></td>
                                     <td>
                                         <span class="badge bg-<?php 
                                             if ($tool['status'] == 'published') echo 'success';
@@ -285,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">No tools found.</td>
+                                <td colspan="5" class="text-center text-muted py-4">No tools found.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -333,6 +244,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                         </div>
                     </div>
                 </div>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Preview</h6>
+                    </div>
+                    <div class="card-body" id="preview-panel">
+                        <!-- Content will be loaded here -->
+                    </div>
+                </div>
             </div>
             
             <div class="col-md-4">
@@ -372,8 +291,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                         </div>
                         
                         <div class="mb-3">
-                            <label for="category" class="form-label">Category</label>
-                            <input type="text" class="form-control" id="category" name="category" value="<?php echo $tool['category'] ?? ''; ?>">
+                            <label for="github_url" class="form-label">GitHub URL</label>
+                            <input type="url" class="form-control" id="github_url" name="github_url" value="<?php echo $tool['github_url'] ?? ''; ?>">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="technologies" class="form-label">Technologies (comma-separated)</label>
+                            <input type="text" class="form-control" id="technologies" name="technologies" value="<?php echo isset($tool['technologies']) ? implode(',', json_decode($tool['technologies'], true)) : ''; ?>">
+                            <small class="form-text text-muted">e.g., PHP, MySQL, Bootstrap</small>
                         </div>
                         
                         <button type="submit" class="btn btn-primary w-100">
@@ -387,4 +312,3 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
 <?php endif; ?>
 
 <?php include 'includes/footer.php'; ?>
-

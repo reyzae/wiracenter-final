@@ -1,8 +1,23 @@
 <?php
+// Articles Admin Page
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+
 $page_title = 'Articles';
 include 'includes/header.php';
+
+$action = $_GET['action'] ?? 'list';
+$id = $_GET['id'] ?? null;
+
+// Pastikan $articles selalu terdefinisi
+$articles = [];
+
+// Pastikan autoload HTMLPurifier jika digunakan
+if (!class_exists('HTMLPurifier_Config')) {
+    if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+        require_once __DIR__ . '/../vendor/autoload.php';
+    }
+}
 
 // Global variables for TinyMCE
 $pageContentType = 'article';
@@ -10,9 +25,6 @@ $pageContentId = json_encode($id);
 
 $db = new Database();
 $conn = $db->connect();
-
-$action = $_GET['action'] ?? 'list';
-$id = $_GET['id'] ?? null;
 
 $success_message = '';
 $error_message = '';
@@ -56,22 +68,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
-            
             $imageName = uniqid() . '_' . $_FILES['featured_image']['name'];
             $imagePath = $uploadDir . $imageName;
-            
             if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
                 $featured_image = $imageName;
             }
         }
-        
-        if (empty($errors)) {
+
         // Auto-generate excerpt if empty
         if (empty($excerpt)) {
             $plain_content = strip_tags($content);
-            $excerpt = substr($plain_content, 0, 160); // Take first 160 characters
+            $excerpt = substr($plain_content, 0, 160);
             if (strlen($plain_content) > 160) {
-                $excerpt .= '...'; // Add ellipsis if content is longer
+                $excerpt .= '...';
             }
         }
 
@@ -79,29 +88,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($action == 'new' && empty($publish_date)) {
             $publish_date = date('Y-m-d H:i:s');
         }
-        
+
         if ($action == 'new' || $action == 'edit') {
-            // Handle featured image upload
+            // Handle featured image upload (again for edit)
             $featured_image = '';
             if (!empty($_FILES['featured_image']['name'])) {
                 $uploadDir = '../' . UPLOAD_PATH;
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
                 }
-                
                 $imageName = uniqid() . '_' . $_FILES['featured_image']['name'];
                 $imagePath = $uploadDir . $imageName;
-                
                 if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
                     $featured_image = $imageName;
                 }
             }
-            
+
             if ($action == 'new') {
                 // Create new article
                 $sql = "INSERT INTO articles (title, slug, content, excerpt, featured_image, status, publish_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $conn->prepare($sql);
-                
                 if ($stmt->execute([$title, $slug, $content, $excerpt, $featured_image, $status, $publish_date, $_SESSION['user_id']])) {
                     $success_message = 'Article created successfully!';
                     $action = 'list';
@@ -120,12 +126,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $stmt = $conn->prepare($sql);
                     $result = $stmt->execute([$title, $slug, $content, $excerpt, $status, $publish_date, $id]);
                 }
-                
                 if ($result) {
                     $success_message = 'Article updated successfully!';
                     $action = 'list';
                     logActivity($_SESSION['user_id'], 'Updated article', 'article', $id);
-                    createNotification($_SESSION['user_id'], 'Article \'' . $title . '\' has been updated.', 'articles.php?action=edit&id=' . $id);
+                    createNotification($_SESSION['user_id'], 'Article "' . $title . '" has been updated.', 'articles.php?action=edit&id=' . $id);
                 } else {
                     $error_message = 'Failed to update article.';
                 }
@@ -162,18 +167,15 @@ if ($action == 'list') {
     $status_filter = $_GET['status_filter'] ?? '';
     $sql = "SELECT a.*, u.username FROM articles a LEFT JOIN users u ON a.created_by = u.id WHERE a.deleted_at IS NULL";
     $params = [];
-
     if (!empty($search_query)) {
         $sql .= " AND (a.title LIKE ? OR a.content LIKE ?)";
         $params[] = '%' . $search_query . '%';
         $params[] = '%' . $search_query . '%';
     }
-
     if (!empty($status_filter)) {
         $sql .= " AND a.status = ?";
         $params[] = $status_filter;
     }
-
     $sql .= " ORDER BY a.created_at DESC";
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
@@ -184,12 +186,10 @@ if ($action == 'list') {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
     $bulk_action = $_POST['bulk_action'];
     $selected_articles = $_POST['selected_articles'] ?? [];
-
     if (!empty($selected_articles)) {
         $placeholders = implode(',', array_fill(0, count($selected_articles), '?'));
         $success_count = 0;
         $error_count = 0;
-
         if ($bulk_action == 'delete') {
             $stmt = $conn->prepare("UPDATE articles SET deleted_at = NOW() WHERE id IN ($placeholders)");
             if ($stmt->execute($selected_articles)) {
@@ -209,7 +209,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                 $error_count = count($selected_articles);
             }
         }
-
         if ($success_count > 0) {
             $success_message = $success_count . ' article(s) ' . str_replace(['publish', 'draft', 'archive', 'schedule'], ['published', 'drafted', 'archived', 'scheduled'], $bulk_action) . ' successfully!';
         }
@@ -219,7 +218,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
     }
     // Redirect to clear POST data and show updated list
     redirect(ADMIN_URL . '/articles.php?action=list');
-}
 }
 ?>
 
@@ -302,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                             </tr>
                         </thead>
                         <tbody>
-                        <?php if ($articles): ?>
+                        <?php if (!empty($articles) && is_array($articles)): ?>
                             <?php foreach ($articles as $article): ?>
                                 <tr>
                                     <td><input type="checkbox" name="selected_articles[]" value="<?php echo $article['id']; ?>" class="article-checkbox"></td>
@@ -382,7 +380,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                         
                         <div class="mb-3">
                             <label for="content" class="form-label">Content *</label>
-                            <textarea class="form-control tinymce" id="content" name="content" rows="20"><?php echo $article['content'] ?? ''; ?></textarea>
+                            <textarea class="tinymce" id="content" name="content" rows="20"><?php echo $article['content'] ?? ''; ?></textarea>
                             <div class="text-muted mt-2">
                                 Word Count: <span id="word-count">0</span> | Read Time: <span id="read-time">0 min</span>
                             </div>
@@ -432,7 +430,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                     <div class="card-header">
                         <h6 class="card-title mb-0">Preview</h6>
                     </div>
-                    <div class="card-body" id="preview-area">
+                    <div class="card-body" id="preview-panel">
                         <!-- Content will be loaded here -->
                     </div>
                 </div>

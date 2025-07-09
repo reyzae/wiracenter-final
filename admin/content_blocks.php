@@ -8,6 +8,11 @@ $conn = $db->connect();
 $action = $_GET['action'] ?? 'list';
 $id = $_GET['id'] ?? null;
 
+// Global variables for TinyMCE
+$pageContentType = 'content_block';
+$pageContentId = ($id !== null) ? json_encode($id) : 'null';
+
+$content_block_types = [];
 $success_message = '';
 $error_message = '';
 
@@ -147,14 +152,18 @@ if ($action == 'manage_types') {
 
 // Handle delete action
 if ($action == 'delete' && $id) {
-    $stmt = $conn->prepare("DELETE FROM content_blocks WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        $success_message = 'Content block deleted successfully!';
-        logActivity($_SESSION['user_id'], 'Deleted content block', 'content_block', $id);
-    } else {
-        $error_message = 'Failed to delete content block.';
+    try {
+        $stmt = $conn->prepare("DELETE FROM content_blocks WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            $success_message = 'Content block deleted successfully!';
+        } else {
+            $error_message = 'Failed to delete content block.';
+        }
+    } catch (PDOException $e) {
+        $error_message = 'Failed to delete content block: ' . $e->getMessage();
     }
-    $action = 'list';
+    header('Location: content_blocks.php?action=list&msg=' . urlencode($success_message ?: $error_message));
+    exit();
 }
 
 // Get content block for editing
@@ -165,37 +174,17 @@ if ($action == 'edit' && $id) {
     $content_block = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Get all content blocks for listing
+// Ambil semua content blocks untuk listing
 if ($action == 'list') {
     $search_query = $_GET['search'] ?? '';
-    $type_filter = $_GET['type_filter'] ?? '';
-    $status_filter = $_GET['status_filter'] ?? '';
-    $page_slug_filter = $_GET['page_slug_filter'] ?? '';
-
     $sql = "SELECT * FROM content_blocks WHERE 1=1";
     $params = [];
-
     if (!empty($search_query)) {
-        $sql .= " AND (name LIKE ? OR title LIKE ? OR content LIKE ?)";
+        $sql .= " AND (title LIKE ? OR content LIKE ?)";
         $params[] = '%' . $search_query . '%';
         $params[] = '%' . $search_query . '%';
-        $params[] = '%' . $search_query . '%';
     }
-
-    if (!empty($type_filter)) {
-        $sql .= " AND type = ?";
-        $params[] = $type_filter;
-    }
-    if (!empty($status_filter)) {
-        $sql .= " AND status = ?";
-        $params[] = $status_filter;
-    }
-    if (!empty($page_slug_filter)) {
-        $sql .= " AND page_slug = ?";
-        $params[] = $page_slug_filter;
-    }
-
-    $sql .= " ORDER BY page_slug ASC, display_order ASC";
+    $sql .= " ORDER BY created_at DESC";
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $content_blocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -215,6 +204,10 @@ if ($action == 'list') {
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>
+
+<?php if (isset($_GET['msg']) && $_GET['msg']) {
+    echo '<div class="alert alert-success alert-dismissible fade show">' . htmlspecialchars($_GET['msg']) . '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+} ?>
 
 <?php if ($action == 'list'): ?>
     <!-- Content Blocks List -->
@@ -346,9 +339,11 @@ if ($action == 'list') {
                     <select class="form-select" id="type" name="type" required>
                         <option value="">Select Type</option>
                         <?php
-                            foreach ($content_block_types as $type_option) {
-                                $selected = ((isset($content_block['type']) && $content_block['type'] == $type_option['type_name'])) ? 'selected' : '';
-                                echo '<option value="' . $type_option['type_name'] . '" ' . $selected . '>' . $type_option['display_name'] . '</option>';
+                            if (is_array($content_block_types)) {
+                                foreach ($content_block_types as $type_option) {
+                                    $selected = ((isset($content_block['type']) && $content_block['type'] == $type_option['type_name'])) ? 'selected' : '';
+                                    echo '<option value="' . $type_option['type_name'] . '" ' . $selected . '>' . $type_option['display_name'] . '</option>';
+                                }
                             }
                         ?>
                     </select>
@@ -387,6 +382,14 @@ if ($action == 'list') {
             </div>
         </div>
     </form>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="card-title mb-0">Preview</h6>
+        </div>
+        <div class="card-body" id="preview-panel">
+            <!-- Content will be loaded here -->
+        </div>
+    </div>
 <?php elseif ($action == 'manage_types'): ?>
     <!-- Manage Content Block Types -->
     <div class="d-flex justify-content-between align-items-center mb-4">

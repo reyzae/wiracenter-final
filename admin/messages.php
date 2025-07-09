@@ -20,12 +20,15 @@ $error_message = '';
 if (isset($_GET['action']) && $_GET['action'] == 'status' && isset($_GET['id']) && isset($_GET['new_status'])) {
     $id = $_GET['id'];
     $new_status = sanitize($_GET['new_status']);
-    
-    $stmt = $conn->prepare("UPDATE contact_messages SET status = ? WHERE id = ?");
-    if ($stmt->execute([$new_status, $id])) {
-        $success_message = 'Message status updated successfully!';
-    } else {
-        $error_message = 'Failed to update message status.';
+    try {
+        $stmt = $conn->prepare("UPDATE contact_messages SET status = ? WHERE id = ?");
+        if ($stmt->execute([$new_status, $id])) {
+            $success_message = 'Message status updated successfully!';
+        } else {
+            $error_message = 'Failed to update message status.';
+        }
+    } catch (PDOException $e) {
+        $error_message = 'Table contact_messages not found in database.';
     }
     $action = 'list';
 }
@@ -33,11 +36,15 @@ if (isset($_GET['action']) && $_GET['action'] == 'status' && isset($_GET['id']) 
 // Handle delete action
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
     $id = $_GET['id'];
-    $stmt = $conn->prepare("DELETE FROM contact_messages WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        $success_message = 'Message deleted successfully!';
-    } else {
-        $error_message = 'Failed to delete message.';
+    try {
+        $stmt = $conn->prepare("DELETE FROM contact_messages WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            $success_message = 'Message deleted successfully!';
+        } else {
+            $error_message = 'Failed to delete message.';
+        }
+    } catch (PDOException $e) {
+        $error_message = 'Table contact_messages not found in database.';
     }
     $action = 'list';
 }
@@ -45,23 +52,33 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id']))
 // Get message for viewing
 $message = null;
 if ($action == 'view' && $id) {
-    $stmt = $conn->prepare("SELECT * FROM contact_messages WHERE id = ?");
-    $stmt->execute([$id]);
-    $message = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Mark as read if it was unread
-    if ($message && $message['status'] == 'unread') {
-        $stmt = $conn->prepare("UPDATE contact_messages SET status = 'read' WHERE id = ?");
+    try {
+        $stmt = $conn->prepare("SELECT * FROM contact_messages WHERE id = ?");
         $stmt->execute([$id]);
-        $message['status'] = 'read'; // Update status in current view
+        $message = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Mark as read if it was unread
+        if ($message && $message['status'] == 'unread') {
+            $stmt = $conn->prepare("UPDATE contact_messages SET status = 'read' WHERE id = ?");
+            $stmt->execute([$id]);
+            $message['status'] = 'read'; // Update status in current view
+        }
+    } catch (PDOException $e) {
+        $message = null;
+        $error_message = 'Table contact_messages not found in database.';
     }
 }
 
 // Get all messages for listing
 if ($action == 'list') {
-    $stmt = $conn->prepare("SELECT * FROM contact_messages ORDER BY created_at DESC");
-    $stmt->execute();
-    $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $conn->prepare("SELECT * FROM contact_messages ORDER BY created_at DESC");
+        $stmt->execute();
+        $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $messages = [];
+        $error_message = 'Table contact_messages not found in database.';
+    }
 }
 ?>
 

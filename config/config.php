@@ -1,9 +1,9 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/../vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->load();
+// require_once __DIR__ . '/../vendor/autoload.php';
+// $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+// $dotenv->load();
 
 // Database configuration
 require_once 'database.php';
@@ -59,11 +59,41 @@ function sanitize($data) {
     return htmlspecialchars(trim($data));
 }
 
-function generateSlug($text) {
-    $text = strtolower($text);
-    $text = preg_replace('/[^a-z0-9\-]/', '-', $text);
-    $text = preg_replace('/-+/', '-', $text);
-    return trim($text, '-');
+function generateSlug($text, $table_name = null, $exclude_id = null) {
+    global $db; // Access the global Database object
+
+    $slug = strtolower($text);
+    $slug = preg_replace('/[^a-z0-9\-]/', '-', $slug);
+    $slug = preg_replace('/-+/', '-', $slug);
+    $slug = trim($slug, '-');
+
+    if ($table_name) {
+        $original_slug = $slug;
+        $counter = 1;
+        while (true) {
+            $sql = "SELECT COUNT(*) FROM " . $table_name . " WHERE slug = ?";
+            $params = [$slug];
+
+            if ($exclude_id) {
+                $sql .= " AND id != ?";
+                $params[] = $exclude_id;
+            }
+
+            $conn = $db->connect(); // Get a new connection
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
+            $count = $stmt->fetchColumn();
+
+            if ($count == 0) {
+                break; // Slug is unique
+            }
+
+            $slug = $original_slug . '-' . $counter;
+            $counter++;
+        }
+    }
+
+    return $slug;
 }
 
 function formatDate($date) {

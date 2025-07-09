@@ -2,186 +2,129 @@
 $page_title = 'Projects';
 include 'includes/header.php';
 
+$action = $_GET['action'] ?? 'list';
+$id = $_GET['id'] ?? null; // Inisialisasi $id di sini
+
+// Pastikan $projects selalu terdefinisi
+$projects = [];
+
+require_once __DIR__ . '/../vendor/autoload.php'; // Pindahkan ke sini
+
 // Global variables for TinyMCE
 $pageContentType = 'project';
-$pageContentId = json_encode($id);
+$pageContentId = ($id !== null) ? json_encode($id) : 'null'; // Pastikan $id terdefinisi
 
 $db = new Database();
 $conn = $db->connect();
-
-$action = $_GET['action'] ?? 'list';
-$id = $_GET['id'] ?? null;
 
 $success_message = '';
 $error_message = '';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $title = sanitize($_POST['title']);
-    $slug = generateSlug($_POST['slug'] ?: $title);
-    $description = sanitize($_POST['description']);
-    $content = $_POST['content'];
-    $project_url = sanitize($_POST['project_url']);
-    $github_url = sanitize($_POST['github_url']);
-    $technologies = json_encode(explode(',', sanitize($_POST['technologies'])));
-    $status = $_POST['status'];
-    $publish_date = $_POST['publish_date'] ?: null;
-    
-    if ($action == 'new' || $action == 'edit') {
-        // Handle featured image upload
-        $featured_image = '';
-        if (!empty($_FILES['featured_image']['name'])) {
-            $uploadDir = '../' . UPLOAD_PATH;
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
+    // Handle form submission here
+    if (
+        isset($_POST['bulk_action']) && 
+        !empty($_POST['bulk_action']) && 
+        isset($_POST['selected_projects']) && 
+        is_array($_POST['selected_projects']) && 
+        count($_POST['selected_projects']) > 0
+    )
+    {
+        $bulk_action = $_POST['bulk_action'];
+        $selected_projects = $_POST['selected_projects'];
+
+        // Example: handle bulk delete
+        if ($bulk_action === 'delete') {
+            foreach ($selected_projects as $project_id) {
+                // You should implement a proper delete function here
+                $stmt = $conn->prepare("DELETE FROM projects WHERE id = ?");
+                $stmt->execute([$project_id]);
             }
-            
-            $imageName = uniqid() . '_' . $_FILES['featured_image']['name'];
-            $imagePath = $uploadDir . $imageName;
-            
-            if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
-                $featured_image = $imageName;
-            }
+            $success_message = "Selected projects have been deleted.";
         }
-        
-        if ($action == 'new') {
-            // Create new project
-            $sql = "INSERT INTO projects (title, slug, description, content, featured_image, project_url, github_url, technologies, status, publish_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            
-            if ($stmt->execute([$title, $slug, $description, $content, $featured_image, $project_url, $github_url, $technologies, $status, $publish_date, $_SESSION['user_id']])) {
-                $success_message = 'Project created successfully!';
-                $action = 'list';
-                logActivity($_SESSION['user_id'], 'Created project', 'project', $conn->lastInsertId());
-                createNotification($_SESSION['user_id'], 'New project \'' . $title . '\' has been created.', 'projects.php?action=edit&id=' . $conn->lastInsertId());
-            } else {
-                $error_message = 'Failed to create project.';
-            }
-        } elseif ($action == 'edit' && $id) {
-            // Update existing project
-            if ($featured_image) {
-                $sql = "UPDATE projects SET title=?, slug=?, description=?, content=?, featured_image=?, project_url=?, github_url=?, technologies=?, status=?, publish_date=? WHERE id=?";
-                $stmt = $conn->prepare($sql);
-                $result = $stmt->execute([$title, $slug, $description, $content, $featured_image, $project_url, $github_url, $technologies, $status, $publish_date, $id]);
-            } else {
-                $sql = "UPDATE projects SET title=?, slug=?, description=?, content=?, project_url=?, github_url=?, technologies=?, status=?, publish_date=? WHERE id=?";
-                $stmt = $conn->prepare($sql);
-                $result = $stmt->execute([$title, $slug, $description, $content, $project_url, $github_url, $technologies, $status, $publish_date, $id]);
-            }
-            
-            if ($result) {
-                $success_message = 'Project updated successfully!';
-                $action = 'list';
-                logActivity($_SESSION['user_id'], 'Updated project', 'project', $id);
-            } else {
-                $error_message = 'Failed to update project.';
-            }
+        // You can add more bulk actions here (publish, draft, archive, schedule)
+        // ...
+    }
+
+    if (!empty($success_message)) {
+        echo '<div class="alert alert-success alert-dismissible fade show" role="alert">';
+        echo htmlspecialchars($success_message);
+        echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        echo '</div>';
+    }
+    if (!empty($error_message)) {
+        echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
+        echo htmlspecialchars($error_message);
+        echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        echo '</div>';
+    }
+    // Tutup blok PHP form submission
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $action == 'new') {
+    $title = sanitize($_POST['title'] ?? '');
+    $slug = generateSlug($_POST['slug'] ?: $title, 'projects');
+    $description = $_POST['description'] ?? '';
+    $content = $_POST['content'] ?? '';
+    $status = $_POST['status'] ?? 'draft';
+    $publish_date = $_POST['publish_date'] ?? null;
+    $errors = [];
+    if (empty($title)) $errors[] = 'Title is required.';
+    if (empty($content)) $errors[] = 'Content is required.';
+    if (!in_array($status, ['draft','published','scheduled','archived'])) $errors[] = 'Invalid status.';
+    if (empty($errors)) {
+        $stmt = $conn->prepare("INSERT INTO projects (title, slug, description, content, status, publish_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $result = $stmt->execute([$title, $slug, $description, $content, $status, $publish_date, $_SESSION['user_id']]);
+        if ($result) {
+            $success_message = 'Project created successfully!';
+            $action = 'list';
+        } else {
+            $error_message = 'Failed to create project.';
         }
+    } else {
+        $error_message = implode('<br>', $errors);
     }
 }
 
 // Handle delete action
 if ($action == 'delete' && $id) {
-    $stmt = $conn->prepare("UPDATE projects SET deleted_at = NOW() WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        $success_message = 'Project moved to trash successfully!';
-        logActivity($_SESSION['user_id'], 'Moved project to trash', 'project', $id);
-    } else {
-        $error_message = 'Failed to delete project.';
+    try {
+        $stmt = $conn->prepare("DELETE FROM projects WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            $success_message = 'Project deleted successfully!';
+        } else {
+            $error_message = 'Failed to delete project.';
+        }
+    } catch (PDOException $e) {
+        $error_message = 'Failed to delete project: ' . $e->getMessage();
     }
-    $action = 'list';
+    header('Location: projects.php?action=list&msg=' . urlencode($success_message ?: $error_message));
+    exit();
 }
 
-// Get project for editing
-$project = null;
-if ($action == 'edit' && $id) {
-    $stmt = $conn->prepare("SELECT * FROM projects WHERE id = ?");
-    $stmt->execute([$id]);
-    $project = $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-// Get all projects for listing
+// Ambil semua projects untuk listing
 if ($action == 'list') {
     $search_query = $_GET['search'] ?? '';
     $status_filter = $_GET['status_filter'] ?? '';
-    $sql = "SELECT p.*, u.username FROM projects p LEFT JOIN users u ON p.created_by = u.id WHERE p.deleted_at IS NULL";
+    $sql = "SELECT p.*, u.username FROM projects p LEFT JOIN users u ON p.created_by = u.id WHERE 1=1";
     $params = [];
-
     if (!empty($search_query)) {
-        $sql .= " AND (p.title LIKE ? OR p.description LIKE ? OR p.content LIKE ?)";
-        $params[] = '%' . $search_query . '%';
+        $sql .= " AND (p.title LIKE ? OR p.content LIKE ?)";
         $params[] = '%' . $search_query . '%';
         $params[] = '%' . $search_query . '%';
     }
-
     if (!empty($status_filter)) {
         $sql .= " AND p.status = ?";
         $params[] = $status_filter;
     }
-
     $sql .= " ORDER BY p.created_at DESC";
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-
-// Handle bulk actions
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
-    $bulk_action = $_POST['bulk_action'];
-    $selected_projects = $_POST['selected_projects'] ?? [];
-
-    if (!empty($selected_projects)) {
-        $placeholders = implode(',', array_fill(0, count($selected_projects), '?'));
-        $success_count = 0;
-        $error_count = 0;
-
-        if ($bulk_action == 'delete') {
-            $stmt = $conn->prepare("UPDATE projects SET deleted_at = NOW() WHERE id IN ($placeholders)");
-            if ($stmt->execute($selected_projects)) {
-                $success_count = $stmt->rowCount();
-                logActivity($_SESSION['user_id'], 'Bulk moved projects to trash', 'project', implode(',', $selected_projects));
-            } else {
-                $error_count = count($selected_projects);
-            }
-        } elseif (in_array($bulk_action, ['publish', 'draft', 'archive', 'schedule'])) {
-            $new_status = str_replace(['publish', 'archive', 'schedule'], ['published', 'archived', 'scheduled'], $bulk_action);
-            $stmt = $conn->prepare("UPDATE projects SET status = ? WHERE id IN ($placeholders)");
-            $bulk_params = array_merge([$new_status], $selected_projects);
-            if ($stmt->execute($bulk_params)) {
-                $success_count = $stmt->rowCount();
-                logActivity($_SESSION['user_id'], 'Bulk updated project status to ' . $new_status, 'project', implode(',', $selected_projects));
-            } else {
-                $error_count = count($selected_projects);
-            }
-        }
-
-        if ($success_count > 0) {
-            $success_message = $success_count . ' project(s) ' . str_replace(['publish', 'draft', 'archive', 'schedule'], ['published', 'drafted', 'archived', 'scheduled'], $bulk_action) . ' successfully!';
-        }
-        if ($error_count > 0) {
-            $error_message = $error_count . ' project(s) failed to ' . $bulk_action . '.';
-        }
-    }
-    // Redirect to clear POST data and show updated list
-    redirect(ADMIN_URL . '/projects.php?action=list');
-}
 ?>
-
-<?php if ($success_message): ?>
-    <div class="alert alert-success alert-dismissible fade show">
-        <?php echo $success_message; ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
-
-<?php if ($error_message): ?>
-    <div class="alert alert-danger alert-dismissible fade show">
-        <?php echo $error_message; ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
-
-<h1 class="h2 mb-4">Projects</h1>
+    <h1 class="h2 mb-4">Projects</h1>
 
 <?php if ($action == 'list'): ?>
     <!-- Projects List -->
@@ -241,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                             </tr>
                         </thead>
                         <tbody>
-                        <?php if ($projects): ?>
+                        <?php if (!empty($projects)): ?>
                             <?php foreach ($projects as $project): ?>
                                 <tr>
                                     <td><input type="checkbox" name="selected_projects[]" value="<?php echo $project['id']; ?>" class="project-checkbox"></td>
@@ -315,13 +258,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
                         
                         <div class="mb-3">
                             <label for="description" class="form-label">Short Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="3"><?php echo $project['description'] ?? ''; ?></textarea>
+                            <textarea class="tinymce" id="description" name="description" rows="3"><?php echo $project['description'] ?? ''; ?></textarea>
                         </div>
                         
                         <div class="mb-3">
                             <label for="content" class="form-label">Full Content *</label>
                             <textarea class="form-control tinymce" id="content" name="content" rows="15"><?php echo $project['content'] ?? ''; ?></textarea>
                         </div>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Preview</h6>
+                    </div>
+                    <div class="card-body" id="preview-panel">
+                        <!-- Content will be loaded here -->
                     </div>
                 </div>
             </div>

@@ -12,50 +12,64 @@ $error_message = '';
 
 $user_id = $_SESSION['user_id'];
 
+$user = null; // Inisialisasi default
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = sanitize($_POST['username']);
     $email = sanitize($_POST['email']);
     $password = $_POST['password'];
     $current_password = $_POST['current_password'];
-    
-    // Fetch current user data to verify current password
-    $stmt = $conn->prepare("SELECT password FROM users WHERE id = ?");
-    $stmt->execute([$user_id]);
-    $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$current_user || !password_verify($current_password, $current_user['password'])) {
-        $error_message = 'Incorrect current password.';
-    } elseif (empty($username) || empty($email)) {
-        $error_message = 'Username and email cannot be empty.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error_message = 'Invalid email format.';
-    } else {
-        $sql = "UPDATE users SET username=?, email=?";
-        $params = [$username, $email];
-        
-        if (!empty($password)) {
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $sql .= ", password=?";
-            $params[] = $hashed_password;
-        }
-        $sql .= " WHERE id=?";
-        $params[] = $user_id;
-        
-        $stmt = $conn->prepare($sql);
-        if ($stmt->execute($params)) {
-            $_SESSION['username'] = $username; // Update session username
-            $success_message = 'Profile updated successfully!';
+    try {
+        // Fetch current user data to verify current password
+        $stmt = $conn->prepare("SELECT password FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $current_user = null;
+        $error_message = 'Table users not found in database.';
+    }
+    if (!isset($error_message) || $error_message === '') {
+        if (!$current_user || !password_verify($current_password, $current_user['password'])) {
+            $error_message = 'Incorrect current password.';
+        } elseif (empty($username) || empty($email)) {
+            $error_message = 'Username and email cannot be empty.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error_message = 'Invalid email format.';
         } else {
-            $error_message = 'Failed to update profile. Username or email might already exist.';
+            $sql = "UPDATE users SET username=?, email=?";
+            $params = [$username, $email];
+            if (!empty($password)) {
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $sql .= ", password=?";
+                $params[] = $hashed_password;
+            }
+            $sql .= " WHERE id=?";
+            $params[] = $user_id;
+            try {
+                $stmt = $conn->prepare($sql);
+                if ($stmt->execute($params)) {
+                    $_SESSION['username'] = $username; // Update session username
+                    $success_message = 'Profile updated successfully!';
+                } else {
+                    $error_message = 'Failed to update profile. Username or email might already exist.';
+                }
+            } catch (PDOException $e) {
+                $error_message = 'Table users not found in database.';
+            }
         }
     }
 }
 
 // Get current user data
-$stmt = $conn->prepare("SELECT id, username, email, role FROM users WHERE id = ?");
-$stmt->execute([$user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+try {
+    $stmt = $conn->prepare("SELECT id, username, email, role FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $user = null;
+    $error_message = 'Table users not found in database.';
+}
 
 if (!$user) {
     // Should not happen if user is logged in

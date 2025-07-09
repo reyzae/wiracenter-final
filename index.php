@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 require_once 'config/config.php';
 
 // Check for maintenance mode
@@ -13,6 +15,11 @@ $site_name = getSetting('site_name', 'Wiracenter');
 $hero_title = getSetting('hero_title', 'Welcome to Wiracenter');
 $hero_subtitle = getSetting('hero_subtitle', 'Your Digital Solutions Partner');
 
+// Pastikan $site_name selalu terdefinisi
+if (!isset($site_name) || empty($site_name)) {
+    $site_name = 'Wiracenter';
+}
+
 // Get recent projects
 $db = new Database();
 $conn = $db->connect();
@@ -24,6 +31,11 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $conn->prepare("SELECT * FROM articles WHERE status = 'published' ORDER BY publish_date DESC LIMIT 3");
 $stmt->execute();
 $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get recent tools
+$stmt = $conn->prepare("SELECT * FROM tools WHERE status = 'published' ORDER BY publish_date DESC LIMIT 3");
+$stmt->execute();
+$tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -50,9 +62,18 @@ $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php
             $nav_db = new Database();
             $nav_conn = $nav_db->connect();
-            $nav_stmt = $nav_conn->prepare("SELECT * FROM navigation_items WHERE status = 'active' ORDER BY display_order ASC");
-            $nav_stmt->execute();
-            $nav_items = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+            $nav_items = [];
+            if ($nav_conn) {
+                try {
+                    $nav_stmt = $nav_conn->prepare("SELECT * FROM navigation_items WHERE status = 'active' ORDER BY display_order ASC");
+                    if ($nav_stmt->execute()) {
+                        $nav_items = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+                    }
+                } catch (PDOException $e) {
+                    // Tabel navigation_items tidak ada atau error query
+                    $nav_items = [];
+                }
+            }
 
             foreach ($nav_items as $item) {
                 $is_active = false;
@@ -104,6 +125,41 @@ $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </section>
 
+    <!-- Recent Articles Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="text-center mb-5">Recent Articles</h2>
+                </div>
+            </div>
+            <div class="row">
+                <?php if (!empty($articles)): ?>
+                    <?php foreach ($articles as $article): ?>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title"><?php echo $article['title']; ?></h5>
+                                    <p class="card-text"><?php echo $article['excerpt'] ?? substr(strip_tags($article['content']), 0, 100) . '...'; ?></p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <a href="article.php?slug=<?php echo $article['slug']; ?>" class="btn btn-outline-primary">Read More</a>
+                                        <small class="text-muted"><?php echo $article['publish_date'] ? formatDate($article['publish_date']) : '-'; ?></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12">
+                        <div class="text-center">
+                            <p class="text-muted">No articles available at the moment.</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
+
     <!-- Featured Projects Section -->
     <section class="py-5 bg-light">
         <div class="container">
@@ -125,7 +181,7 @@ $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <p class="card-text"><?php echo substr($project['description'], 0, 100) . '...'; ?></p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <a href="project.php?slug=<?php echo $project['slug']; ?>" class="btn btn-primary">View Project</a>
-                                        <small class="text-muted"><?php echo formatDate($project['publish_date']); ?></small>
+                                        <small class="text-muted"><?php echo $project['publish_date'] ? formatDate($project['publish_date']) : '-'; ?></small>
                                     </div>
                                 </div>
                             </div>
@@ -142,25 +198,28 @@ $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </section>
 
-    <!-- Recent Articles Section -->
-    <section class="py-5">
+    <!-- Recent My Tools Section -->
+    <section class="py-5 bg-light">
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <h2 class="text-center mb-5">Recent Articles</h2>
+                    <h2 class="text-center mb-5">Recent My Tools</h2>
                 </div>
             </div>
             <div class="row">
-                <?php if (!empty($articles)): ?>
-                    <?php foreach ($articles as $article): ?>
+                <?php if (!empty($tools)): ?>
+                    <?php foreach ($tools as $tool): ?>
                         <div class="col-md-4 mb-4">
-                            <div class="card h-100">
+                            <div class="card h-100 shadow-sm">
+                                <?php if ($tool['featured_image']): ?>
+                                    <img src="<?php echo UPLOAD_PATH . $tool['featured_image']; ?>" class="card-img-top" alt="<?php echo $tool['title']; ?>">
+                                <?php endif; ?>
                                 <div class="card-body">
-                                    <h5 class="card-title"><?php echo $article['title']; ?></h5>
-                                    <p class="card-text"><?php echo $article['excerpt'] ?? substr(strip_tags($article['content']), 0, 100) . '...'; ?></p>
+                                    <h5 class="card-title"><?php echo $tool['title']; ?></h5>
+                                    <p class="card-text"><?php echo $tool['excerpt'] ?? substr(strip_tags($tool['content']), 0, 100) . '...'; ?></p>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <a href="article.php?slug=<?php echo $article['slug']; ?>" class="btn btn-outline-primary">Read More</a>
-                                        <small class="text-muted"><?php echo formatDate($article['publish_date']); ?></small>
+                                        <a href="tool.php?slug=<?php echo $tool['slug']; ?>" class="btn btn-primary">View Tool</a>
+                                        <small class="text-muted"><?php echo $tool['publish_date'] ? formatDate($tool['publish_date']) : '-'; ?></small>
                                     </div>
                                 </div>
                             </div>
@@ -169,7 +228,7 @@ $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php else: ?>
                     <div class="col-12">
                         <div class="text-center">
-                            <p class="text-muted">No articles available at the moment.</p>
+                            <p class="text-muted">No tools available at the moment.</p>
                         </div>
                     </div>
                 <?php endif; ?>

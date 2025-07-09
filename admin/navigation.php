@@ -11,6 +11,9 @@ $id = $_GET['id'] ?? null;
 $success_message = '';
 $error_message = '';
 
+$navigation_items = [];
+$navigation_item = null;
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = sanitize($_POST['name']);
@@ -37,27 +40,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($errors)) {
         if ($action == 'new') {
             // Create new navigation item
-            $sql = "INSERT INTO navigation_items (name, url, display_order, status) VALUES (?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            
-            if ($stmt->execute([$name, $url, $display_order, $status])) {
-                $success_message = 'Navigation item created successfully!';
-                $action = 'list';
-                logActivity($_SESSION['user_id'], 'Created navigation item', 'navigation_item', $conn->lastInsertId());
-            } else {
-                $error_message = 'Failed to create navigation item.';
+            try {
+                $sql = "INSERT INTO navigation_items (name, url, display_order, status) VALUES (?, ?, ?, ?)";
+                $stmt = $conn->prepare($sql);
+                if ($stmt->execute([$name, $url, $display_order, $status])) {
+                    $success_message = 'Navigation item created successfully!';
+                    $action = 'list';
+                    logActivity($_SESSION['user_id'], 'Created navigation item', 'navigation_item', $conn->lastInsertId());
+                } else {
+                    $error_message = 'Failed to create navigation item.';
+                }
+            } catch (PDOException $e) {
+                $error_message = 'Table navigation_items not found in database.';
             }
         } elseif ($action == 'edit' && $id) {
             // Update existing navigation item
-            $sql = "UPDATE navigation_items SET name=?, url=?, display_order=?, status=? WHERE id=?";
-            $stmt = $conn->prepare($sql);
-            
-            if ($stmt->execute([$name, $url, $display_order, $status, $id])) {
-                $success_message = 'Navigation item updated successfully!';
-                $action = 'list';
-                logActivity($_SESSION['user_id'], 'Updated navigation item', 'navigation_item', $id);
-            } else {
-                $error_message = 'Failed to update navigation item.';
+            try {
+                $sql = "UPDATE navigation_items SET name=?, url=?, display_order=?, status=? WHERE id=?";
+                $stmt = $conn->prepare($sql);
+                if ($stmt->execute([$name, $url, $display_order, $status, $id])) {
+                    $success_message = 'Navigation item updated successfully!';
+                    $action = 'list';
+                    logActivity($_SESSION['user_id'], 'Updated navigation item', 'navigation_item', $id);
+                } else {
+                    $error_message = 'Failed to update navigation item.';
+                }
+            } catch (PDOException $e) {
+                $error_message = 'Table navigation_items not found in database.';
             }
         }
     } else {
@@ -67,22 +76,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Handle delete action
 if ($action == 'delete' && $id) {
-    $stmt = $conn->prepare("DELETE FROM navigation_items WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        $success_message = 'Navigation item deleted successfully!';
-        logActivity($_SESSION['user_id'], 'Deleted navigation item', 'navigation_item', $id);
-    } else {
-        $error_message = 'Failed to delete navigation item.';
+    try {
+        $stmt = $conn->prepare("DELETE FROM navigation_items WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            $success_message = 'Navigation item deleted successfully!';
+            logActivity($_SESSION['user_id'], 'Deleted navigation item', 'navigation_item', $id);
+        } else {
+            $error_message = 'Failed to delete navigation item.';
+        }
+    } catch (PDOException $e) {
+        $error_message = 'Table navigation_items not found in database.';
     }
     $action = 'list';
 }
 
 // Get navigation item for editing
-$navigation_item = null;
 if ($action == 'edit' && $id) {
-    $stmt = $conn->prepare("SELECT * FROM navigation_items WHERE id = ?");
-    $stmt->execute([$id]);
-    $navigation_item = $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $conn->prepare("SELECT * FROM navigation_items WHERE id = ?");
+        $stmt->execute([$id]);
+        $navigation_item = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $navigation_item = null;
+        $error_message = 'Table navigation_items not found in database.';
+    }
 }
 
 // Get all navigation items for listing
@@ -104,9 +121,14 @@ if ($action == 'list') {
     }
 
     $sql .= " ORDER BY display_order ASC";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute($params);
-    $navigation_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $navigation_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $navigation_items = [];
+        $error_message = 'Table navigation_items not found in database.';
+    }
 }
 ?>
 

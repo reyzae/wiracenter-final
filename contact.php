@@ -14,9 +14,14 @@ $error_message = '';
 
 // Get content for the contact page from the database
 $page_content = null;
-$stmt = $conn->prepare("SELECT * FROM pages WHERE slug = 'contact' AND status = 'published'");
-$stmt->execute();
-$page_content = $stmt->fetch(PDO::FETCH_ASSOC);
+try {
+    $stmt = $conn->prepare("SELECT * FROM pages WHERE slug = 'contact' AND status = 'published'");
+    $stmt->execute();
+    $page_content = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $error_message = 'Table pages not found in database.';
+    $page_content = null;
+}
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -32,20 +37,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error_message = 'Please enter a valid email address.';
     } else {
         // Save to database
-        $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)");
-        
-        if ($stmt->execute([$name, $email, $subject, $message])) {
-            $success_message = 'Thank you for your message! I will get back to you soon.';
-            
-            // Send email notification (optional)
-            $to = $contact_email;
-            $email_subject = "New Contact Form Message: $subject";
-            $email_body = "Name: $name\nEmail: $email\nSubject: $subject\n\nMessage:\n$message";
-            $headers = "From: $email\r\nReply-To: $email\r\n";
-            
-            @mail($to, $email_subject, $email_body, $headers);
-        } else {
-            $error_message = 'Sorry, there was an error sending your message. Please try again.';
+        try {
+            $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)");
+            if ($stmt->execute([$name, $email, $subject, $message])) {
+                $success_message = 'Thank you for your message! I will get back to you soon.';
+                // Send email notification (optional)
+                $to = $contact_email;
+                $email_subject = "New Contact Form Message: $subject";
+                $email_body = "Name: $name\nEmail: $email\nSubject: $subject\n\nMessage:\n$message";
+                $headers = "From: $email\r\nReply-To: $email\r\n";
+                @mail($to, $email_subject, $email_body, $headers);
+            } else {
+                $error_message = 'Sorry, there was an error sending your message. Please try again.';
+            }
+        } catch (PDOException $e) {
+            $error_message = 'Table contact_messages not found in database.';
         }
     }
 }
@@ -74,9 +80,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <?php
             $nav_db = new Database();
             $nav_conn = $nav_db->connect();
-            $nav_stmt = $nav_conn->prepare("SELECT * FROM navigation_items WHERE status = 'active' ORDER BY display_order ASC");
-            $nav_stmt->execute();
-            $nav_items = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+            $nav_items = [];
+            if ($nav_conn) {
+                try {
+                    $nav_stmt = $nav_conn->prepare("SELECT * FROM navigation_items WHERE status = 'active' ORDER BY display_order ASC");
+                    if ($nav_stmt->execute()) {
+                        $nav_items = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+                    }
+                } catch (PDOException $e) {
+                    $nav_items = [];
+                }
+            }
 
             foreach ($nav_items as $item) {
                 $is_active = false;

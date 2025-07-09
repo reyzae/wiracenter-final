@@ -64,43 +64,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Handle delete action
 if ($action == 'delete' && $id) {
-    $stmt = $conn->prepare("DELETE FROM faqs WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        $success_message = 'FAQ deleted successfully!';
-        logActivity($_SESSION['user_id'], 'Deleted FAQ', 'faq', $id);
-    } else {
-        $error_message = 'Failed to delete FAQ.';
+    try {
+        $stmt = $conn->prepare("DELETE FROM faqs WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            $success_message = 'FAQ deleted successfully!';
+        } else {
+            $error_message = 'Failed to delete FAQ.';
+        }
+    } catch (PDOException $e) {
+        $error_message = 'Failed to delete FAQ: ' . $e->getMessage();
     }
-    $action = 'list';
+    header('Location: faqs.php?action=list&msg=' . urlencode($success_message ?: $error_message));
+    exit();
 }
 
 // Get FAQ for editing
 $faq = null;
 if ($action == 'edit' && $id) {
-    $stmt = $conn->prepare("SELECT * FROM faqs WHERE id = ?");
-    $stmt->execute([$id]);
-    $faq = $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $conn->prepare("SELECT * FROM faqs WHERE id = ?");
+        $stmt->execute([$id]);
+        $faq = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $error_message = 'FAQ table not found in database.';
+        $faq = null;
+    }
 }
 
-// Get all FAQs for listing
+// Ambil semua faqs untuk listing
 if ($action == 'list') {
     $search_query = $_GET['search'] ?? '';
-    $status_filter = $_GET['status_filter'] ?? '';
     $sql = "SELECT * FROM faqs WHERE 1=1";
     $params = [];
-
     if (!empty($search_query)) {
         $sql .= " AND (question LIKE ? OR answer LIKE ?)";
         $params[] = '%' . $search_query . '%';
         $params[] = '%' . $search_query . '%';
     }
-
-    if (!empty($status_filter)) {
-        $sql .= " AND status = ?";
-        $params[] = $status_filter;
-    }
-
-    $sql .= " ORDER BY display_order ASC";
+    $sql .= " ORDER BY created_at DESC";
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $faqs = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -120,6 +121,10 @@ if ($action == 'list') {
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>
+
+<?php if (isset($_GET['msg']) && $_GET['msg']) {
+    echo '<div class="alert alert-success alert-dismissible fade show">' . htmlspecialchars($_GET['msg']) . '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+} ?>
 
 <?php if ($action == 'list'): ?>
     <!-- FAQs List -->
@@ -207,7 +212,7 @@ if ($action == 'list') {
                 
                 <div class="mb-3">
                     <label for="answer" class="form-label">Answer *</label>
-                    <textarea class="form-control tinymce" id="answer" name="answer" rows="10"><?php echo $faq['answer'] ?? ''; ?></textarea>
+                    <textarea class="tinymce" id="answer" name="answer" rows="10"><?php echo $faq['answer'] ?? ''; ?></textarea>
                 </div>
                 
                 <div class="mb-3">
@@ -227,6 +232,14 @@ if ($action == 'list') {
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="fas fa-save me-2"></i><?php echo $action == 'new' ? 'Add FAQ' : 'Update FAQ'; ?>
                 </button>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Preview</h6>
+            </div>
+            <div class="card-body" id="preview-panel">
+                <!-- Content will be loaded here -->
             </div>
         </div>
     </form>
