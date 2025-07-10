@@ -36,22 +36,19 @@ $page_description = $tool['description'];
 
 include 'includes/header.php';
 ?>
-
+<div class="main-content" style="margin-left:0;">
 <section class="py-5">
     <div class="container">
         <div class="row">
             <div class="col-lg-8 mx-auto">
                 <h1 class="display-5 mb-3"><?php echo htmlspecialchars($tool['title']); ?></h1>
                 <p class="text-muted mb-4">Published on <?php echo formatDate($tool['publish_date']); ?></p>
-                
                 <?php if (!empty($tool['featured_image'])) : ?>
                     <img src="<?php echo UPLOAD_PATH . htmlspecialchars($tool['featured_image']); ?>" class="img-fluid rounded mb-4" alt="<?php echo htmlspecialchars($tool['title']); ?>">
                 <?php endif; ?>
-
                 <div class="tool-content">
-                    <?php echo $tool['content']; // Assuming content is saved as HTML from a rich text editor ?>
+                    <?php echo $tool['content']; ?>
                 </div>
-
                 <?php if (!empty($tool['tool_url'])) : ?>
                 <div class="mt-5">
                     <a href="<?php echo htmlspecialchars($tool['tool_url']); ?>" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Visit Tool</a>
@@ -61,5 +58,5 @@ include 'includes/header.php';
         </div>
     </div>
 </section>
-
+</div>
 <?php include 'includes/footer.php'; ?>

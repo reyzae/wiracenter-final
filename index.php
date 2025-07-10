@@ -53,69 +53,10 @@ $tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <!-- Sidebar Navigation -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <a href="index.php" class="sidebar-brand"><?php echo $site_name; ?></a>
-        </div>
-        <ul class="sidebar-nav">
-            <?php
-            $nav_db = new Database();
-            $nav_conn = $nav_db->connect();
-            $nav_items = [];
-            if ($nav_conn) {
-                try {
-                    $nav_stmt = $nav_conn->prepare("SELECT * FROM navigation_items WHERE status = 'active' ORDER BY display_order ASC");
-                    if ($nav_stmt->execute()) {
-                        $nav_items = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
-                    }
-                } catch (PDOException $e) {
-                    // Tabel navigation_items tidak ada atau error query
-                    $nav_items = [];
-                }
-            }
-
-            foreach ($nav_items as $item) {
-                $is_active = false;
-                // Determine active state based on current page/slug
-                if ($item['url'] == 'index.php' && basename($_SERVER['PHP_SELF']) == 'index.php') {
-                    $is_active = true;
-                } elseif (strpos($item['url'], 'page.php?slug=') !== false) {
-                    $slug_from_url = explode('slug=', $item['url'])[1];
-                    if (basename($_SERVER['PHP_SELF']) == 'page.php' && ($_GET['slug'] ?? '') == $slug_from_url) {
-                        $is_active = true;
-                    }
-                } elseif ($item['url'] == basename($_SERVER['PHP_SELF'])) {
-                    $is_active = true;
-                }
-            ?>
-                <li class="sidebar-nav-item">
-                    <a href="<?php echo $item['url']; ?>" class="sidebar-nav-link <?php echo $is_active ? 'active' : ''; ?>">
-                        <i class="fas fa-<?php 
-                            if ($item['name'] == 'Home') echo 'home';
-                            else if ($item['name'] == 'About') echo 'user';
-                            else if ($item['name'] == 'My Spaces') echo 'rocket';
-                            else if ($item['name'] == 'Contact') echo 'envelope';
-                            else echo 'circle'; // Default icon
-                        ?>"></i>
-                        <span><?php echo $item['name']; ?></span>
-                    </a>
-                </li>
-            <?php }
-            ?>
-        </ul>
-        <div class="sidebar-footer">
-            © <?php echo date('Y'); ?> <?php echo getSetting('site_name', 'Wiracenter'); ?>. All rights reserved.
-        </div>
-    </div>
-
-    <!-- Mobile-only Navbar Toggle -->
-    <button class="sidebar-toggle" id="sidebarToggle">
-        <i class="fas fa-bars"></i>
-    </button>
+    <?php include 'includes/navbar.php'; ?>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content" style="margin-left:0;">
         <!-- Hero Section -->
         <section class="hero-section text-center">
             <div class="container">
@@ -238,8 +179,10 @@ $tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     
     </div>
-
+    <?php include 'includes/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
     <script src="assets/js/script.js"></script>
 </body>
 </html>

@@ -432,3 +432,12 @@ Stack trace:
 [09-Jul-2025 23:04:51 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:80) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 103
 [09-Jul-2025 23:05:36 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:80) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 103
 [09-Jul-2025 23:11:10 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:80) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 102
+[10-Jul-2025 06:11:25 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[10-Jul-2025 06:35:39 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[10-Jul-2025 13:56:50 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[10-Jul-2025 14:05:38 Asia/Jakarta] PHP Error: Undefined variable $errors in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 77
+[10-Jul-2025 14:05:38 Asia/Jakarta] PHP Exception: implode(): If argument #1 ($separator) is of type string, argument #2 ($array) must be of type array, null given in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 77
+[10-Jul-2025 16:48:07 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'deleted_at' in 'where clause' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 74
+[10-Jul-2025 16:48:11 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'deleted_at' in 'where clause' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 74
+[10-Jul-2025 16:59:25 Asia/Jakarta] PHP Error: Undefined variable $tab in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 39
+[10-Jul-2025 16:59:25 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:80) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 39

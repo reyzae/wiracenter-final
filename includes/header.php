@@ -15,9 +15,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <?php include 'includes/sidebar.php'; ?>
-    <!-- Mobile-only Navbar Toggle -->
-    <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+    <?php include 'includes/navbar.php'; ?>
 
     <!-- Main Content -->
     <div class="main-content">

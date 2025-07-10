@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $db = new Database();
         $conn = $db->connect();
         try {
-            $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ? OR email = ?");
+            $stmt = $conn->prepare("SELECT id, username, password, role, status, temp_password, temp_password_expired_at FROM users WHERE username = ? OR email = ?");
             $stmt->execute([$username, $username]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -27,16 +27,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error_message = 'Table users not found in database.';
         }
         if (!isset($error_message) || $error_message === '') {
-            if ($user && password_verify($password, $user['password'])) {
+            if (!$user) {
+                $error_message = 'Your account has been deleted. Please contact the administrator if you believe this is a mistake.';
+            } elseif (isset($user['status']) && $user['status'] === 'suspended') {
+                $error_message = 'Your account has been suspended. Please contact the administrator for more information.';
+            } elseif ($user && isset($user['temp_password']) && $user['temp_password'] && password_verify($password, $user['password'])) {
+                // Cek expired
+                if (isset($user['temp_password_expired_at']) && strtotime($user['temp_password_expired_at']) < time()) {
+                    $error_message = 'Your temporary password has expired. Please contact the administrator to get a new password.';
+                } else {
+                    // Force change password
+                    $_SESSION['force_change_password'] = true;
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['user_role'] = $user['role'];
+                    session_regenerate_id(true);
+                    header('Location: force_change_password.php');
+                    exit();
+                }
+            } elseif ($user && password_verify($password, $user['password'])) {
                 error_log('admin/login.php: Login successful for user: ' . $user['username']);
                 // Set session variables
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['user_role'] = $user['role'];
                 session_regenerate_id(true);
-                
                 logActivity($user['id'], 'User logged in');
-                
                 // Redirect to dashboard
                 redirect(ADMIN_URL . '/dashboard.php');
             } else {

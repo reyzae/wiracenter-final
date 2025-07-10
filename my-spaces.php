@@ -39,44 +39,8 @@ try {
     $error_message = 'Table tools not found in database.';
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Spaces - <?php echo $site_name; ?></title>
-    <meta name="description" content="Explore my projects, articles, and tools">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="index.php"><?php echo $site_name; ?></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="about.php">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="my-spaces.php">My Spaces</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="contact.php">Contact</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
+<?php include 'includes/header.php'; ?>
+<div class="main-content" style="margin-left:0;">
     <!-- Page Header -->
     <section class="py-5 bg-light">
         <div class="container">
@@ -246,29 +210,5 @@ try {
             </div>
         </div>
     </section>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-4">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5><?php echo $site_name; ?></h5>
-                    <p><?php echo getSetting('site_description', 'Personal Portfolio Website'); ?></p>
-                </div>
-                <div class="col-md-6">
-                    <h5>Contact Info</h5>
-                    <p><i class="fas fa-envelope"></i> <?php echo getSetting('contact_email', 'contact@wiracenter.com'); ?></p>
-                    <p><i class="fas fa-phone"></i> <?php echo getSetting('contact_phone', '+1234567890'); ?></p>
-                </div>
-            </div>
-            <hr>
-            <div class="text-center">
-                <p>&copy; <?php echo date('Y'); ?> <?php echo $site_name; ?>. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/script.js"></script>
-</body>
-</html>
+</div>
+<?php include 'includes/footer.php'; ?>

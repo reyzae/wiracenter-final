@@ -28,22 +28,19 @@ $page_description = $project['description'];
 
 include 'includes/header.php';
 ?>
-
+<div class="main-content" style="margin-left:0;">
 <section class="py-5">
     <div class="container">
         <div class="row">
             <div class="col-lg-8 mx-auto">
                 <h1 class="display-5 mb-3"><?php echo htmlspecialchars($project['title']); ?></h1>
                 <p class="text-muted mb-4">Published on <?php echo formatDate($project['publish_date']); ?></p>
-                
                 <?php if (!empty($project['featured_image'])) : ?>
                     <img src="<?php echo UPLOAD_PATH . htmlspecialchars($project['featured_image']); ?>" class="img-fluid rounded mb-4" alt="<?php echo htmlspecialchars($project['title']); ?>">
                 <?php endif; ?>
-
                 <div class="project-content">
-                    <?php echo $project['content']; // Assuming content is saved as HTML from a rich text editor ?>
+                    <?php echo $project['content']; ?>
                 </div>
-
                 <?php if (!empty($project['project_url'])) : ?>
                 <div class="mt-5">
                     <a href="<?php echo htmlspecialchars($project['project_url']); ?>" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Visit Project</a>
@@ -53,5 +50,5 @@ include 'includes/header.php';
         </div>
     </div>
 </section>
-
+</div>
 <?php include 'includes/footer.php'; ?>

@@ -227,3 +227,52 @@ See `change_log.md` for detailed update history and troubleshooting log.
    - Lihat `change_log.md` untuk log detail troubleshooting dan patch.
 
 ---
+
+# Wiracenter User Management Features
+
+## 1. Soft Delete & Restore User
+- **Delete user**: User tidak dihapus permanen, hanya kolom `deleted_at` yang diisi. User tidak bisa login dan tidak muncul di list utama.
+- **Restore user**: Di tab "Trashed Users", admin bisa mengembalikan user (set `deleted_at` ke NULL).
+
+## 2. Reset Password (Admin Panel)
+- Admin bisa reset password user via tombol di tabel user.
+- Password otomatis digenerate (format `#user-xxxx`), readonly, background abu-abu, ada toggle show/hide dan tombol copy.
+- Admin bisa generate ulang password random di modal.
+- Setelah reset, password user diupdate (hash), dan temporary password serta expired_at disimpan (berlaku 1 jam).
+
+## 3. Temporary Password Flow
+- Password temporary berlaku 1 jam (`temp_password`, `temp_password_expired_at`).
+- User login dengan password ini **wajib ganti password** sebelum akses dashboard.
+- Jika expired, login ditolak dan muncul pesan: "Your temporary password has expired. Please contact the administrator to get a new password."
+- Setelah password diganti, kolom `temp_password` dan `temp_password_expired_at` dihapus.
+
+## 4. Admin Panel: Lihat/Generate Ulang Temporary Password
+- Admin bisa melihat temporary password (jika masih berlaku) di tabel user.
+- Jika expired, admin bisa generate ulang password baru (langsung bisa di-copy, expired 1 jam).
+
+## 5. Filter, Search, Pagination
+- Tersedia filter role/status, search user (username/email), dan pagination di tabel user (tab Active & Trashed).
+
+## 6. Audit Log
+- Semua aksi penting (edit, suspend, delete, restore, reset password, force change) dicatat di log aktivitas.
+
+## 7. Notifikasi Login
+- Pesan khusus untuk user suspended, deleted, expired, dan wajib ganti password:
+  - Suspended: "Your account has been suspended. Please contact the administrator for more information."
+  - Deleted: "Your account has been deleted. Please contact the administrator if you believe this is a mistake."
+  - Temporary password expired: "Your temporary password has expired. Please contact the administrator to get a new password."
+  - Force change: "You must change your password before accessing the dashboard."
+
+## 8. Flow Admin & User
+### Admin:
+1. Bisa create user, reset password, suspend, restore, soft delete, lihat/generate temp password.
+2. Semua aksi penting tercatat di audit log.
+
+### User:
+1. Jika login dengan temp password, wajib ganti password.
+2. Jika password expired, hubungi admin untuk dapat password baru.
+3. Jika suspended/deleted, tidak bisa login dan dapat notifikasi.
+
+---
+
+**Seluruh fitur di atas sudah terintegrasi dan siap digunakan.**

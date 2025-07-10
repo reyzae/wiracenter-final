@@ -28,25 +28,38 @@
             }
         }
 
+        // Mapping icon default berdasarkan nama menu
+        $default_icons = [
+            'Home' => 'home',
+            'About' => 'user',
+            'My Spaces' => 'rocket',
+            'Contact' => 'envelope',
+        ];
         foreach ($nav_items as $item) {
             $is_active = false;
             $current_page = basename($_SERVER['PHP_SELF']);
             $slug = $_GET['slug'] ?? '';
-
-            if ($item['url'] == $current_page && $slug == '') {
-                $is_active = true;
-            } elseif (strpos($item['url'], 'page.php?slug=') !== false) {
-                $slug_from_url = explode('slug=', $item['url'])[1];
-                if ($current_page == 'page.php' && $slug == $slug_from_url) {
+            $reading_pages = ['article.php', 'project.php', 'tool.php', 'page.php'];
+            if (in_array($current_page, $reading_pages)) {
+                $is_active = false;
+            } else {
+                if ($item['url'] == $current_page && $slug == '') {
+                    $is_active = true;
+                } elseif (strpos($item['url'], 'page.php?slug=') !== false) {
+                    $slug_from_url = explode('slug=', $item['url'])[1];
+                    if ($current_page == 'page.php' && $slug == $slug_from_url) {
+                        $is_active = true;
+                    }
+                } elseif ($item['url'] == basename($_SERVER['PHP_SELF'])) {
                     $is_active = true;
                 }
-            } elseif ($item['url'] == basename($_SERVER['PHP_SELF'])) {
-                $is_active = true;
             }
+            // Gunakan icon dari kolom, jika kosong pakai mapping default
+            $icon = isset($item['icon']) && $item['icon'] ? $item['icon'] : ($default_icons[$item['name']] ?? 'circle');
         ?>
             <li class="sidebar-nav-item">
                 <a href="<?php echo $item['url']; ?>" class="sidebar-nav-link <?php echo $is_active ? 'active' : ''; ?>">
-                    <i class="fas fa-<?php echo $item['icon'] ?? 'circle'; ?>"></i>
+                    <i class="fas fa-<?php echo $icon; ?>"></i>
                     <span><?php echo $item['name']; ?></span>
                 </a>
             </li>
