@@ -7,12 +7,19 @@ if (empty($slug)) {
     exit();
 }
 
-$db = new Database();
-$conn = $db->connect();
-
-$stmt = $conn->prepare("SELECT * FROM articles WHERE slug = ? AND status = 'published'");
-$stmt->execute([$slug]);
-$article = $stmt->fetch(PDO::FETCH_ASSOC);
+$article = null;
+try {
+    $db = new Database();
+    $conn = $db->connect();
+    
+    if ($conn) {
+        $stmt = $conn->prepare("SELECT * FROM articles WHERE slug = ? AND status = 'published' AND deleted_at IS NULL");
+        $stmt->execute([$slug]);
+        $article = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+} catch (PDOException $e) {
+    error_log("Database connection failed in article.php: " . $e->getMessage());
+}
 
 if (!$article) {
     header("HTTP/1.0 404 Not Found");
@@ -37,7 +44,7 @@ include 'includes/header.php';
                 <p class="text-muted mb-4">Published on <?php echo formatDate($article['publish_date']); ?></p>
                 
                 <?php if (!empty($article['featured_image'])) : ?>
-                    <img src="<?php echo UPLOAD_PATH . htmlspecialchars($article['featured_image']); ?>" class="img-fluid rounded mb-4" alt="<?php echo htmlspecialchars($article['title']); ?>">
+                    <img src="<?php echo htmlspecialchars(UPLOAD_PATH . $article['featured_image']); ?>" class="img-fluid rounded mb-4" alt="<?php echo htmlspecialchars($article['title']); ?>">
                 <?php endif; ?>
 
                 <div class="article-content">

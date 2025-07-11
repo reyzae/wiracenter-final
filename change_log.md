@@ -149,3 +149,323 @@ Setiap entri mencakup timestamp, deskripsi perubahan, file yang terpengaruh, dan
 **Alat Digunakan:** `replace`, `write_file`, `debug_console`
 
 ---
+## 2025-07-10
+- **BUGFIX:** Mengatasi masalah halaman blank setelah aksi suspend/unsuspend/delete pada halaman admin/users.php.
+- **Penyebab:**
+  - Ada output (HTML/spasi) dari file lain (misal: includes/header.php) sebelum fungsi header('Location: ...') dipanggil, sehingga redirect gagal dan halaman menjadi blank.
+  - PHP tidak bisa melakukan redirect jika sudah ada output yang terkirim ke browser.
+- **Solusi:**
+  - Menambahkan output buffering (`ob_start()` di baris 1 dan `ob_end_clean()` sebelum setiap `exit();`) pada file admin/users.php agar semua output dibersihkan sebelum redirect.
+  - Sekarang, setelah aksi konfirmasi, user akan selalu kembali ke halaman users.php?tab=active dan status user langsung berubah tanpa halaman blank.
+
+---
+## [Perbaikan] 10 Juli 2025
+- Menambahkan kolom `excerpt` pada tabel `projects` dan `tools` di database melalui phpMyAdmin untuk mengatasi error SQLSTATE[42S22] (Unknown column 'excerpt' in 'field list') yang menyebabkan halaman admin/projects.php dan admin/tools.php blank.
+
+---
+# Change Log - WiraCenter
+
+## [2024-12-XX] - Fixed IP 0.0.0.0 Issues & Improved .env Parsing
+
+### 🔧 Critical Database Connection Fixes
+- **config/database.php**: 
+  - ✅ Fixed IP 0.0.0.0 connection issues (not valid for database connections)
+  - ✅ Changed default host from '0.0.0.0' to 'localhost'
+  - ✅ Improved .env file parsing with better error handling
+  - ✅ Enhanced comment and whitespace handling in .env parsing
+  - ✅ Added validation for empty keys in environment variables
+  - ✅ Improved connection fallback methods (localhost, 127.0.0.1)
+  - ✅ Better error logging for troubleshooting
+
+### 🆕 Updated Setup Scripts
+- **create_env.php**: 
+  - ✅ Updated template to use 'localhost' instead of '0.0.0.0'
+  - ✅ Improved configuration for standard XAMPP setup
+  - ✅ Enhanced troubleshooting instructions
+  - ✅ Better error handling and user feedback
+
+- **test_connection.php**: 
+  - ✅ Fixed .env parsing to handle comments and whitespace properly
+  - ✅ Updated default host configuration
+  - ✅ Improved error messages for XAMPP troubleshooting
+  - ✅ Enhanced connection testing methods
+
+### 📚 Updated Documentation
+- **ENVIRONMENT_SETUP.md**: 
+  - ✅ Removed references to problematic IP 0.0.0.0 configuration
+  - ✅ Updated to use standard localhost configuration
+  - ✅ Simplified XAMPP setup instructions
+  - ✅ Enhanced troubleshooting section
+  - ✅ Added v1.2 update log entry
+
+### 🐛 Bug Fixes
+- **IP 0.0.0.0 Issue**: 
+  - ❌ Fixed: "The requested address is not valid in its context" error
+  - ✅ Solution: Use 'localhost' as default host for database connections
+  - ✅ Added fallback to 127.0.0.1 if localhost fails
+
+- **.env Parsing Issue**: 
+  - ❌ Fixed: "Failed to parse dotenv file. Encountered unexpected whitespace" error
+  - ✅ Solution: Improved parsing logic with proper comment and whitespace handling
+  - ✅ Added validation for empty keys and malformed lines
+
+### 🔍 Connection Method Improvements
+- **Primary Method**: Direct connection with configured host
+- **Fallback 1**: localhost if current host is not localhost
+- **Fallback 2**: 127.0.0.1 for alternative local connection
+- **Fallback 3**: Server-only connection (without database) for troubleshooting
+
+### 🛠️ XAMPP Integration
+- **Standard Configuration**: Use localhost for database connections
+- **Service Detection**: Automatic detection of MySQL and Apache services
+- **Port Testing**: Verification of common XAMPP ports (80, 443, 3306, 8080, 8000)
+- **Error Handling**: Better error messages for common XAMPP issues
+
+### 🚀 Quick Setup Process (Updated)
+1. Run `create_env.php` to generate .env file with localhost configuration
+2. Run `test_connection.php` to verify database connectivity
+3. Run `setup_database.php` to create database schema
+4. Access admin panel at `http://localhost:8000/admin`
+
+### 🔒 Security & Performance
+- **Connection Reliability**: Multiple fallback methods for better reliability
+- **Error Logging**: Enhanced logging for debugging and troubleshooting
+- **Configuration Validation**: Better validation of environment variables
+- **Performance**: Optimized connection attempts to reduce timeout issues
+
+---
+
+## [2024-12-XX] - IP 0.0.0.0 Support & Database Connection Improvements
+
+### 🔧 Enhanced Database Connection
+- **config/database.php**: 
+  - ✅ Added support for IP 0.0.0.0 configuration
+  - ✅ Implemented multiple connection fallback methods (localhost, 127.0.0.1, 0.0.0.0)
+  - ✅ Added automatic database creation if not exists
+  - ✅ Improved environment variable loading with quote handling
+  - ✅ Enhanced error logging for XAMPP troubleshooting
+  - ✅ Added connection testing with multiple methods
+
+### 🆕 New Setup Scripts
+- **create_env.php**: 
+  - ✅ Interactive web interface for .env file creation
+  - ✅ Automatic configuration for XAMPP with IP 0.0.0.0
+  - ✅ Database connection testing functionality
+  - ✅ Step-by-step setup guidance
+  - ✅ Troubleshooting tips and XAMPP configuration help
+
+- **test_connection.php**: 
+  - ✅ Comprehensive database connection testing
+  - ✅ Multiple connection method testing
+  - ✅ XAMPP service status checking
+  - ✅ Port availability verification
+  - ✅ Detailed error reporting and troubleshooting
+
+### 📚 Updated Documentation
+- **ENVIRONMENT_SETUP.md**: 
+  - ✅ Added IP 0.0.0.0 configuration guide
+  - ✅ Enhanced XAMPP setup instructions
+  - ✅ Improved troubleshooting section
+  - ✅ Added security considerations
+  - ✅ Updated file structure documentation
+
+### 🔍 Configuration Improvements
+- **Default Host**: Changed from 'localhost' to '0.0.0.0' for better XAMPP compatibility
+- **Connection Methods**: Added fallback to localhost and 127.0.0.1 if 0.0.0.0 fails
+- **Error Handling**: Better error messages for common XAMPP issues
+- **Environment Loading**: Improved .env file parsing with quote handling
+
+### 🛠️ XAMPP Integration
+- **Bind Address**: Support for MySQL bind-address = 0.0.0.0
+- **Port Testing**: Automatic detection of MySQL and Apache ports
+- **Service Status**: Real-time checking of XAMPP services
+- **Firewall Considerations**: Added guidance for Windows firewall configuration
+
+### 🚀 Quick Setup Process
+1. Run `create_env.php` to generate .env file
+2. Run `test_connection.php` to verify database connectivity
+3. Run `setup_database.php` to create database schema
+4. Access admin panel at `http://localhost:8000/admin`
+
+### 🔒 Security & Performance
+- **Connection Pooling**: Improved database connection management
+- **Error Logging**: Enhanced logging for debugging
+- **Fallback Methods**: Multiple connection attempts for reliability
+- **Configuration Validation**: Better validation of environment variables
+
+---
+
+## [2024-12-XX] - Comprehensive QA Check and Automatic Fixes
+
+### 🔧 Database Configuration
+- **config/config.php**: 
+  - ✅ Enabled autoload for HTMLPurifier and dependencies
+  - ✅ Added environment variable loading with error handling
+  - ✅ Improved error reporting configuration
+  - ✅ Enhanced redirect function with headers_sent check
+  - ✅ Added proper session management
+
+- **config/database.php**: 
+  - ✅ Added backward compatibility for existing code
+  - ✅ Improved error logging and debugging
+  - ✅ Added helpful error messages for XAMPP issues
+  - ✅ Enhanced connection testing functionality
+
+### 🛠️ Admin Panel Fixes
+- **admin/articles.php**: 
+  - ✅ Fixed undefined variable $id initialization
+  - ✅ Added proper error handling for database operations
+  - ✅ Improved bulk action handling with row counting
+  - ✅ Enhanced activity logging
+
+- **admin/projects.php**: 
+  - ✅ Fixed undefined variable issues
+  - ✅ Added proper initialization of arrays and variables
+  - ✅ Improved error handling and user feedback
+  - ✅ Enhanced bulk operations
+
+- **admin/tools.php**: 
+  - ✅ Fixed undefined variable $id
+  - ✅ Added proper error handling
+  - ✅ Improved form validation
+  - ✅ Enhanced user experience
+
+- **admin/pages.php**: 
+  - ✅ Fixed undefined variable issues
+  - ✅ Added proper error handling
+  - ✅ Improved bulk operations
+  - ✅ Enhanced activity logging
+
+- **admin/users.php**: 
+  - ✅ Fixed undefined variable $tab
+  - ✅ Added proper initialization of variables
+  - ✅ Improved error handling
+  - ✅ Enhanced user management
+
+- **admin/trash.php**: 
+  - ✅ Fixed missing deleted_at column handling
+  - ✅ Added proper error handling for database operations
+  - ✅ Improved trash management functionality
+  - ✅ Enhanced user feedback
+
+### 🔐 Authentication & Session
+- **admin/login.php**: 
+  - ✅ Fixed session regeneration issues
+  - ✅ Added proper session validation
+  - ✅ Improved security measures
+  - ✅ Enhanced error handling
+
+### 🎨 Frontend Improvements
+- **admin/includes/footer.php**: 
+  - ✅ Added missing JavaScript setup
+  - ✅ Fixed undefined variable issues
+  - ✅ Improved admin panel functionality
+  - ✅ Enhanced user experience
+
+### 🌐 Public Pages
+- **index.php**: 
+  - ✅ Added database connection error handling
+  - ✅ Improved content sanitization
+  - ✅ Enhanced error reporting
+  - ✅ Better user experience
+
+- **article.php**: 
+  - ✅ Added proper error handling
+  - ✅ Improved content display
+  - ✅ Enhanced security measures
+  - ✅ Better user experience
+
+- **project.php**: 
+  - ✅ Added database error handling
+  - ✅ Improved content sanitization
+  - ✅ Enhanced security
+  - ✅ Better user experience
+
+- **tool.php**: 
+  - ✅ Added proper error handling
+  - ✅ Improved content display
+  - ✅ Enhanced security measures
+  - ✅ Better user experience
+
+### 📚 Documentation & Setup
+- **ENVIRONMENT_SETUP.md**: 
+  - ✅ Created comprehensive setup guide
+  - ✅ Added XAMPP integration instructions
+  - ✅ Included troubleshooting steps
+  - ✅ Added security considerations
+
+- **setup_database.php**: 
+  - ✅ Created automated database setup script
+  - ✅ Added schema import functionality
+  - ✅ Included admin user creation
+  - ✅ Enhanced error handling
+
+- **test_connection.php**: 
+  - ✅ Created database connection testing script
+  - ✅ Added comprehensive error reporting
+  - ✅ Included configuration validation
+  - ✅ Enhanced debugging capabilities
+
+### 🔍 Error Handling Improvements
+- **Global**: 
+  - ✅ Added try-catch blocks around database operations
+  - ✅ Improved error logging and reporting
+  - ✅ Enhanced user feedback for errors
+  - ✅ Better exception handling
+
+- **Headers**: 
+  - ✅ Fixed "headers already sent" warnings
+  - ✅ Added proper header checking before redirects
+  - ✅ Improved session management
+  - ✅ Enhanced security measures
+
+### 📊 Activity Logging
+- **Global**: 
+  - ✅ Improved activity logging functionality
+  - ✅ Enhanced error tracking
+  - ✅ Better user action monitoring
+  - ✅ Comprehensive audit trail
+
+### 🚀 Performance Optimizations
+- **Database**: 
+  - ✅ Improved connection management
+  - ✅ Enhanced query optimization
+  - ✅ Better resource utilization
+  - ✅ Reduced memory usage
+
+### 🔒 Security Enhancements
+- **Input Validation**: 
+  - ✅ Enhanced input sanitization
+  - ✅ Improved SQL injection prevention
+  - ✅ Better XSS protection
+  - ✅ Enhanced CSRF protection
+
+- **Session Management**: 
+  - ✅ Improved session security
+  - ✅ Enhanced authentication
+  - ✅ Better authorization checks
+  - ✅ Comprehensive security measures
+
+### 📝 Code Quality
+- **Standards**: 
+  - ✅ Improved code consistency
+  - ✅ Enhanced readability
+  - ✅ Better documentation
+  - ✅ Comprehensive error handling
+
+### 🛠️ Maintenance
+- **Logging**: 
+  - ✅ Enhanced error logging
+  - ✅ Improved debugging capabilities
+  - ✅ Better monitoring
+  - ✅ Comprehensive troubleshooting
+
+---
+
+## [Previous Entries]
+- Initial project setup and configuration
+- Basic functionality implementation
+- User authentication system
+- Content management features
+- File upload system
+- Admin panel development

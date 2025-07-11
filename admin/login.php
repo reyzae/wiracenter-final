@@ -41,7 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['user_role'] = $user['role'];
-                    session_regenerate_id(true);
+                    if (session_status() === PHP_SESSION_ACTIVE) {
+                        session_regenerate_id(true);
+                    }
                     header('Location: force_change_password.php');
                     exit();
                 }
@@ -51,7 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['user_role'] = $user['role'];
-                session_regenerate_id(true);
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    session_regenerate_id(true);
+                }
                 logActivity($user['id'], 'User logged in');
                 // Redirect to dashboard
                 redirect(ADMIN_URL . '/dashboard.php');

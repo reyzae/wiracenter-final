@@ -1,72 +1,102 @@
 <?php
+ob_start();
+require_once __DIR__ . '/../config/config.php';
 $page_title = 'Trash';
-include 'includes/header.php';
+
+// Initialize variables to prevent undefined variable errors
+$tab = $_GET['tab'] ?? 'articles';
+$success_message = '';
+$error_message = '';
 
 $db = new Database();
 $conn = $db->connect();
 
-$success_message = '';
-$error_message = '';
-$tab = $_GET['tab'] ?? 'articles';
-
-// Handle restore & permanent delete actions
-$type = $_GET['type'] ?? null;
-$id = $_GET['id'] ?? null;
-actionHandler:
-if ($type && $id) {
-    if (isset($_GET['restore'])) {
-        // Restore (set deleted_at = NULL)
-        $table = ($type === 'article') ? 'articles' : (($type === 'project') ? 'projects' : 'tools');
-        $stmt = $conn->prepare("UPDATE $table SET deleted_at = NULL WHERE id = ?");
-        if ($stmt->execute([$id])) {
-            $success_message = ucfirst($type) . ' restored successfully!';
-        } else {
-            $error_message = 'Failed to restore ' . $type . '.';
+// Handle restore and permanent delete actions
+if (isset($_GET['type']) && isset($_GET['id'])) {
+    $type = $_GET['type'];
+    $id = $_GET['id'];
+    
+    try {
+        if (isset($_GET['restore'])) {
+            $stmt = $conn->prepare("UPDATE $type SET deleted_at = NULL WHERE id = ?");
+            if ($stmt->execute([$id])) {
+                $success_message = ucfirst($type) . ' restored successfully!';
+                logActivity($_SESSION['user_id'], "Restored $type", $type, $id);
+            } else {
+                $error_message = 'Failed to restore ' . $type . '.';
+            }
+        } elseif (isset($_GET['delete'])) {
+            $stmt = $conn->prepare("DELETE FROM $type WHERE id = ?");
+            if ($stmt->execute([$id])) {
+                $success_message = ucfirst($type) . ' permanently deleted!';
+                logActivity($_SESSION['user_id'], "Permanently deleted $type", $type, $id);
+            } else {
+                $error_message = 'Failed to delete ' . $type . '.';
+            }
         }
-    } elseif (isset($_GET['delete'])) {
-        // Permanent delete
-        $table = ($type === 'article') ? 'articles' : (($type === 'project') ? 'projects' : 'tools');
-        $stmt = $conn->prepare("DELETE FROM $table WHERE id = ?");
-        if ($stmt->execute([$id])) {
-            $success_message = ucfirst($type) . ' permanently deleted!';
-        } else {
-            $error_message = 'Failed to delete ' . $type . '.';
-        }
+    } catch (PDOException $e) {
+        $error_message = 'Database error: ' . $e->getMessage();
     }
-    // Redirect to clear GET params
-    header('Location: trash.php?tab=' . $tab . '&msg=' . urlencode($success_message ?: $error_message));
-    exit();
+    
+    if (!headers_sent()) {
+        header('Location: trash.php?tab=' . $tab . '&msg=' . urlencode($success_message ?: $error_message));
+        ob_end_clean();
+        exit();
+    }
 }
 
 if (isset($_GET['msg'])) {
     $success_message = $_GET['msg'];
 }
 
-// Fetch soft-deleted items
+// Fetch soft-deleted items with better error handling
 function getTrashed($conn, $table) {
-    $sql = "SELECT * FROM $table WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    try {
+        // Check if table exists and has deleted_at column
+        $checkStmt = $conn->prepare("SHOW TABLES LIKE ?");
+        $checkStmt->execute([$table]);
+        if (!$checkStmt->fetch()) {
+            return [];
+        }
+        
+        // Check if deleted_at column exists
+        $columnStmt = $conn->prepare("SHOW COLUMNS FROM $table LIKE 'deleted_at'");
+        $columnStmt->execute();
+        if (!$columnStmt->fetch()) {
+            return [];
+        }
+        
+        $sql = "SELECT * FROM $table WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error in getTrashed for table $table: " . $e->getMessage());
+        return [];
+    }
 }
+
 $trashed_articles = getTrashed($conn, 'articles');
 $trashed_projects = getTrashed($conn, 'projects');
 $trashed_tools = getTrashed($conn, 'tools');
 $trashed_media = getTrashed($conn, 'files');
+
+include 'includes/header.php';
+// include 'includes/navigation.php';
 ?>
 <div class="container-fluid">
     <h1 class="h2 mb-4">Trash</h1>
-    <?php if ($success_message): ?>
-        <div class="alert alert-success alert-dismissible fade show">
-            <?php echo $success_message; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+<?php if ($success_message): ?>
+    <div class="alert alert-success alert-dismissible fade show">
+        <?php echo $success_message; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     <?php elseif ($error_message): ?>
-        <div class="alert alert-danger alert-dismissible fade show">
-            <?php echo $error_message; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
+    <div class="alert alert-danger alert-dismissible fade show">
+        <?php echo $error_message; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
             <a class="nav-link<?php if ($tab == 'articles') echo ' active'; ?>" href="?tab=articles">Articles</a>
@@ -82,7 +112,7 @@ $trashed_media = getTrashed($conn, 'files');
         </li>
     </ul>
     <div class="card">
-        <div class="card-body">
+    <div class="card-body">
             <?php if ($tab == 'articles'): ?>
                 <h5 class="mb-3">Trashed Articles</h5>
                 <div class="table-responsive">
@@ -102,8 +132,8 @@ $trashed_media = getTrashed($conn, 'files');
                                 <td><span class="badge bg-secondary"><?php echo ucfirst($a['status']); ?></span></td>
                                 <td><?php echo $a['deleted_at']; ?></td>
                                 <td>
-                                    <a href="?tab=articles&type=article&id=<?php echo $a['id']; ?>&restore=1" class="btn btn-success btn-sm">Restore</a>
-                                    <a href="?tab=articles&type=article&id=<?php echo $a['id']; ?>&delete=1" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete this article?');">Delete Permanently</a>
+                                    <a href="?tab=articles&type=articles&id=<?php echo $a['id']; ?>&restore=1" class="btn btn-success btn-sm">Restore</a>
+                                    <a href="?tab=articles&type=articles&id=<?php echo $a['id']; ?>&delete=1" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete this article?');">Delete Permanently</a>
                                 </td>
                             </tr>
                         <?php endforeach; else: ?>
@@ -111,7 +141,7 @@ $trashed_media = getTrashed($conn, 'files');
                         <?php endif; ?>
                         </tbody>
                     </table>
-                </div>
+            </div>
             <?php elseif ($tab == 'projects'): ?>
                 <h5 class="mb-3">Trashed Projects</h5>
                 <div class="table-responsive">
@@ -131,8 +161,8 @@ $trashed_media = getTrashed($conn, 'files');
                                 <td><span class="badge bg-secondary"><?php echo ucfirst($p['status']); ?></span></td>
                                 <td><?php echo $p['deleted_at']; ?></td>
                                 <td>
-                                    <a href="?tab=projects&type=project&id=<?php echo $p['id']; ?>&restore=1" class="btn btn-success btn-sm">Restore</a>
-                                    <a href="?tab=projects&type=project&id=<?php echo $p['id']; ?>&delete=1" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete this project?');">Delete Permanently</a>
+                                    <a href="?tab=projects&type=projects&id=<?php echo $p['id']; ?>&restore=1" class="btn btn-success btn-sm">Restore</a>
+                                    <a href="?tab=projects&type=projects&id=<?php echo $p['id']; ?>&delete=1" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete this project?');">Delete Permanently</a>
                                 </td>
                             </tr>
                         <?php endforeach; else: ?>
@@ -140,33 +170,33 @@ $trashed_media = getTrashed($conn, 'files');
                         <?php endif; ?>
                         </tbody>
                     </table>
-                </div>
+            </div>
             <?php elseif ($tab == 'tools'): ?>
                 <h5 class="mb-3">Trashed Tools</h5>
-                <div class="table-responsive">
+        <div class="table-responsive">
                     <table class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
+                <thead>
+                    <tr>
+                        <th>Title</th>
                                 <th>Status</th>
                                 <th>Deleted At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
                         <?php if ($trashed_tools): foreach ($trashed_tools as $t): ?>
-                            <tr>
+                        <tr>
                                 <td><strong><?php echo htmlspecialchars($t['title']); ?></strong></td>
                                 <td><span class="badge bg-secondary"><?php echo ucfirst($t['status']); ?></span></td>
                                 <td><?php echo $t['deleted_at']; ?></td>
                                 <td>
-                                    <a href="?tab=tools&type=tool&id=<?php echo $t['id']; ?>&restore=1" class="btn btn-success btn-sm">Restore</a>
-                                    <a href="?tab=tools&type=tool&id=<?php echo $t['id']; ?>&delete=1" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete this tool?');">Delete Permanently</a>
+                                    <a href="?tab=tools&type=tools&id=<?php echo $t['id']; ?>&restore=1" class="btn btn-success btn-sm">Restore</a>
+                                    <a href="?tab=tools&type=tools&id=<?php echo $t['id']; ?>&delete=1" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete this tool?');">Delete Permanently</a>
                                 </td>
                             </tr>
                         <?php endforeach; else: ?>
                             <tr><td colspan="4" class="text-center text-muted">No trashed tools.</td></tr>
-                        <?php endif; ?>
+                                <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -185,7 +215,7 @@ $trashed_media = getTrashed($conn, 'files');
                             </tr>
                         </thead>
                         <tbody>
-                        <?php
+                                <?php 
                         function formatSize($bytes) {
                             if ($bytes >= 1073741824) {
                                 return number_format($bytes / 1073741824, 2) . ' GB';
@@ -201,23 +231,27 @@ $trashed_media = getTrashed($conn, 'files');
                                 return '-';
                             }
                         }
-                        // Ambil daftar user id->username untuk lookup cepat
+                        // Get user id->username for quick lookup
                         $usernames = [];
-                        $userStmt = $conn->query("SELECT id, username FROM users");
-                        foreach ($userStmt->fetchAll(PDO::FETCH_ASSOC) as $u) {
-                            $usernames[$u['id']] = $u['username'];
+                        try {
+                            $userStmt = $conn->query("SELECT id, username FROM users");
+                            foreach ($userStmt->fetchAll(PDO::FETCH_ASSOC) as $u) {
+                                $usernames[$u['id']] = $u['username'];
+                            }
+                        } catch (PDOException $e) {
+                            // Handle case where users table doesn't exist
                         }
-                        ?>
-                        <?php if ($trashed_media): foreach ($trashed_media as $m): ?>
+                        
+                        if ($trashed_media): foreach ($trashed_media as $f): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($m['original_name'] ?? $m['file_path']); ?></td>
-                                <td><?php echo htmlspecialchars($m['file_type'] ?? '-'); ?></td>
-                                <td><?php echo isset($m['file_size']) ? formatSize($m['file_size']) : '-'; ?></td>
-                                <td><?php echo isset($m['deleted_by'], $usernames[$m['deleted_by']]) ? htmlspecialchars($usernames[$m['deleted_by']]) : '-'; ?></td>
-                                <td><?php echo $m['deleted_at']; ?></td>
+                                <td><strong><?php echo htmlspecialchars($f['original_name']); ?></strong></td>
+                                <td><?php echo htmlspecialchars($f['file_type']); ?></td>
+                                <td><?php echo formatSize($f['file_size']); ?></td>
+                                <td><?php echo isset($usernames[$f['uploaded_by']]) ? htmlspecialchars($usernames[$f['uploaded_by']]) : 'Unknown'; ?></td>
+                                <td><?php echo $f['deleted_at']; ?></td>
                                 <td>
-                                    <a href="?tab=media&type=file&id=<?php echo $m['id']; ?>&restore=1" class="btn btn-success btn-sm">Restore</a>
-                                    <a href="?tab=media&type=file&id=<?php echo $m['id']; ?>&delete=1" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete this file?');">Delete Permanently</a>
+                                    <a href="?tab=media&type=files&id=<?php echo $f['id']; ?>&restore=1" class="btn btn-success btn-sm">Restore</a>
+                                    <a href="?tab=media&type=files&id=<?php echo $f['id']; ?>&delete=1" class="btn btn-danger btn-sm" onclick="return confirm('Permanently delete this file?');">Delete Permanently</a>
                                 </td>
                             </tr>
                         <?php endforeach; else: ?>
@@ -230,4 +264,5 @@ $trashed_media = getTrashed($conn, 'files');
         </div>
     </div>
 </div>
+
 <?php include 'includes/footer.php'; ?>

@@ -7,12 +7,19 @@ if (empty($slug)) {
     exit();
 }
 
-$db = new Database();
-$conn = $db->connect();
-
-$stmt = $conn->prepare("SELECT * FROM projects WHERE slug = ? AND status = 'published'");
-$stmt->execute([$slug]);
-$project = $stmt->fetch(PDO::FETCH_ASSOC);
+$project = null;
+try {
+    $db = new Database();
+    $conn = $db->connect();
+    
+    if ($conn) {
+        $stmt = $conn->prepare("SELECT * FROM projects WHERE slug = ? AND status = 'published' AND deleted_at IS NULL");
+        $stmt->execute([$slug]);
+        $project = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+} catch (PDOException $e) {
+    error_log("Database connection failed in project.php: " . $e->getMessage());
+}
 
 if (!$project) {
     header("HTTP/1.0 404 Not Found");
@@ -36,7 +43,7 @@ include 'includes/header.php';
                 <h1 class="display-5 mb-3"><?php echo htmlspecialchars($project['title']); ?></h1>
                 <p class="text-muted mb-4">Published on <?php echo formatDate($project['publish_date']); ?></p>
                 <?php if (!empty($project['featured_image'])) : ?>
-                    <img src="<?php echo UPLOAD_PATH . htmlspecialchars($project['featured_image']); ?>" class="img-fluid rounded mb-4" alt="<?php echo htmlspecialchars($project['title']); ?>">
+                    <img src="<?php echo htmlspecialchars(UPLOAD_PATH . $project['featured_image']); ?>" class="img-fluid rounded mb-4" alt="<?php echo htmlspecialchars($project['title']); ?>">
                 <?php endif; ?>
                 <div class="project-content">
                     <?php echo $project['content']; ?>

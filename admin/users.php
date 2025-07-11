@@ -1,43 +1,67 @@
 <?php
+ob_start();
+// Aktifkan error reporting untuk debug
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Log debug ke file
+file_put_contents(__DIR__.'/debug_users_action.log', date('Y-m-d H:i:s')." | Masuk blok aksi | ".json_encode($_GET).PHP_EOL, FILE_APPEND);
+
+require_once __DIR__ . '/../config/config.php';
 $page_title = 'Users';
-include 'includes/header.php';
+
+// Initialize variables to prevent undefined variable errors
+$tab = $_GET['tab'] ?? 'active';
+$id = $_GET['id'] ?? null;
+$users = [];
+$roles = [];
+$success_message = '';
+$error_message = '';
+$action = $_GET['action'] ?? 'list';
+
+$db = new Database();
+$conn = $db->connect();
 
 requireLogin();
 if (!hasPermission('admin')) {
     redirect(ADMIN_URL . '/dashboard.php');
 }
 
-$db = new Database();
-$conn = $db->connect();
-
-// Handle actions: suspend, unsuspend, delete, restore, reset_password
+// --- HANDLE ACTIONS DI PALING ATAS, SEBELUM APAPUN ---
 if (isset($_GET['action']) && isset($_GET['id'])) {
-    $id = (int)$_GET['id'];
-    if ($_GET['action'] === 'suspend') {
-        $stmt = $conn->prepare("UPDATE users SET status = 'suspended' WHERE id = ?");
-        $stmt->execute([$id]);
-    } elseif ($_GET['action'] === 'unsuspend') {
-        $stmt = $conn->prepare("UPDATE users SET status = 'active' WHERE id = ?");
-        $stmt->execute([$id]);
-    } elseif ($_GET['action'] === 'delete') {
+    $id = $_GET['id'];
+    $logMsg = '';
+    
+    if ($_GET['action'] === 'delete') {
         $stmt = $conn->prepare("UPDATE users SET deleted_at = NOW() WHERE id = ?");
         $stmt->execute([$id]);
+        $logMsg = 'Delete user id '.$id;
     } elseif ($_GET['action'] === 'restore') {
         $stmt = $conn->prepare("UPDATE users SET deleted_at = NULL WHERE id = ?");
         $stmt->execute([$id]);
+        $logMsg = 'Restore user id '.$id;
     } elseif ($_GET['action'] === 'reset_password') {
-        // Generate new temp password
         $rand = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
         $temp_password = '#user-' . $rand;
         $hashed = password_hash($temp_password, PASSWORD_DEFAULT);
-        $expired_at = date('Y-m-d H:i:s', time() + 3600); // 1 hour from now
+        $expired_at = date('Y-m-d H:i:s', time() + 3600);
         $stmt = $conn->prepare("UPDATE users SET password=?, temp_password=?, temp_password_expired_at=? WHERE id=?");
         $stmt->execute([$hashed, $temp_password, $expired_at, $id]);
-        header('Location: users.php?tab=active&resetpw='.$id);
+        $logMsg = 'Reset password user id '.$id;
+        file_put_contents(__DIR__.'/debug_users_action.log', date('Y-m-d H:i:s')." | ".$logMsg.PHP_EOL, FILE_APPEND);
+        if (!headers_sent()) {
+            header('Location: users.php?tab=active&resetpw='.$id);
+            ob_end_clean();
+            exit();
+        }
+    }
+    file_put_contents(__DIR__.'/debug_users_action.log', date('Y-m-d H:i:s')." | ".$logMsg.PHP_EOL, FILE_APPEND);
+    if (!headers_sent()) {
+        header('Location: users.php?tab=active');
+        ob_end_clean();
         exit();
     }
-    header('Location: users.php?tab=' . ($_GET['action'] === 'restore' ? 'active' : $tab));
-    exit();
 }
 
 // Handle create user
@@ -50,8 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
     $temp_password = '#user-' . $rand;
     $hashed = password_hash($temp_password, PASSWORD_DEFAULT);
     $expired_at = date('Y-m-d H:i:s', time() + 3600);
-    $error_message = '';
-    $success_message = '';
+    
     if (!$username || !$email) {
         $error_message = 'Username and email are required.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -66,9 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
         }
     }
 }
-
-// Tab logic
-$tab = $_GET['tab'] ?? 'active';
 
 // Filter
 $role_filter = $_GET['role'] ?? '';
@@ -103,11 +123,18 @@ if ($tab === 'trashed') {
 }
 
 // Get all roles for dropdown
-$roles = [];
 $roleStmt = $conn->query("SELECT DISTINCT role FROM users");
 foreach ($roleStmt->fetchAll(PDO::FETCH_COLUMN) as $r) {
     $roles[] = $r;
 }
+
+// Handle success/error messages from URL parameters
+if (isset($_GET['msg'])) {
+    $success_message = $_GET['msg'];
+}
+
+include 'includes/header.php';
+// include 'includes/navigation.php';
 ?>
 <div class="container-fluid">
     <h1 class="h2 mb-4">Users</h1>
@@ -226,13 +253,13 @@ foreach ($roleStmt->fetchAll(PDO::FETCH_COLUMN) as $r) {
                                     <a href="users.php?action=restore&id=<?php echo $user['id']; ?>" class="btn btn-sm btn-success" onclick="return confirm('Restore this user?');">Restore</a>
                                 <?php else: ?>
                                     <a href="users.php?action=edit&id=<?php echo $user['id']; ?>" class="btn btn-sm btn-primary">Edit</a>
-                                    <a href="users.php?action=delete&id=<?php echo $user['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this user?');">Delete</a>
                                     <?php if (($user['status'] ?? '') === 'active'): ?>
-                                        <a href="users.php?action=suspend&id=<?php echo $user['id']; ?>" class="btn btn-sm btn-warning" onclick="return confirm('Suspend this user?');">Suspend</a>
+                                        <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="suspend" data-id="<?php echo $user['id']; ?>">Suspend</a>
                                     <?php elseif (($user['status'] ?? '') === 'suspended'): ?>
-                                        <a href="users.php?action=unsuspend&id=<?php echo $user['id']; ?>" class="btn btn-sm btn-success" onclick="return confirm('Unsuspend this user?');">Unsuspend</a>
+                                        <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="unsuspend" data-id="<?php echo $user['id']; ?>">Unsuspend</a>
                                     <?php endif; ?>
-                                    <?php if ($tab === 'active'): ?>
+                                    <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="delete" data-id="<?php echo $user['id']; ?>">Delete</a>
+                                    <?php if (($user['status'] ?? '') === 'active'): ?>
                                         <button type="button" class="btn btn-sm btn-info" onclick="showResetPasswordModal(<?php echo $user['id']; ?>)">Reset Password</button>
                                     <?php endif; ?>
                                     <?php if (!empty($user['temp_password']) && (!isset($user['temp_password_expired_at']) || strtotime($user['temp_password_expired_at']) > time())): ?>
@@ -403,4 +430,42 @@ function copyCreateUserPassword() {
 window.addEventListener('DOMContentLoaded', function() {
     setCreateUserPassword(generateCreateUserPassword());
 });
+</script>
+<!-- Modal Konfirmasi Bootstrap -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalLabel">Konfirmasi Aksi</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="confirmModalBody">
+        Apakah Anda yakin ingin melakukan aksi ini?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary" id="confirmModalYes">Ya, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+var confirmModal = document.getElementById('confirmModal');
+var confirmUrl = '#';
+confirmModal.addEventListener('show.bs.modal', function (event) {
+  var button = event.relatedTarget;
+  var action = button.getAttribute('data-action');
+  var id = button.getAttribute('data-id');
+  var modalBody = confirmModal.querySelector('#confirmModalBody');
+  var confirmBtn = confirmModal.querySelector('#confirmModalYes');
+  var actionText = '';
+  if(action === 'suspend') actionText = 'Suspend user ini?';
+  else if(action === 'unsuspend') actionText = 'Aktifkan kembali user ini?';
+  else if(action === 'delete') actionText = 'Hapus user ini?';
+  modalBody.textContent = actionText;
+  confirmUrl = 'users.php?action=' + action + '&id=' + id;
+});
+document.getElementById('confirmModalYes').onclick = function() {
+  window.location.href = confirmUrl;
+};
 </script>

@@ -7,17 +7,20 @@ if (empty($slug)) {
     exit();
 }
 
-$db = new Database();
-$conn = $db->connect();
-
 $tool = null;
+$error_message = '';
 try {
-    $stmt = $conn->prepare("SELECT * FROM tools WHERE slug = ? AND status = 'published'");
-    $stmt->execute([$slug]);
-    $tool = $stmt->fetch(PDO::FETCH_ASSOC);
+    $db = new Database();
+    $conn = $db->connect();
+    
+    if ($conn) {
+        $stmt = $conn->prepare("SELECT * FROM tools WHERE slug = ? AND status = 'published' AND deleted_at IS NULL");
+        $stmt->execute([$slug]);
+        $tool = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 } catch (PDOException $e) {
-    $tool = null;
-    $error_message = 'Table tools not found in database.';
+    error_log("Database connection failed in tool.php: " . $e->getMessage());
+    $error_message = 'Database connection failed.';
 }
 
 if (!$tool) {
@@ -44,7 +47,7 @@ include 'includes/header.php';
                 <h1 class="display-5 mb-3"><?php echo htmlspecialchars($tool['title']); ?></h1>
                 <p class="text-muted mb-4">Published on <?php echo formatDate($tool['publish_date']); ?></p>
                 <?php if (!empty($tool['featured_image'])) : ?>
-                    <img src="<?php echo UPLOAD_PATH . htmlspecialchars($tool['featured_image']); ?>" class="img-fluid rounded mb-4" alt="<?php echo htmlspecialchars($tool['title']); ?>">
+                    <img src="<?php echo htmlspecialchars(UPLOAD_PATH . $tool['featured_image']); ?>" class="img-fluid rounded mb-4" alt="<?php echo htmlspecialchars($tool['title']); ?>">
                 <?php endif; ?>
                 <div class="tool-content">
                     <?php echo $tool['content']; ?>

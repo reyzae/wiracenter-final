@@ -176,6 +176,30 @@ body, html {
     align-items: center;
 }
 
+/* Tambahan untuk posisi toggle notifikasi & akun di header */
+.navbar-nav.ms-auto {
+    margin-right: 2rem !important;
+    gap: 1.2rem;
+}
+
+.navbar .nav-item.dropdown .nav-link {
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
+}
+
+/* Dropdown menu agar tidak terlalu mepet ke kanan */
+.dropdown-menu-end {
+    right: 0.5rem !important;
+    left: auto !important;
+    min-width: 260px;
+    margin-top: 0.5rem;
+}
+
+/* Tambahan agar icon bell dan user tidak terlalu mepet */
+.navbar .fa-bell, .navbar .fa-user {
+    margin-right: 0.5rem;
+}
+
 /* Main Content Area */
 .container-fluid.p-4 {
     padding: 2rem !important;
@@ -291,4 +315,95 @@ body, html {
 
 .list-group-item[aria-expanded="true"] .collapse-icon {
     transform: rotate(180deg);
+}
+
+/* ================= RESPONSIVE ADMIN DASHBOARD ================= */
+@media (max-width: 1200px) {
+  #sidebar-wrapper {
+    width: 12rem;
+  }
+  #sidebar-wrapper .list-group {
+    width: 12rem;
+  }
+  #sidebar-wrapper .list-group-item {
+    font-size: 1.05rem;
+    padding: 0.9rem 1rem;
+  }
+  .container-fluid.p-4 {
+    padding: 1.2rem !important;
+  }
+}
+
+/* Responsive Sidebar Fix */
+@media (max-width: 992px) {
+  #sidebar-wrapper {
+    position: fixed;
+    left: -15rem;
+    top: 0;
+    z-index: 1051;
+    width: 15rem;
+    height: 100vh;
+    transition: left 0.3s;
+  }
+  #wrapper.toggled #sidebar-wrapper {
+    left: 0 !important;
+    background: #222d3b !important;
+    z-index: 9999 !important;
+    display: block !important;
+    border: 2px solid red !important;
+  }
+  #page-content-wrapper {
+    margin-left: 0;
+    width: 100%;
+  }
+  .navbar {
+    padding: 0.7rem 0.7rem;
+  }
+}
+
+@media (max-width: 768px) {
+  #sidebar-wrapper {
+    width: 70vw !important;
+    max-width: 260px !important;
+    min-width: 180px;
+    left: -100vw;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.18);
+    border: none !important;
+  }
+  #wrapper.toggled #sidebar-wrapper {
+    left: 0 !important;
+  }
+  #page-content-wrapper {
+    margin-left: 0 !important;
+    width: 100vw !important;
+  }
+  #sidebar-wrapper .list-group-item {
+    font-size: 1rem !important;
+    padding: 0.7rem 0.8rem !important;
+  }
+  #sidebar-wrapper .sidebar-heading {
+    font-size: 1.1rem !important;
+    padding: 1rem 0.8rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .container-fluid.p-4 {
+    padding: 0.3rem !important;
+  }
+  .card, .stats-card {
+    padding: 0.5rem;
+  }
+  #sidebar-wrapper .list-group-item {
+    font-size: 0.95rem;
+    padding: 0.7rem 0.7rem;
+  }
+}
+
+/* Hamburger menu always visible on mobile */
+@media (max-width: 992px) {
+  #menu-toggle {
+    display: inline-block !important;
+    margin-left: 0.5rem;
+  }
 }

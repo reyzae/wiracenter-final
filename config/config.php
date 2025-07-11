@@ -1,24 +1,69 @@
 <?php
-session_start();
+// Start session at the very beginning
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// require_once __DIR__ . '/../vendor/autoload.php';
-// $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-// $dotenv->load();
+// Enable autoload for HTMLPurifier and other dependencies
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
+
+// Load environment variables if .env exists
+if (file_exists(__DIR__ . '/../.env')) {
+    try {
+        // Load .env file manually with better parsing
+        $env_file = __DIR__ . '/../.env';
+        $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        
+        foreach ($lines as $line) {
+            // Skip comments and empty lines
+            $line = trim($line);
+            if (empty($line) || strpos($line, '#') === 0) {
+                continue;
+            }
+            
+            // Only process lines with = sign
+            if (strpos($line, '=') !== false) {
+                $parts = explode('=', $line, 2);
+                if (count($parts) == 2) {
+                    $key = trim($parts[0]);
+                    $value = trim($parts[1]);
+                    
+                    // Remove quotes if present
+                    if ((substr($value, 0, 1) === '"' && substr($value, -1) === '"') ||
+                        (substr($value, 0, 1) === "'" && substr($value, -1) === "'")) {
+                        $value = substr($value, 1, -1);
+                    }
+                    
+                    // Only set if key is not empty
+                    if (!empty($key)) {
+                        $_ENV[$key] = $value;
+                        putenv("$key=$value");
+                    }
+                }
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Error loading .env file: " . $e->getMessage());
+    }
+}
 
 // Database configuration
 require_once 'database.php';
 
 // Site configuration
-define('SITE_URL', 'http://localhost:8000');
-define('ADMIN_URL', SITE_URL . '/admin');
-define('UPLOAD_PATH', 'uploads/');
-define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
+define('SITE_URL', $_ENV['SITE_URL'] ?? 'http://localhost:8000');
+define('ADMIN_URL', $_ENV['ADMIN_URL'] ?? SITE_URL . '/admin');
+define('UPLOAD_PATH', $_ENV['UPLOAD_PATH'] ?? 'uploads/');
+define('MAX_FILE_SIZE', $_ENV['MAX_FILE_SIZE'] ?? 5 * 1024 * 1024); // 5MB
 
 // Timezone
-date_default_timezone_set('Asia/Jakarta');
+$timezone = $_ENV['TIMEZONE'] ?? 'Asia/Jakarta';
+date_default_timezone_set($timezone);
 
 // Error reporting
-$debug_mode = getSetting('debug_mode', '0');
+$debug_mode = $_ENV['DEBUG_MODE'] ?? getSetting('debug_mode', '0');
 if ($debug_mode == '1') {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
@@ -26,33 +71,19 @@ if ($debug_mode == '1') {
     error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
     ini_set('display_errors', 0);
     ini_set('log_errors', 1);
-    ini_set('error_log', __DIR__ . '/../php_errors.log'); // Log errors to a file outside web root
-
-    // Set a custom error handler for production
-    set_error_handler(function ($severity, $message, $file, $line) {
-        if (!(error_reporting() & $severity)) {
-            // This error code is not included in error_reporting
-            return;
-        }
-        error_log(sprintf("PHP Error: %s in %s on line %d", $message, $file, $line));
-        // For production, you might want to redirect to a generic error page
-        // header('Location: /error.php');
-        // exit();
-    });
-
-    // Set a custom exception handler for production
-    set_exception_handler(function ($exception) {
-        error_log(sprintf("PHP Exception: %s in %s on line %d", $exception->getMessage(), $exception->getFile(), $exception->getLine()));
-        // For production, you might want to redirect to a generic error page
-        // header('Location: /error.php');
-        // exit();
-    });
+    ini_set('error_log', __DIR__ . '/../php_errors.log');
 }
 
 // Helper functions
 function redirect($url) {
-    header("Location: $url");
-    exit();
+    if (!headers_sent()) {
+        header("Location: $url");
+        exit();
+    } else {
+        echo "<script>window.location.href='$url';</script>";
+        echo "<noscript><meta http-equiv='refresh' content='0;url=$url'></noscript>";
+        exit();
+    }
 }
 
 function sanitize($data) {
@@ -60,14 +91,14 @@ function sanitize($data) {
 }
 
 function generateSlug($text, $table_name = null, $exclude_id = null) {
-    global $db; // Access the global Database object
+    global $db;
 
     $slug = strtolower($text);
     $slug = preg_replace('/[^a-z0-9\-]/', '-', $slug);
     $slug = preg_replace('/-+/', '-', $slug);
     $slug = trim($slug, '-');
 
-    if ($table_name) {
+    if ($table_name && $db) {
         $original_slug = $slug;
         $counter = 1;
         while (true) {
@@ -79,17 +110,26 @@ function generateSlug($text, $table_name = null, $exclude_id = null) {
                 $params[] = $exclude_id;
             }
 
-            $conn = $db->connect(); // Get a new connection
-            $stmt = $conn->prepare($sql);
-            $stmt->execute($params);
-            $count = $stmt->fetchColumn();
+            try {
+                $conn = $db->connect();
+                if ($conn) {
+                    $stmt = $conn->prepare($sql);
+                    $stmt->execute($params);
+                    $count = $stmt->fetchColumn();
 
-            if ($count == 0) {
-                break; // Slug is unique
+                    if ($count == 0) {
+                        break;
+                    }
+
+                    $slug = $original_slug . '-' . $counter;
+                    $counter++;
+                } else {
+                    break;
+                }
+            } catch (Exception $e) {
+                error_log("Error generating slug: " . $e->getMessage());
+                break;
             }
-
-            $slug = $original_slug . '-' . $counter;
-            $counter++;
         }
     }
 
@@ -130,12 +170,19 @@ function logActivity($user_id, $action, $item_type = null, $item_id = null) {
     if (!$db) {
         $db = new Database();
     }
-    $conn = $db->connect();
-    $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
-    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+    
+    try {
+        $conn = $db->connect();
+        if ($conn) {
+            $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
 
-    $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, action, item_type, item_id, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$user_id, $action, $item_type, $item_id, $ip_address, $user_agent]);
+            $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, action, item_type, item_id, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$user_id, $action, $item_type, $item_id, $ip_address, $user_agent]);
+        }
+    } catch (Exception $e) {
+        error_log("Error logging activity: " . $e->getMessage());
+    }
 }
 
 function createNotification($user_id, $message, $link = null) {
@@ -143,9 +190,16 @@ function createNotification($user_id, $message, $link = null) {
     if (!$db) {
         $db = new Database();
     }
-    $conn = $db->connect();
-    $stmt = $conn->prepare("INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)");
-    $stmt->execute([$user_id, $message, $link]);
+    
+    try {
+        $conn = $db->connect();
+        if ($conn) {
+            $stmt = $conn->prepare("INSERT INTO notifications (user_id, message, link) VALUES (?, ?, ?)");
+            $stmt->execute([$user_id, $message, $link]);
+        }
+    } catch (Exception $e) {
+        error_log("Error creating notification: " . $e->getMessage());
+    }
 }
 
 // Site settings cache
@@ -154,28 +208,38 @@ function getSetting($key, $default = '') {
     global $site_settings;
     
     if (empty($site_settings)) {
-        $db = new Database();
-        $conn = $db->connect();
-        if (!$conn) {
-            die('Database connection failed in getSetting().');
+        try {
+            $db = new Database();
+            $conn = $db->connect();
+            if ($conn) {
+                $stmt = $conn->prepare("SELECT setting_key, setting_value FROM site_settings");
+                $stmt->execute();
+                $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+                $site_settings = $settings;
+            }
+        } catch (Exception $e) {
+            error_log("Error getting settings: " . $e->getMessage());
+            return $default;
         }
-        $stmt = $conn->prepare("SELECT setting_key, setting_value FROM site_settings");
-        $stmt->execute();
-        $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-        $site_settings = $settings;
     }
     
     return isset($site_settings[$key]) ? $site_settings[$key] : $default;
 }
 
 function setSetting($key, $value) {
-    $db = new Database();
-    $conn = $db->connect();
-    $stmt = $conn->prepare("INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?");
-    $stmt->execute([$key, $value, $value]);
-    
-    // Update cache
-    global $site_settings;
-    $site_settings[$key] = $value;
+    try {
+        $db = new Database();
+        $conn = $db->connect();
+        if ($conn) {
+            $stmt = $conn->prepare("INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?");
+            $stmt->execute([$key, $value, $value]);
+            
+            // Update cache
+            global $site_settings;
+            $site_settings[$key] = $value;
+        }
+    } catch (Exception $e) {
+        error_log("Error setting setting: " . $e->getMessage());
+    }
 }
 ?>

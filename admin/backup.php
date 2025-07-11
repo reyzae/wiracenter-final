@@ -27,6 +27,16 @@ if (!is_dir($backup_dir)) {
     mkdir($backup_dir, 0755, true);
 }
 
+// Tambahkan pengecekan permission folder backup sebelum backup
+if (!is_writable($backup_dir)) {
+    $error_message = 'Backup directory is not writable.';
+}
+
+// Tambahkan pengecekan file mysqldump
+if (!file_exists('C:/xampp/mysql/bin/mysqldump.exe')) {
+    $error_message = 'mysqldump.exe not found. Please check your XAMPP installation.';
+}
+
 if (isset($_GET['action'])) {
     if ($_GET['action'] == 'backup_db') {
         $backup_file = $backup_dir . 'db_backup_' . date('Ymd_His') . '.sql';

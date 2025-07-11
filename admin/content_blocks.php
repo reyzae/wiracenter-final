@@ -1,4 +1,5 @@
 <?php
+ob_start();
 $page_title = 'Content Blocks';
 include 'includes/header.php';
 
@@ -153,16 +154,17 @@ if ($action == 'manage_types') {
 // Handle delete action
 if ($action == 'delete' && $id) {
     try {
-        $stmt = $conn->prepare("DELETE FROM content_blocks WHERE id = ?");
-        if ($stmt->execute([$id])) {
-            $success_message = 'Content block deleted successfully!';
-        } else {
-            $error_message = 'Failed to delete content block.';
-        }
+    $stmt = $conn->prepare("DELETE FROM content_blocks WHERE id = ?");
+    if ($stmt->execute([$id])) {
+        $success_message = 'Content block deleted successfully!';
+    } else {
+        $error_message = 'Failed to delete content block.';
+    }
     } catch (PDOException $e) {
         $error_message = 'Failed to delete content block: ' . $e->getMessage();
     }
-    header('Location: content_blocks.php?action=list&msg=' . urlencode($success_message ?: $error_message));
+    header('Location: content_blocks.php?action=list&tab=active&msg=' . urlencode($success_message ?: $error_message));
+    ob_end_clean();
     exit();
 }
 
@@ -188,6 +190,15 @@ if ($action == 'list') {
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $content_blocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Pastikan $content_blocks selalu array
+if (!isset($content_blocks) || !is_array($content_blocks)) {
+    $content_blocks = [];
+}
+// Pastikan $content_block_types selalu array
+if (!isset($content_block_types) || !is_array($content_block_types)) {
+    $content_block_types = [];
 }
 ?>
 
@@ -340,8 +351,8 @@ if ($action == 'list') {
                         <option value="">Select Type</option>
                         <?php
                             if (is_array($content_block_types)) {
-                                foreach ($content_block_types as $type_option) {
-                                    $selected = ((isset($content_block['type']) && $content_block['type'] == $type_option['type_name'])) ? 'selected' : '';
+                            foreach ($content_block_types as $type_option) {
+                                $selected = ((isset($content_block['type']) && $content_block['type'] == $type_option['type_name'])) ? 'selected' : '';
                                     echo '<option value="' . $type_option['type_name'] . '" ' . $selected . '>' . $type_option['display_name'] . '</option>';
                                 }
                             }

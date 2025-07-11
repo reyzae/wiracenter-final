@@ -2,7 +2,11 @@
 require_once 'config/config.php';
 
 $db = new Database();
-$conn = $db->connect();
+try {
+    $conn = $db->connect();
+} catch (PDOException $e) {
+    die('Database connection failed: ' . $e->getMessage());
+}
 
 $slug = $_GET['slug'] ?? '';
 $page = null;

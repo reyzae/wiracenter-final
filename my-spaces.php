@@ -9,9 +9,9 @@ $db = new Database();
 $conn = $db->connect();
 $projects = [];
 try {
-    $stmt = $conn->prepare("SELECT * FROM projects WHERE status = 'published' ORDER BY publish_date DESC");
-    $stmt->execute();
-    $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $conn->prepare("SELECT * FROM projects WHERE status = 'published' ORDER BY publish_date DESC");
+$stmt->execute();
+$projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $projects = [];
     $error_message = 'Table projects not found in database.';
@@ -20,9 +20,9 @@ try {
 // Get articles
 $articles = [];
 try {
-    $stmt = $conn->prepare("SELECT * FROM articles WHERE status = 'published' ORDER BY publish_date DESC");
-    $stmt->execute();
-    $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $conn->prepare("SELECT * FROM articles WHERE status = 'published' ORDER BY publish_date DESC");
+$stmt->execute();
+$articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $articles = [];
     $error_message = 'Table articles not found in database.';
@@ -31,9 +31,9 @@ try {
 // Get tools
 $tools = [];
 try {
-    $stmt = $conn->prepare("SELECT * FROM tools WHERE status = 'published' ORDER BY publish_date DESC");
-    $stmt->execute();
-    $tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $conn->prepare("SELECT * FROM tools WHERE status = 'published' ORDER BY publish_date DESC");
+$stmt->execute();
+$tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $tools = [];
     $error_message = 'Table tools not found in database.';
@@ -210,5 +210,5 @@ try {
             </div>
         </div>
     </section>
-</div>
+                </div>
 <?php include 'includes/footer.php'; ?>

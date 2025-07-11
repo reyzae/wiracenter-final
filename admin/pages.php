@@ -1,33 +1,32 @@
 <?php
+ob_start();
 $page_title = 'Pages';
-include 'includes/header.php';
 
-// Inisialisasi $id agar tidak undefined
+// Initialize variables to prevent undefined variable errors
 $id = $_GET['id'] ?? null;
+$action = $_GET['action'] ?? 'list';
+$pages = [];
+$page = null;
+$success_message = '';
+$error_message = '';
+$errors = [];
+$tab = $_GET['tab'] ?? 'active';
+
+require_once __DIR__ . '/../config/config.php';
 
 // Global variables for TinyMCE
 $pageContentType = 'page';
 $pageContentId = json_encode($id);
 
-// Pastikan $pages selalu terdefinisi
-$pages = [];
-
 $db = new Database();
 $conn = $db->connect();
 
-$action = $_GET['action'] ?? 'list';
-
-$success_message = '';
-$error_message = '';
-
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $title = sanitize($_POST['title']);
-    $slug = generateSlug($_POST['slug'] ?: $title);
-    $content = $_POST['content'];
-    $status = $_POST['status'];
-
-    $errors = [];
+    $title = sanitize($_POST['title'] ?? '');
+    $slug = generateSlug($_POST['slug'] ?? $title);
+    $content = $_POST['content'] ?? '';
+    $status = $_POST['status'] ?? 'draft';
 
     // Validation
     if (empty($title)) {
@@ -72,9 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error_message = 'Failed to update page.';
             }
         }
+    } else {
+        $error_message = implode('<br>', $errors);
     }
-} else {
-    $error_message = implode('<br>', $errors);
 }
 
 // Handle delete action
@@ -89,23 +88,25 @@ if ($action == 'delete' && $id) {
     } catch (PDOException $e) {
         $error_message = 'Failed to delete page: ' . $e->getMessage();
     }
-    header('Location: pages.php?action=list&msg=' . urlencode($success_message ?: $error_message));
-    exit();
+    if (!headers_sent()) {
+        header('Location: pages.php?action=list&tab=active&msg=' . urlencode($success_message ?: $error_message));
+        ob_end_clean();
+        exit();
+    }
 }
 
 // Get page for editing
-$page = null;
 if ($action == 'edit' && $id) {
     $stmt = $conn->prepare("SELECT * FROM pages WHERE id = ?");
     $stmt->execute([$id]);
     $page = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Ambil semua pages untuk listing
+// Get all pages for listing
 if ($action == 'list') {
     $search_query = $_GET['search'] ?? '';
     $status_filter = $_GET['status_filter'] ?? '';
-    $sql = "SELECT p.*, u.username FROM pages p LEFT JOIN users u ON p.created_by = u.id WHERE 1=1";
+    $sql = "SELECT p.*, u.username FROM pages p LEFT JOIN users u ON p.created_by = u.id WHERE p.deleted_at IS NULL";
     $params = [];
     if (!empty($search_query)) {
         $sql .= " AND (p.title LIKE ? OR p.content LIKE ?)";
@@ -135,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
         if ($bulk_action == 'delete') {
             $stmt = $conn->prepare("UPDATE pages SET deleted_at = NOW() WHERE id IN ($placeholders)");
             if ($stmt->execute($selected_pages)) {
-                $success_count = $stmt->rowCount();
+                $success_count = count($selected_pages);
                 logActivity($_SESSION['user_id'], 'Bulk moved pages to trash', 'page', implode(',', $selected_pages));
             } else {
                 $error_count = count($selected_pages);
@@ -145,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
             $stmt = $conn->prepare("UPDATE pages SET status = ? WHERE id IN ($placeholders)");
             $bulk_params = array_merge([$new_status], $selected_pages);
             if ($stmt->execute($bulk_params)) {
-                $success_count = $stmt->rowCount();
+                $success_count = count($selected_pages);
                 logActivity($_SESSION['user_id'], 'Bulk updated page status to ' . $new_status, 'page', implode(',', $selected_pages));
             } else {
                 $error_count = count($selected_pages);
@@ -160,8 +161,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
         }
     }
     // Redirect to clear POST data and show updated list
-    redirect(ADMIN_URL . '/pages.php?action=list');
+    if (!headers_sent()) {
+        redirect(ADMIN_URL . '/pages.php?action=list');
+    }
 }
+
+// Handle success/error messages from URL parameters
+if (isset($_GET['msg'])) {
+    $success_message = $_GET['msg'];
+}
+
+include 'includes/header.php';
+// include 'includes/navigation.php';
 ?>
 
 <?php if ($success_message): ?>

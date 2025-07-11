@@ -1,7 +1,15 @@
 <?php
-// Pastikan variabel $id selalu terdefinisi agar tidak error jika di-include
+// Ensure $id variable is always defined to prevent errors when included
 if (!isset($id)) {
     $id = null;
+}
+
+// Ensure other common variables are defined
+if (!isset($pageContentType)) {
+    $pageContentType = 'default';
+}
+if (!isset($pageContentId)) {
+    $pageContentId = 'null';
 }
 ?>
 </div>
@@ -20,7 +28,10 @@ if (!isset($id)) {
         if (menuToggle) {
             menuToggle.addEventListener('click', function() {
                 document.getElementById('wrapper').classList.toggle('toggled');
+                console.log('Hamburger clicked (footer.php)');
             });
+        } else {
+            console.log('menuToggle not found (footer.php)');
         }
 
         // Select all checkboxes functionality
@@ -39,6 +50,7 @@ if (!isset($id)) {
         setupSelectAll('select-all-articles', '.article-checkbox');
         setupSelectAll('select-all-projects', '.project-checkbox');
         setupSelectAll('select-all-tools', '.tool-checkbox');
+        setupSelectAll('select-all-pages', '.page-checkbox');
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text)
@@ -50,6 +62,9 @@ if (!isset($id)) {
                 });
         }
 
+        // Global variables for autosave functionality
+        window.pageContentType = '<?php echo $pageContentType; ?>';
+        window.pageContentId = <?php echo $pageContentId; ?>;
         
     </script>
 

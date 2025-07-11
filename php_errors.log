@@ -441,3 +441,166 @@ Stack trace:
 [10-Jul-2025 16:48:11 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'deleted_at' in 'where clause' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 74
 [10-Jul-2025 16:59:25 Asia/Jakarta] PHP Error: Undefined variable $tab in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 39
 [10-Jul-2025 16:59:25 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:80) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 39
+[10-Jul-2025 18:16:21 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[10-Jul-2025 18:17:06 Asia/Jakarta] PHP Error: Undefined variable $tab in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 39
+[10-Jul-2025 18:17:06 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:80) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 39
+[10-Jul-2025 18:17:12 Asia/Jakarta] PHP Error: Undefined variable $tab in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 39
+[10-Jul-2025 18:17:12 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:80) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 39
+[10-Jul-2025 18:17:32 Asia/Jakarta] PHP Error: Undefined variable $tab in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 39
+[10-Jul-2025 18:17:32 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:80) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 39
+[10-Jul-2025 18:31:50 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:80) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 24
+[10-Jul-2025 18:33:23 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:80) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 24
+[10-Jul-2025 18:40:18 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 18
+[10-Jul-2025 18:44:06 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 28
+[10-Jul-2025 18:44:13 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 19
+[10-Jul-2025 18:44:38 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 28
+[10-Jul-2025 18:44:48 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 28
+[10-Jul-2025 18:48:42 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 54
+[10-Jul-2025 18:48:53 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 54
+[10-Jul-2025 18:55:00 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 154
+[10-Jul-2025 18:58:02 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php on line 37
+[10-Jul-2025 19:27:47 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 71
+[10-Jul-2025 19:30:55 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 71
+[10-Jul-2025 19:30:59 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 71
+[10-Jul-2025 19:31:30 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 77
+[10-Jul-2025 19:32:15 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 89
+[10-Jul-2025 19:38:36 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 89
+[10-Jul-2025 19:39:06 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 92
+[10-Jul-2025 19:48:16 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 95
+[10-Jul-2025 19:49:00 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 71
+[10-Jul-2025 19:52:59 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 19:53:05 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 19:53:30 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 19:53:39 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 20:23:29 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[10-Jul-2025 20:26:21 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 20:27:06 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 20:27:13 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 20:27:20 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 20:27:52 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 95
+[10-Jul-2025 20:28:28 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 77
+[10-Jul-2025 20:28:59 Asia/Jakarta] PHP Error: Undefined variable $errors in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[10-Jul-2025 20:28:59 Asia/Jakarta] PHP Exception: implode(): If argument #1 ($separator) is of type string, argument #2 ($array) must be of type array, null given in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[10-Jul-2025 20:29:07 Asia/Jakarta] PHP Error: Undefined variable $errors in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[10-Jul-2025 20:29:07 Asia/Jakarta] PHP Exception: implode(): If argument #1 ($separator) is of type string, argument #2 ($array) must be of type array, null given in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[10-Jul-2025 20:38:48 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 20:40:39 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 20:41:25 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 70
+[10-Jul-2025 20:43:18 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 73
+[10-Jul-2025 20:43:21 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 73
+[10-Jul-2025 20:43:31 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 73
+[10-Jul-2025 20:43:35 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 73
+[10-Jul-2025 20:43:39 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'excerpt' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 73
+[10-Jul-2025 20:48:49 Asia/Jakarta] PHP Error: Undefined variable $errors in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[10-Jul-2025 20:48:49 Asia/Jakarta] PHP Exception: implode(): If argument #1 ($separator) is of type string, argument #2 ($array) must be of type array, null given in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[10-Jul-2025 20:53:08 Asia/Jakarta] PHP Error: Undefined variable $errors in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[10-Jul-2025 20:53:08 Asia/Jakarta] PHP Exception: implode(): If argument #1 ($separator) is of type string, argument #2 ($array) must be of type array, null given in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[10-Jul-2025 20:53:30 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\notifications.php on line 16
+[10-Jul-2025 20:54:13 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\notifications.php on line 16
+[10-Jul-2025 20:54:24 Asia/Jakarta] PHP Error: Cannot modify header information - headers already sent by (output started at D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\includes\header.php:81) in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\notifications.php on line 16
+[10-Jul-2025 20:58:39 Asia/Jakarta] PHP Error: Undefined variable $errors in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[10-Jul-2025 20:58:39 Asia/Jakarta] PHP Exception: implode(): If argument #1 ($separator) is of type string, argument #2 ($array) must be of type array, null given in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[10-Jul-2025 20:59:17 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'github_url' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 77
+[10-Jul-2025 20:59:37 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'github_url' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 77
+[10-Jul-2025 20:59:51 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'github_url' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 77
+[10-Jul-2025 21:29:41 Asia/Jakarta] PHP Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'technologies' in 'field list' in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 77
+[11-Jul-2025 03:59:33 Asia/Jakarta] PHP Error: Undefined variable $errors in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[11-Jul-2025 03:59:33 Asia/Jakarta] PHP Exception: implode(): If argument #1 ($separator) is of type string, argument #2 ($array) must be of type array, null given in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 80
+[11-Jul-2025 04:34:33 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[11-Jul-2025 08:45:00 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[11-Jul-2025 08:46:49 Asia/Jakarta] PHP Warning:  include(includes/navigation.php): Failed to open stream: No such file or directory in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 223
+[11-Jul-2025 08:46:49 Asia/Jakarta] PHP Warning:  include(): Failed opening 'includes/navigation.php' for inclusion (include_path='.;C:\php\pear') in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\articles.php on line 223
+[11-Jul-2025 08:47:10 Asia/Jakarta] PHP Warning:  include(includes/navigation.php): Failed to open stream: No such file or directory in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 220
+[11-Jul-2025 08:47:10 Asia/Jakarta] PHP Warning:  include(): Failed opening 'includes/navigation.php' for inclusion (include_path='.;C:\php\pear') in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 220
+[11-Jul-2025 08:48:25 Asia/Jakarta] PHP Warning:  include(includes/navigation.php): Failed to open stream: No such file or directory in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 220
+[11-Jul-2025 08:48:25 Asia/Jakarta] PHP Warning:  include(): Failed opening 'includes/navigation.php' for inclusion (include_path='.;C:\php\pear') in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 220
+[11-Jul-2025 08:49:20 Asia/Jakarta] PHP Warning:  include(includes/navigation.php): Failed to open stream: No such file or directory in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 220
+[11-Jul-2025 08:49:20 Asia/Jakarta] PHP Warning:  include(): Failed opening 'includes/navigation.php' for inclusion (include_path='.;C:\php\pear') in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\projects.php on line 220
+[11-Jul-2025 08:55:16 Asia/Jakarta] PHP Warning:  include(includes/navigation.php): Failed to open stream: No such file or directory in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 137
+[11-Jul-2025 08:55:16 Asia/Jakarta] PHP Warning:  include(): Failed opening 'includes/navigation.php' for inclusion (include_path='.;C:\php\pear') in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 137
+[11-Jul-2025 09:01:37 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[11-Jul-2025 09:02:15 Asia/Jakarta] PHP Warning:  include(includes/navigation.php): Failed to open stream: No such file or directory in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 217
+[11-Jul-2025 09:02:15 Asia/Jakarta] PHP Warning:  include(): Failed opening 'includes/navigation.php' for inclusion (include_path='.;C:\php\pear') in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\tools.php on line 217
+[11-Jul-2025 09:02:36 Asia/Jakarta] PHP Warning:  include(includes/navigation.php): Failed to open stream: No such file or directory in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 175
+[11-Jul-2025 09:02:37 Asia/Jakarta] PHP Warning:  include(): Failed opening 'includes/navigation.php' for inclusion (include_path='.;C:\php\pear') in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\pages.php on line 175
+[11-Jul-2025 09:03:46 Asia/Jakarta] Error in getTrashed for table articles: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '?' at line 1
+[11-Jul-2025 09:03:46 Asia/Jakarta] Error in getTrashed for table projects: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '?' at line 1
+[11-Jul-2025 09:03:46 Asia/Jakarta] Error in getTrashed for table tools: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '?' at line 1
+[11-Jul-2025 09:03:46 Asia/Jakarta] Error in getTrashed for table files: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '?' at line 1
+[11-Jul-2025 09:03:48 Asia/Jakarta] PHP Warning:  include(includes/navigation.php): Failed to open stream: No such file or directory in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php on line 85
+[11-Jul-2025 09:03:48 Asia/Jakarta] PHP Warning:  include(): Failed opening 'includes/navigation.php' for inclusion (include_path='.;C:\php\pear') in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php on line 85
+[11-Jul-2025 09:04:00 Asia/Jakarta] Error in getTrashed for table articles: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '?' at line 1
+[11-Jul-2025 09:04:00 Asia/Jakarta] Error in getTrashed for table projects: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '?' at line 1
+[11-Jul-2025 09:04:00 Asia/Jakarta] Error in getTrashed for table tools: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '?' at line 1
+[11-Jul-2025 09:04:00 Asia/Jakarta] Error in getTrashed for table files: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '?' at line 1
+[11-Jul-2025 09:04:02 Asia/Jakarta] PHP Warning:  include(includes/navigation.php): Failed to open stream: No such file or directory in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php on line 85
+[11-Jul-2025 09:04:02 Asia/Jakarta] PHP Warning:  include(): Failed opening 'includes/navigation.php' for inclusion (include_path='.;C:\php\pear') in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\trash.php on line 85
+[11-Jul-2025 09:05:05 Asia/Jakarta] PHP Warning:  include(includes/navigation.php): Failed to open stream: No such file or directory in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 137
+[11-Jul-2025 09:05:05 Asia/Jakarta] PHP Warning:  include(): Failed opening 'includes/navigation.php' for inclusion (include_path='.;C:\php\pear') in D:\SOURCE CODE REYZA\wiracenter-v1-main\wiracenter-v1-main\admin\users.php on line 137
+[11-Jul-2025 09:21:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:21:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:22:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:22:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:23:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:23:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:24:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:24:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:25:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:25:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:26:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:26:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:27:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:27:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:28:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:28:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:29:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:29:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:30:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:30:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:31:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:31:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:32:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:32:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:33:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:33:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:34:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:34:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:35:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:35:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:36:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:36:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:37:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:37:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:38:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:38:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:39:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:39:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:40:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:40:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:41:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:41:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:42:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:42:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:43:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:43:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:44:52 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:44:54 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:00 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:02 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:06 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:08 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:13 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:15 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:20 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:22 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:26 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:28 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:30 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:34 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:36 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:42 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:45:44 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:46:11 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:46:13 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:46:41 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context
+[11-Jul-2025 09:46:43 Asia/Jakarta] Connection failed for 0.0.0.0: SQLSTATE[HY000] [2002] The requested address is not valid in its context

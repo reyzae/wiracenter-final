@@ -1,4 +1,5 @@
 <?php
+ob_start();
 // Articles Admin Page
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -6,13 +7,17 @@ ini_set('display_errors', 1);
 $page_title = 'Articles';
 include 'includes/header.php';
 
+// Initialize variables to prevent undefined variable errors
 $action = $_GET['action'] ?? 'list';
 $id = $_GET['id'] ?? null;
-
-// Pastikan $articles selalu terdefinisi
 $articles = [];
+$article = null;
+$success_message = '';
+$error_message = '';
+$errors = [];
+$tab = $_GET['tab'] ?? 'active';
 
-// Pastikan autoload HTMLPurifier jika digunakan
+// Ensure HTMLPurifier is available
 if (!class_exists('HTMLPurifier_Config')) {
     if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
         require_once __DIR__ . '/../vendor/autoload.php';
@@ -26,19 +31,14 @@ $pageContentId = json_encode($id);
 $db = new Database();
 $conn = $db->connect();
 
-$success_message = '';
-$error_message = '';
-
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $title = sanitize($_POST['title']);
-    $slug = generateSlug($_POST['slug'] ?: $title);
-    $content = $_POST['content']; // TinyMCE content, handle carefully
-    $excerpt = sanitize($_POST['excerpt']);
-    $status = $_POST['status'];
-    $publish_date = $_POST['publish_date'] ?: null;
-
-    $errors = [];
+    $title = sanitize($_POST['title'] ?? '');
+    $slug = generateSlug($_POST['slug'] ?? $title);
+    $content = $_POST['content'] ?? ''; // TinyMCE content, handle carefully
+    $excerpt = sanitize($_POST['excerpt'] ?? '');
+    $status = $_POST['status'] ?? 'draft';
+    $publish_date = $_POST['publish_date'] ?? null;
 
     // Validation
     if (empty($title)) {
@@ -90,20 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         if ($action == 'new' || $action == 'edit') {
-            // Handle featured image upload (again for edit)
-            $featured_image = '';
-            if (!empty($_FILES['featured_image']['name'])) {
-                $uploadDir = '../' . UPLOAD_PATH;
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-                $imageName = uniqid() . '_' . $_FILES['featured_image']['name'];
-                $imagePath = $uploadDir . $imageName;
-                if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
-                    $featured_image = $imageName;
-                }
-            }
-
             if ($action == 'new') {
                 // Create new article
                 $sql = "INSERT INTO articles (title, slug, content, excerpt, featured_image, status, publish_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -151,10 +137,14 @@ if ($action == 'delete' && $id) {
         $error_message = 'Failed to delete article.';
     }
     $action = 'list';
+    if (!headers_sent()) {
+        header('Location: articles.php?action=list&tab=active&msg=' . urlencode($success_message ?: $error_message));
+        ob_end_clean();
+        exit();
+    }
 }
 
 // Get article for editing
-$article = null;
 if ($action == 'edit' && $id) {
     $stmt = $conn->prepare("SELECT * FROM articles WHERE id = ?");
     $stmt->execute([$id]);
@@ -193,32 +183,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
         if ($bulk_action == 'delete') {
             $stmt = $conn->prepare("UPDATE articles SET deleted_at = NOW() WHERE id IN ($placeholders)");
             if ($stmt->execute($selected_articles)) {
-                $success_count = $stmt->rowCount();
-                logActivity($_SESSION['user_id'], 'Bulk moved articles to trash', 'article', implode(',', $selected_articles));
+                $success_count = count($selected_articles);
+                logActivity($_SESSION['user_id'], "Bulk deleted $success_count articles", 'article');
             } else {
                 $error_count = count($selected_articles);
             }
-        } elseif (in_array($bulk_action, ['publish', 'draft', 'archive', 'schedule'])) {
-            $new_status = str_replace(['publish', 'archive', 'schedule'], ['published', 'archived', 'scheduled'], $bulk_action);
-            $stmt = $conn->prepare("UPDATE articles SET status = ? WHERE id IN ($placeholders)");
-            $bulk_params = array_merge([$new_status], $selected_articles);
-            if ($stmt->execute($bulk_params)) {
-                $success_count = $stmt->rowCount();
-                logActivity($_SESSION['user_id'], 'Bulk updated article status to ' . $new_status, 'article', implode(',', $selected_articles));
+        } elseif ($bulk_action == 'publish') {
+            $stmt = $conn->prepare("UPDATE articles SET status = 'published' WHERE id IN ($placeholders)");
+            if ($stmt->execute($selected_articles)) {
+                $success_count = count($selected_articles);
+                logActivity($_SESSION['user_id'], "Bulk published $success_count articles", 'article');
+            } else {
+                $error_count = count($selected_articles);
+            }
+        } elseif ($bulk_action == 'draft') {
+            $stmt = $conn->prepare("UPDATE articles SET status = 'draft' WHERE id IN ($placeholders)");
+            if ($stmt->execute($selected_articles)) {
+                $success_count = count($selected_articles);
+                logActivity($_SESSION['user_id'], "Bulk moved $success_count articles to draft", 'article');
             } else {
                 $error_count = count($selected_articles);
             }
         }
+        
         if ($success_count > 0) {
-            $success_message = $success_count . ' article(s) ' . str_replace(['publish', 'draft', 'archive', 'schedule'], ['published', 'drafted', 'archived', 'scheduled'], $bulk_action) . ' successfully!';
+            $success_message = "Successfully processed $success_count articles.";
         }
         if ($error_count > 0) {
-            $error_message = $error_count . ' article(s) failed to ' . $bulk_action . '.';
+            $error_message = "Failed to process $error_count articles.";
         }
     }
-    // Redirect to clear POST data and show updated list
-    redirect(ADMIN_URL . '/articles.php?action=list');
 }
+
+// Handle success/error messages from URL parameters
+if (isset($_GET['msg'])) {
+    $success_message = $_GET['msg'];
+}
+
 ?>
 
 <?php if ($success_message): ?>

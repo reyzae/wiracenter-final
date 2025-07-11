@@ -1,0 +1,44 @@
+ALTER TABLE articles MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE projects MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE tools MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE files MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE pages MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE navigation_items MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE faqs MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE content_block_types MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE content_blocks MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE site_settings MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE contact_messages MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE activity_logs MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE notifications MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+
+-- 2. Tambahkan kolom yang kurang (jika belum ada)
+ALTER TABLE tools ADD COLUMN github_url VARCHAR(255) DEFAULT NULL;
+ALTER TABLE projects ADD COLUMN excerpt TEXT DEFAULT NULL;
+
+-- 3. Pastikan tipe data JSON pada kolom technologies di projects
+-- (Akan error jika sudah bertipe JSON, bisa diabaikan)
+ALTER TABLE projects MODIFY technologies JSON;
+
+-- 4. Samakan default value dan nullability pada beberapa kolom
+ALTER TABLE articles MODIFY featured_image VARCHAR(255) DEFAULT NULL;
+ALTER TABLE projects MODIFY featured_image VARCHAR(255) DEFAULT NULL;
+ALTER TABLE tools MODIFY featured_image VARCHAR(255) DEFAULT NULL;
+ALTER TABLE projects MODIFY project_url VARCHAR(255) DEFAULT NULL;
+ALTER TABLE tools MODIFY tool_url VARCHAR(255) DEFAULT NULL;
+
+-- 5. Tambahkan foreign key constraint (akan error jika sudah ada, bisa diabaikan)
+ALTER TABLE articles ADD CONSTRAINT fk_articles_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE projects ADD CONSTRAINT fk_projects_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE tools ADD CONSTRAINT fk_tools_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE files ADD CONSTRAINT fk_files_uploaded_by FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE activity_logs ADD CONSTRAINT fk_activity_logs_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE notifications ADD CONSTRAINT fk_notifications_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE content_blocks ADD CONSTRAINT fk_content_blocks_type FOREIGN KEY (type) REFERENCES content_block_types(type_name) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE pages ADD CONSTRAINT fk_pages_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+
+-- 6. Tambahkan index pada kolom slug (akan error jika sudah ada, bisa diabaikan)
+ALTER TABLE articles ADD INDEX idx_slug (slug);
+ALTER TABLE projects ADD INDEX idx_slug (slug);
+ALTER TABLE tools ADD INDEX idx_slug (slug);
+ALTER TABLE pages ADD INDEX idx_slug (slug); 

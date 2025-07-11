@@ -43,16 +43,16 @@
             if (in_array($current_page, $reading_pages)) {
                 $is_active = false;
             } else {
-                if ($item['url'] == $current_page && $slug == '') {
-                    $is_active = true;
-                } elseif (strpos($item['url'], 'page.php?slug=') !== false) {
-                    $slug_from_url = explode('slug=', $item['url'])[1];
-                    if ($current_page == 'page.php' && $slug == $slug_from_url) {
-                        $is_active = true;
-                    }
-                } elseif ($item['url'] == basename($_SERVER['PHP_SELF'])) {
+            if ($item['url'] == $current_page && $slug == '') {
+                $is_active = true;
+            } elseif (strpos($item['url'], 'page.php?slug=') !== false) {
+                $slug_from_url = explode('slug=', $item['url'])[1];
+                if ($current_page == 'page.php' && $slug == $slug_from_url) {
                     $is_active = true;
                 }
+            } elseif ($item['url'] == basename($_SERVER['PHP_SELF'])) {
+                $is_active = true;
+            }
             }
             // Gunakan icon dari kolom, jika kosong pakai mapping default
             $icon = isset($item['icon']) && $item['icon'] ? $item['icon'] : ($default_icons[$item['name']] ?? 'circle');

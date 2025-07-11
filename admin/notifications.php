@@ -1,8 +1,6 @@
 <?php
 require_once '../config/config.php';
 requireLogin();
-$page_title = 'Notifications';
-include 'includes/header.php';
 
 $db = new Database();
 $conn = $db->connect();
@@ -24,6 +22,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     header('Location: notifications.php');
     exit();
 }
+
+$page_title = 'Notifications';
+include 'includes/header.php';
+
 // Ambil semua notifikasi user
 $stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC");
 $stmt->execute([$user_id]);

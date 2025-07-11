@@ -1,4 +1,5 @@
 <?php
+ob_start();
 $page_title = 'FAQs';
 include 'includes/header.php';
 
@@ -74,7 +75,8 @@ if ($action == 'delete' && $id) {
     } catch (PDOException $e) {
         $error_message = 'Failed to delete FAQ: ' . $e->getMessage();
     }
-    header('Location: faqs.php?action=list&msg=' . urlencode($success_message ?: $error_message));
+    header('Location: faqs.php?action=list&tab=active&msg=' . urlencode($success_message ?: $error_message));
+    ob_end_clean();
     exit();
 }
 
@@ -105,6 +107,11 @@ if ($action == 'list') {
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $faqs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Pastikan $faqs selalu array
+if (!isset($faqs) || !is_array($faqs)) {
+    $faqs = [];
 }
 ?>
 

@@ -1,113 +1,200 @@
 <?php
-$page_title = 'Projects';
-include 'includes/header.php';
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
+// Initialize variables to prevent undefined variable errors
+$id = $_GET['id'] ?? null;
 $action = $_GET['action'] ?? 'list';
-$id = $_GET['id'] ?? null; // Inisialisasi $id di sini
-
-// Pastikan $projects selalu terdefinisi
 $projects = [];
+$project = null;
+$success_message = '';
+$error_message = '';
+$errors = [];
+$tab = $_GET['tab'] ?? 'active';
 
-require_once __DIR__ . '/../vendor/autoload.php'; // Pindahkan ke sini
+ob_start();
+require_once __DIR__ . '/../config/config.php';
+$page_title = 'Projects';
 
-// Global variables for TinyMCE
+// Ensure HTMLPurifier is available
+if (!class_exists('HTMLPurifier_Config')) {
+    if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+        require_once __DIR__ . '/../vendor/autoload.php';
+    }
+}
+
 $pageContentType = 'project';
-$pageContentId = ($id !== null) ? json_encode($id) : 'null'; // Pastikan $id terdefinisi
+$pageContentId = json_encode($id);
 
 $db = new Database();
 $conn = $db->connect();
 
-$success_message = '';
-$error_message = '';
-
-// Handle form submissions
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Handle form submission here
-    if (
-        isset($_POST['bulk_action']) && 
-        !empty($_POST['bulk_action']) && 
-        isset($_POST['selected_projects']) && 
-        is_array($_POST['selected_projects']) && 
-        count($_POST['selected_projects']) > 0
-    )
-    {
-        $bulk_action = $_POST['bulk_action'];
-        $selected_projects = $_POST['selected_projects'];
-
-        // Example: handle bulk delete
-        if ($bulk_action === 'delete') {
-            foreach ($selected_projects as $project_id) {
-                // You should implement a proper delete function here
-                $stmt = $conn->prepare("DELETE FROM projects WHERE id = ?");
-                $stmt->execute([$project_id]);
-            }
-            $success_message = "Selected projects have been deleted.";
-        }
-        // You can add more bulk actions here (publish, draft, archive, schedule)
-        // ...
-    }
-
-    if (!empty($success_message)) {
-        echo '<div class="alert alert-success alert-dismissible fade show" role="alert">';
-        echo htmlspecialchars($success_message);
-        echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-        echo '</div>';
-    }
-    if (!empty($error_message)) {
-        echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
-        echo htmlspecialchars($error_message);
-        echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-        echo '</div>';
-    }
-    // Tutup blok PHP form submission
-}
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && $action == 'new') {
+// Handle form submissions (tambah/edit)
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($action == 'new' || $action == 'edit')) {
     $title = sanitize($_POST['title'] ?? '');
-    $slug = generateSlug($_POST['slug'] ?: $title, 'projects');
-    $description = $_POST['description'] ?? '';
+    $slug = generateSlug($_POST['slug'] ?? $title, 'projects', $id);
     $content = $_POST['content'] ?? '';
+    $excerpt = sanitize($_POST['excerpt'] ?? '');
     $status = $_POST['status'] ?? 'draft';
     $publish_date = $_POST['publish_date'] ?? null;
-    $errors = [];
+
+    // Validasi
     if (empty($title)) $errors[] = 'Title is required.';
+    if (strlen($title) > 255) $errors[] = 'Title cannot exceed 255 characters.';
     if (empty($content)) $errors[] = 'Content is required.';
-    if (!in_array($status, ['draft','published','scheduled','archived'])) $errors[] = 'Invalid status.';
+    if (!empty($slug) && !preg_match('/^[a-z0-9-]+$/', $slug)) $errors[] = 'Slug can only contain lowercase letters, numbers, and hyphens.';
+    if (!in_array($status, ['draft', 'published', 'scheduled', 'archived'])) $errors[] = 'Invalid status selected.';
+    if (!empty($publish_date) && !strtotime($publish_date)) $errors[] = 'Invalid publish date format.';
+
+    // Upload featured image
+    $featured_image = '';
+    if (!empty($_FILES['featured_image']['name'])) {
+        $uploadDir = '../' . UPLOAD_PATH;
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        $imageName = uniqid() . '_' . $_FILES['featured_image']['name'];
+        $imagePath = $uploadDir . $imageName;
+        if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
+            $featured_image = $imageName;
+        }
+    }
+
+    // Auto-generate excerpt jika kosong
+    if (empty($excerpt)) {
+        $plain_content = strip_tags($content);
+        $excerpt = substr($plain_content, 0, 160);
+        if (strlen($plain_content) > 160) {
+            $excerpt .= '...';
+        }
+    }
+
+    // Auto-fill publish date jika tambah baru dan kosong
+    if ($action == 'new' && empty($publish_date)) {
+        $publish_date = date('Y-m-d H:i:s');
+    }
+
     if (empty($errors)) {
-        $stmt = $conn->prepare("INSERT INTO projects (title, slug, description, content, status, publish_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $result = $stmt->execute([$title, $slug, $description, $content, $status, $publish_date, $_SESSION['user_id']]);
-        if ($result) {
-            $success_message = 'Project created successfully!';
-            $action = 'list';
-        } else {
-            $error_message = 'Failed to create project.';
+        if ($action == 'new') {
+            $sql = "INSERT INTO projects (title, slug, content, excerpt, featured_image, status, publish_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            if ($stmt->execute([$title, $slug, $content, $excerpt, $featured_image, $status, $publish_date, $_SESSION['user_id']])) {
+                $success_message = 'Project created successfully!';
+                $action = 'list';
+                logActivity($_SESSION['user_id'], 'Created project', 'project', $conn->lastInsertId());
+                if (!headers_sent()) {
+                    header('Location: projects.php?action=list&tab=active&msg=' . urlencode($success_message));
+                    ob_end_clean();
+                    exit();
+                }
+            } else {
+                $error_message = 'Failed to create project.';
+            }
+        } elseif ($action == 'edit' && $id) {
+            if ($featured_image) {
+                $sql = "UPDATE projects SET title=?, slug=?, content=?, excerpt=?, featured_image=?, status=?, publish_date=? WHERE id=?";
+                $stmt = $conn->prepare($sql);
+                $result = $stmt->execute([$title, $slug, $content, $excerpt, $featured_image, $status, $publish_date, $id]);
+            } else {
+                $sql = "UPDATE projects SET title=?, slug=?, content=?, excerpt=?, status=?, publish_date=? WHERE id=?";
+                $stmt = $conn->prepare($sql);
+                $result = $stmt->execute([$title, $slug, $content, $excerpt, $status, $publish_date, $id]);
+            }
+            if ($result) {
+                $success_message = 'Project updated successfully!';
+                $action = 'list';
+                logActivity($_SESSION['user_id'], 'Updated project', 'project', $id);
+                createNotification($_SESSION['user_id'], 'Project "' . $title . '" has been updated.', 'projects.php?action=edit&id=' . $id);
+                if (!headers_sent()) {
+                    header('Location: projects.php?action=list&tab=active&msg=' . urlencode($success_message));
+                    ob_end_clean();
+                    exit();
+                }
+            } else {
+                $error_message = 'Failed to update project.';
+            }
         }
     } else {
         $error_message = implode('<br>', $errors);
     }
 }
 
-// Handle delete action
+// Handle delete action (soft delete)
 if ($action == 'delete' && $id) {
-    try {
-        $stmt = $conn->prepare("DELETE FROM projects WHERE id = ?");
-        if ($stmt->execute([$id])) {
-            $success_message = 'Project deleted successfully!';
-        } else {
-            $error_message = 'Failed to delete project.';
-        }
-    } catch (PDOException $e) {
-        $error_message = 'Failed to delete project: ' . $e->getMessage();
+    $stmt = $conn->prepare("UPDATE projects SET deleted_at = NOW() WHERE id = ?");
+    if ($stmt->execute([$id])) {
+        $success_message = 'Project moved to trash successfully!';
+        logActivity($_SESSION['user_id'], 'Moved project to trash', 'project', $id);
+    } else {
+        $error_message = 'Failed to delete project.';
     }
-    header('Location: projects.php?action=list&msg=' . urlencode($success_message ?: $error_message));
-    exit();
+    $action = 'list';
+    if (!headers_sent()) {
+        header('Location: projects.php?action=list&tab=active&msg=' . urlencode($success_message ?: $error_message));
+        ob_end_clean();
+        exit();
+    }
 }
 
-// Ambil semua projects untuk listing
+// Handle bulk actions
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
+    $bulk_action = $_POST['bulk_action'];
+    $selected_projects = $_POST['selected_projects'] ?? [];
+    if (!empty($selected_projects)) {
+        $placeholders = implode(',', array_fill(0, count($selected_projects), '?'));
+        $success_count = 0;
+        $error_count = 0;
+        if ($bulk_action == 'delete') {
+            $stmt = $conn->prepare("UPDATE projects SET deleted_at = NOW() WHERE id IN ($placeholders)");
+            if ($stmt->execute($selected_projects)) {
+                $success_count = count($selected_projects);
+                foreach ($selected_projects as $pid) {
+                    logActivity($_SESSION['user_id'], 'Bulk moved project to trash', 'project', $pid);
+                }
+            } else {
+                $error_count = count($selected_projects);
+            }
+        } elseif (in_array($bulk_action, ['publish', 'draft', 'archive', 'schedule'])) {
+            $new_status = str_replace(['publish', 'archive', 'schedule'], ['published', 'archived', 'scheduled'], $bulk_action);
+            $stmt = $conn->prepare("UPDATE projects SET status = ? WHERE id IN ($placeholders)");
+            $bulk_params = array_merge([$new_status], $selected_projects);
+            if ($stmt->execute($bulk_params)) {
+                $success_count = count($selected_projects);
+                foreach ($selected_projects as $pid) {
+                    logActivity($_SESSION['user_id'], 'Bulk updated project status to ' . $new_status, 'project', $pid);
+                }
+            } else {
+                $error_count = count($selected_projects);
+            }
+        }
+        if ($success_count > 0) {
+            $success_message = $success_count . ' project(s) ' . str_replace(['publish', 'draft', 'archive', 'schedule'], ['published', 'drafted', 'archived', 'scheduled'], $bulk_action) . ' successfully!';
+        }
+        if ($error_count > 0) {
+            $error_message = $error_count . ' project(s) failed to ' . $bulk_action . '.';
+        }
+    }
+    // Redirect to clear POST data and show updated list
+    if (!headers_sent()) {
+        header('Location: projects.php?action=list&tab=active');
+        ob_end_clean();
+        exit();
+    }
+}
+
+// Get project for editing
+if ($action == 'edit' && $id) {
+    $stmt = $conn->prepare("SELECT * FROM projects WHERE id = ?");
+    $stmt->execute([$id]);
+    $project = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Get all projects for listing
 if ($action == 'list') {
     $search_query = $_GET['search'] ?? '';
     $status_filter = $_GET['status_filter'] ?? '';
-    $sql = "SELECT p.*, u.username FROM projects p LEFT JOIN users u ON p.created_by = u.id WHERE 1=1";
+    $sql = "SELECT p.*, u.username FROM projects p LEFT JOIN users u ON p.created_by = u.id WHERE p.deleted_at IS NULL";
     $params = [];
     if (!empty($search_query)) {
         $sql .= " AND (p.title LIKE ? OR p.content LIKE ?)";
@@ -123,8 +210,16 @@ if ($action == 'list') {
     $stmt->execute($params);
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+// Handle success/error messages from URL parameters
+if (isset($_GET['msg'])) {
+    $success_message = $_GET['msg'];
+}
+
+include 'includes/header.php';
+// include 'includes/navigation.php';
 ?>
-    <h1 class="h2 mb-4">Projects</h1>
+<h1 class="h2 mb-4">Projects</h1>
 
 <?php if ($action == 'list'): ?>
     <!-- Projects List -->
@@ -257,8 +352,9 @@ if ($action == 'list') {
                         </div>
                         
                         <div class="mb-3">
-                            <label for="description" class="form-label">Short Description</label>
-                            <textarea class="tinymce" id="description" name="description" rows="3"><?php echo $project['description'] ?? ''; ?></textarea>
+                            <label for="excerpt" class="form-label">Excerpt</label>
+                            <textarea class="form-control" id="excerpt" name="excerpt" rows="3"><?php echo $project['excerpt'] ?? ''; ?></textarea>
+                            <small class="form-text text-muted">Leave blank to auto-generate from content.</small>
                         </div>
                         
                         <div class="mb-3">
@@ -335,4 +431,10 @@ if ($action == 'list') {
 <?php endif; ?>
 
 <?php include 'includes/footer.php'; ?>
+
+<?php
+if (function_exists('ob_get_level') && ob_get_level() > 0) {
+    ob_end_flush();
+}
+?>
 
