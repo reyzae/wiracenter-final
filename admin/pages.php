@@ -1,357 +1,525 @@
 <?php
 ob_start();
-$page_title = 'Pages';
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// Initialize variables to prevent undefined variable errors
-$id = $_GET['id'] ?? null;
-$action = $_GET['action'] ?? 'list';
-$pages = [];
-$page = null;
-$success_message = '';
-$error_message = '';
-$errors = [];
-$tab = $_GET['tab'] ?? 'active';
+$page_title = 'Pages & Navigation';
+include 'includes/header.php';
 
-require_once __DIR__ . '/../config/config.php';
-
-// Global variables for TinyMCE
-$pageContentType = 'page';
-$pageContentId = json_encode($id);
-
+// --- Setup ---
 $db = new Database();
 $conn = $db->connect();
 
-// Handle form submissions
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $title = sanitize($_POST['title'] ?? '');
-    $slug = generateSlug($_POST['slug'] ?? $title);
-    $content = $_POST['content'] ?? '';
-    $status = $_POST['status'] ?? 'draft';
+$tab = $_GET['tab'] ?? 'pages';
+$action = $_GET['action'] ?? 'list';
+$id = $_GET['id'] ?? null;
 
-    // Validation
-    if (empty($title)) {
-        $errors[] = 'Title is required.';
-    }
-    if (strlen($title) > 255) {
-        $errors[] = 'Title cannot exceed 255 characters.';
-    }
-    if (empty($content)) {
-        $errors[] = 'Content is required.';
-    }
-    if (!empty($slug) && !preg_match('/^[a-z0-9-]+$/', $slug)) {
-        $errors[] = 'Slug can only contain lowercase letters, numbers, and hyphens.';
-    }
-    if (!in_array($status, ['draft', 'published'])) {
-        $errors[] = 'Invalid status selected.';
-    }
+$success_message = '';
+$error_message = '';
+$errors = [];
 
-    if (empty($errors)) {
-        if ($action == 'new') {
-            // Create new page
-            $sql = "INSERT INTO pages (title, slug, content, status, created_by) VALUES (?, ?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            
-            if ($stmt->execute([$title, $slug, $content, $status, $_SESSION['user_id']])) {
-                $success_message = 'Page created successfully!';
-                $action = 'list';
-                logActivity($_SESSION['user_id'], 'Created page', 'page', $conn->lastInsertId());
-            } else {
-                $error_message = 'Failed to create page.';
-            }
-        } elseif ($action == 'edit' && $id) {
-            // Update existing page
-            $sql = "UPDATE pages SET title=?, slug=?, content=?, status=? WHERE id=?";
-            $stmt = $conn->prepare($sql);
-            
-            if ($stmt->execute([$title, $slug, $content, $status, $id])) {
-                $success_message = 'Page updated successfully!';
-                $action = 'list';
-                logActivity($_SESSION['user_id'], 'Updated page', 'page', $id);
-            } else {
-                $error_message = 'Failed to update page.';
-            }
-        }
-    } else {
-        $error_message = implode('<br>', $errors);
-    }
+// --- Handle Tabs ---
+if (isset($_GET['tab']) && in_array($_GET['tab'], ['pages', 'navigation'])) {
+    $tab = $_GET['tab'];
 }
 
-// Handle delete action
-if ($action == 'delete' && $id) {
-    try {
+// --- Pages Management Logic ---
+$pages = [];
+$page = null;
+if ($tab === 'pages') {
+    // Handle form submissions
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_POST['form_type'] ?? '') === 'page') {
+        $title = sanitize($_POST['title'] ?? '');
+        $slug = generateSlug($_POST['slug'] ?? $title, 'pages', $id);
+        $content = $_POST['content'] ?? '';
+        $status = $_POST['status'] ?? 'draft';
+        $profile_image = $page['profile_image'] ?? '';
+        // Handle profile image upload (only for About page)
+        if ($slug === 'about' && !empty($_POST['cropped_profile_image'])) {
+            $data = $_POST['cropped_profile_image'];
+            if (preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $data, $type)) {
+                $data = substr($data, strpos($data, ',') + 1);
+                $data = base64_decode($data);
+                $ext = $type[1] === 'jpeg' ? 'jpg' : $type[1];
+                $filename = 'about_profile_' . time() . '_' . rand(1000,9999) . '.' . $ext;
+                $filepath = '../uploads/' . $filename;
+                // Remove old image if exists and different
+                if (!empty($profile_image) && file_exists('../uploads/' . $profile_image)) {
+                    @unlink('../uploads/' . $profile_image);
+                }
+                file_put_contents($filepath, $data);
+                $profile_image = $filename;
+            }
+        }
+        // Validation
+        if (empty($title)) $errors[] = 'Title is required.';
+        if (strlen($title) > 255) $errors[] = 'Title cannot exceed 255 characters.';
+        if (empty($content)) $errors[] = 'Content is required.';
+        if (!empty($slug) && !preg_match('/^[a-z0-9-]+$/', $slug)) $errors[] = 'Slug can only contain lowercase letters, numbers, and hyphens.';
+        if (!in_array($status, ['draft', 'published'])) $errors[] = 'Invalid status selected.';
+
+        if (empty($errors)) {
+            if ($action == 'new') {
+                $sql = "INSERT INTO pages (title, slug, content, status, created_by) VALUES (?, ?, ?, ?, ?)";
+                $stmt = $conn->prepare($sql);
+                if ($stmt->execute([$title, $slug, $content, $status, $_SESSION['user_id']])) {
+                    $success_message = 'Page created successfully!';
+                    $action = 'list';
+                    logActivity($_SESSION['user_id'], 'Created page', 'page', $conn->lastInsertId());
+                } else {
+                    $error_message = 'Failed to create page.';
+                }
+            } elseif ($action == 'edit' && $id) {
+                if ($slug === 'about') {
+                    $sql = "UPDATE pages SET title=?, slug=?, content=?, status=?, profile_image=? WHERE id=?";
+                    $stmt = $conn->prepare($sql);
+                    if ($stmt->execute([$title, $slug, $content, $status, $profile_image, $id])) {
+                        $success_message = 'Page updated successfully!';
+                        $action = 'list';
+                        logActivity($_SESSION['user_id'], 'Updated page', 'page', $id);
+                    } else {
+                        $error_message = 'Failed to update page.';
+                    }
+                } else {
+                    $sql = "UPDATE pages SET title=?, slug=?, content=?, status=? WHERE id=?";
+                    $stmt = $conn->prepare($sql);
+                    if ($stmt->execute([$title, $slug, $content, $status, $id])) {
+                        $success_message = 'Page updated successfully!';
+                        $action = 'list';
+                        logActivity($_SESSION['user_id'], 'Updated page', 'page', $id);
+                    } else {
+                        $error_message = 'Failed to update page.';
+                    }
+                }
+            }
+        } else {
+            $error_message = implode('<br>', $errors);
+        }
+    }
+    // Handle delete action
+    if ($action == 'delete' && $id) {
         $stmt = $conn->prepare("DELETE FROM pages WHERE id = ?");
         if ($stmt->execute([$id])) {
             $success_message = 'Page deleted successfully!';
+            logActivity($_SESSION['user_id'], 'Deleted page', 'page', $id);
         } else {
             $error_message = 'Failed to delete page.';
         }
-    } catch (PDOException $e) {
-        $error_message = 'Failed to delete page: ' . $e->getMessage();
+        $action = 'list';
     }
-    if (!headers_sent()) {
-        header('Location: pages.php?action=list&tab=active&msg=' . urlencode($success_message ?: $error_message));
-        ob_end_clean();
-        exit();
+    // Get page for editing
+    if ($action == 'edit' && $id) {
+        $stmt = $conn->prepare("SELECT * FROM pages WHERE id = ?");
+        $stmt->execute([$id]);
+        $page = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    // Get all pages for listing
+    if ($action == 'list') {
+        $search_query = $_GET['search'] ?? '';
+        $status_filter = $_GET['status_filter'] ?? '';
+        $sql = "SELECT * FROM pages WHERE deleted_at IS NULL";
+        $params = [];
+        if (!empty($search_query)) {
+            $sql .= " AND (title LIKE ? OR slug LIKE ?)";
+            $params[] = '%' . $search_query . '%';
+            $params[] = '%' . $search_query . '%';
+        }
+        if (!empty($status_filter)) {
+            $sql .= " AND status = ?";
+            $params[] = $status_filter;
+        }
+        $sql .= " ORDER BY created_at DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 
-// Get page for editing
-if ($action == 'edit' && $id) {
-    $stmt = $conn->prepare("SELECT * FROM pages WHERE id = ?");
-    $stmt->execute([$id]);
-    $page = $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-// Get all pages for listing
-if ($action == 'list') {
-    $search_query = $_GET['search'] ?? '';
-    $status_filter = $_GET['status_filter'] ?? '';
-    $sql = "SELECT p.*, u.username FROM pages p LEFT JOIN users u ON p.created_by = u.id WHERE p.deleted_at IS NULL";
-    $params = [];
-    if (!empty($search_query)) {
-        $sql .= " AND (p.title LIKE ? OR p.content LIKE ?)";
-        $params[] = '%' . $search_query . '%';
-        $params[] = '%' . $search_query . '%';
-    }
-    if (!empty($status_filter)) {
-        $sql .= " AND p.status = ?";
-        $params[] = $status_filter;
-    }
-    $sql .= " ORDER BY p.created_at DESC";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute($params);
-    $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Handle bulk actions
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
-    $bulk_action = $_POST['bulk_action'];
-    $selected_pages = $_POST['selected_pages'] ?? [];
-
-    if (!empty($selected_pages)) {
-        $placeholders = implode(',', array_fill(0, count($selected_pages), '?'));
-        $success_count = 0;
-        $error_count = 0;
-
-        if ($bulk_action == 'delete') {
-            $stmt = $conn->prepare("UPDATE pages SET deleted_at = NOW() WHERE id IN ($placeholders)");
-            if ($stmt->execute($selected_pages)) {
-                $success_count = count($selected_pages);
-                logActivity($_SESSION['user_id'], 'Bulk moved pages to trash', 'page', implode(',', $selected_pages));
-            } else {
-                $error_count = count($selected_pages);
+// --- Navigation Management Logic ---
+$navigation_items = [];
+$navigation_item = null;
+if ($tab === 'navigation') {
+    // Handle form submissions
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_POST['form_type'] ?? '') === 'navigation') {
+        $name = sanitize($_POST['name'] ?? '');
+        $url = sanitize($_POST['url'] ?? '');
+        $display_order = (int)($_POST['display_order'] ?? 0);
+        $status = $_POST['status'] ?? 'active';
+        $errors = [];
+        if (empty($name)) $errors[] = 'Name is required.';
+        if (empty($url)) $errors[] = 'URL is required.';
+        if (!filter_var($url, FILTER_VALIDATE_URL) && !preg_match('/^[a-zA-Z0-9_\-]+\.php(\?.*)?$/', $url) && !preg_match('/^page\.php\?slug=[a-zA-Z0-9_\-]+$/', $url)) $errors[] = 'Invalid URL format. Must be a valid URL or a relative path to a .php file (e.g., index.php, page.php?slug=about).';
+        if (!in_array($status, ['active', 'inactive'])) $errors[] = 'Invalid status selected.';
+        if (empty($errors)) {
+            if ($action == 'new') {
+                $sql = "INSERT INTO navigation_items (name, url, display_order, status) VALUES (?, ?, ?, ?)";
+                $stmt = $conn->prepare($sql);
+                if ($stmt->execute([$name, $url, $display_order, $status])) {
+                    $success_message = 'Navigation item created successfully!';
+                    $action = 'list';
+                    logActivity($_SESSION['user_id'], 'Created navigation item', 'navigation_item', $conn->lastInsertId());
+                } else {
+                    $error_message = 'Failed to create navigation item.';
+                }
+            } elseif ($action == 'edit' && $id) {
+                $sql = "UPDATE navigation_items SET name=?, url=?, display_order=?, status=? WHERE id=?";
+                $stmt = $conn->prepare($sql);
+                if ($stmt->execute([$name, $url, $display_order, $status, $id])) {
+                    $success_message = 'Navigation item updated successfully!';
+                    $action = 'list';
+                    logActivity($_SESSION['user_id'], 'Updated navigation item', 'navigation_item', $id);
+                } else {
+                    $error_message = 'Failed to update navigation item.';
+                }
             }
-        } elseif (in_array($bulk_action, ['publish', 'draft'])) {
-            $new_status = str_replace(['publish'], ['published'], $bulk_action);
-            $stmt = $conn->prepare("UPDATE pages SET status = ? WHERE id IN ($placeholders)");
-            $bulk_params = array_merge([$new_status], $selected_pages);
-            if ($stmt->execute($bulk_params)) {
-                $success_count = count($selected_pages);
-                logActivity($_SESSION['user_id'], 'Bulk updated page status to ' . $new_status, 'page', implode(',', $selected_pages));
-            } else {
-                $error_count = count($selected_pages);
-            }
-        }
-
-        if ($success_count > 0) {
-            $success_message = $success_count . ' page(s) ' . str_replace(['publish'], ['published'], $bulk_action) . ' successfully!';
-        }
-        if ($error_count > 0) {
-            $error_message = $error_count . ' page(s) failed to ' . $bulk_action . '.';
+        } else {
+            $error_message = implode('<br>', $errors);
         }
     }
-    // Redirect to clear POST data and show updated list
-    if (!headers_sent()) {
-        redirect(ADMIN_URL . '/pages.php?action=list');
+    // Handle delete action
+    if ($action == 'delete' && $id) {
+        $stmt = $conn->prepare("DELETE FROM navigation_items WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            $success_message = 'Navigation item deleted successfully!';
+            logActivity($_SESSION['user_id'], 'Deleted navigation item', 'navigation_item', $id);
+        } else {
+            $error_message = 'Failed to delete navigation item.';
+        }
+        $action = 'list';
+    }
+    // Get navigation item for editing
+    if ($action == 'edit' && $id) {
+        $stmt = $conn->prepare("SELECT * FROM navigation_items WHERE id = ?");
+        $stmt->execute([$id]);
+        $navigation_item = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    // Get all navigation items for listing
+    if ($action == 'list') {
+        $search_query = $_GET['search'] ?? '';
+        $status_filter = $_GET['status_filter'] ?? '';
+        $sql = "SELECT * FROM navigation_items WHERE 1=1";
+        $params = [];
+        if (!empty($search_query)) {
+            $sql .= " AND (name LIKE ? OR url LIKE ?)";
+            $params[] = '%' . $search_query . '%';
+            $params[] = '%' . $search_query . '%';
+        }
+        if (!empty($status_filter)) {
+            $sql .= " AND status = ?";
+            $params[] = $status_filter;
+        }
+        $sql .= " ORDER BY display_order ASC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $navigation_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
-
-// Handle success/error messages from URL parameters
-if (isset($_GET['msg'])) {
-    $success_message = $_GET['msg'];
-}
-
-include 'includes/header.php';
-// include 'includes/navigation.php';
 ?>
 
-<?php if ($success_message): ?>
-    <div class="alert alert-success alert-dismissible fade show">
-        <?php echo $success_message; ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
+<div class="container-fluid">
+    <ul class="nav nav-tabs mb-4" id="pagesNavTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link<?php echo $tab === 'pages' ? ' active' : ''; ?>" href="?tab=pages">Pages</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link<?php echo $tab === 'navigation' ? ' active' : ''; ?>" href="?tab=navigation">Navigation/Menu</a>
+        </li>
+    </ul>
 
-<?php if ($error_message): ?>
-    <div class="alert alert-danger alert-dismissible fade show">
-        <?php echo $error_message; ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
-
-<?php if (isset($_GET['msg']) && $_GET['msg']) {
-    echo '<div class="alert alert-success alert-dismissible fade show">' . htmlspecialchars($_GET['msg']) . '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
-} ?>
-
-<?php if ($action == 'list'): ?>
-    <!-- Pages List -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h2">All Pages</h1>
-        <a href="?action=new" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>New Page
-        </a>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="GET" class="row g-3 align-items-center mb-4">
-                <input type="hidden" name="action" value="list">
-                <div class="col-md-4">
-                    <input type="text" name="search" class="form-control" placeholder="Search pages..." value="<?php echo $_GET['search'] ?? ''; ?>">
-                </div>
-                <div class="col-md-3">
-                    <select name="status_filter" class="form-select">
-                        <option value="">All Statuses</option>
-                        <option value="draft" <?php echo (($_GET['status_filter'] ?? '') == 'draft') ? 'selected' : ''; ?>>Draft</option>
-                        <option value="published" <?php echo (($_GET['status_filter'] ?? '') == 'published') ? 'selected' : ''; ?>>Published</option>
-                    </select>
-                </div>
-                <div class="col-md-auto">
-                    <button type="submit" class="btn btn-primary">Filter</button>
-                </div>
-            </form>
-
-            <form method="POST" action="" id="bulk-action-form">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="d-flex align-items-center">
-                        <select name="bulk_action" class="form-select me-2">
-                            <option value="">Bulk Actions</option>
-                            <option value="delete">Delete</option>
-                            <option value="publish">Change Status to Published</option>
-                            <option value="draft">Change Status to Draft</option>
-                        </select>
-                        <button type="submit" class="btn btn-info" onclick="return confirm('Are you sure you want to apply this bulk action?');">Apply</button>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="select-all-pages">
-                        <label class="form-check-label" for="select-all-pages">
-                            Select All
-                        </label>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th><input type="checkbox" id="select-all-pages"></th>
-                                <th>Title</th>
-                                <th>Status</th>
-                                <th>Author</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        <?php if (!empty($pages)): ?>
-                            <?php foreach ($pages as $page): ?>
-                                <tr>
-                                    <td><input type="checkbox" name="selected_pages[]" value="<?php echo $page['id']; ?>" class="page-checkbox"></td>
-                                    <td>
-                                        <strong><?php echo $page['title']; ?></strong>
-                                        <br>
-                                        <small class="text-muted"><?php echo $page['slug']; ?></small>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-<?php 
-                                            if ($page['status'] == 'published') echo 'success';
-                                            else if ($page['status'] == 'draft') echo 'secondary';
-                                            else echo 'warning'; // Fallback for unknown status
-                                        ?>">
-                                            <?php echo ucfirst($page['status']); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo $page['username']; ?></td>
-                                    <td><?php echo formatDate($page['created_at']); ?></td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="?action=edit&id=<?php echo $page['id']; ?>" class="btn btn-outline-primary">Edit</a>
-                                            <a href="?action=delete&id=<?php echo $page['id']; ?>" class="btn btn-outline-danger delete-btn" data-item="page">Delete</a>
-                                            <?php if ($page['status'] == 'published'): ?>
-                                                <a href="../page.php?slug=<?php echo $page['slug']; ?>" class="btn btn-outline-success" target="_blank">View</a>
-                                            <?php endif; ?>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">No pages found.</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+    <?php if ($success_message): ?>
+        <div class="alert alert-success alert-dismissible fade show">
+            <?php echo $success_message; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-    </div>
+    <?php endif; ?>
+    <?php if ($error_message): ?>
+        <div class="alert alert-danger alert-dismissible fade show">
+            <?php echo $error_message; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
 
-<?php elseif ($action == 'new' || $action == 'edit'): ?>
-    <!-- Page Form -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h2"><?php echo $action == 'new' ? 'New Page' : 'Edit Page'; ?></h1>
-        <a href="?action=list" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Back to List
-        </a>
-    </div>
-    
-    <form method="POST">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h6 class="card-title mb-0">Content</h6>
+    <?php if ($tab === 'pages'): ?>
+        <?php if ($action == 'list'): ?>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">Pages Management</h1>
+                <a href="?tab=pages&action=new" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add New Page
+                </a>
+            </div>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 align-items-center mb-4">
+                        <input type="hidden" name="tab" value="pages">
+                        <input type="hidden" name="action" value="list">
+                        <div class="col-md-4">
+                            <input type="text" name="search" class="form-control" placeholder="Search pages..." value="<?php echo $_GET['search'] ?? ''; ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="status_filter" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="published" <?php echo (($_GET['status_filter'] ?? '') == 'published') ? 'selected' : ''; ?>>Published</option>
+                                <option value="draft" <?php echo (($_GET['status_filter'] ?? '') == 'draft') ? 'selected' : ''; ?>>Draft</option>
+                            </select>
+                        </div>
+                        <div class="col-md-auto">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </div>
+                    </form>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Slug</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if ($pages): ?>
+                                    <?php foreach ($pages as $item): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($item['title']); ?></td>
+                                            <td><?php echo htmlspecialchars($item['slug']); ?></td>
+                                            <td><span class="badge bg-<?php echo $item['status'] == 'published' ? 'success' : 'secondary'; ?>"><?php echo ucfirst($item['status']); ?></span></td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="?tab=pages&action=edit&id=<?php echo $item['id']; ?>" class="btn btn-outline-primary">Edit</a>
+                                                    <a href="?tab=pages&action=delete&id=<?php echo $item['id']; ?>" class="btn btn-outline-danger delete-btn" data-item="page">Delete</a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">No pages found.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
                     </div>
+                </div>
+            </div>
+        <?php elseif ($action == 'new' || $action == 'edit'): ?>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2"><?php echo $action == 'new' ? 'Add New Page' : 'Edit Page'; ?></h1>
+                <a href="?tab=pages&action=list" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to List
+                </a>
+            </div>
+            <form method="POST" enctype="multipart/form-data" id="editPageForm">
+                <input type="hidden" name="form_type" value="page">
+                <div class="card mb-4">
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="title" class="form-label">Title *</label>
-                            <input type="text" class="form-control" id="title" name="title" value="<?php echo $page['title'] ?? ''; ?>" required>
+                            <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($page['title'] ?? ''); ?>" required>
                         </div>
-                        
                         <div class="mb-3">
-                            <label for="slug" class="form-label">Slug</label>
-                            <input type="text" class="form-control" id="slug" name="slug" value="<?php echo $page['slug'] ?? ''; ?>">
-                            <small class="form-text text-muted">Leave blank to auto-generate from title</small>
+                            <label for="slug" class="form-label">Slug *</label>
+                            <input type="text" class="form-control" id="slug" name="slug" value="<?php echo htmlspecialchars($page['slug'] ?? ''); ?>" required>
+                            <small class="form-text text-muted">e.g., about, contact, faq</small>
                         </div>
-                        
+                        <?php if (($page['slug'] ?? '') === 'about'): ?>
+                        <div class="mb-3">
+                            <label class="form-label">Profile Image</label><br>
+                            <?php if (!empty($page['profile_image'])): ?>
+                                <img id="profileImagePreview" src="../uploads/<?php echo htmlspecialchars($page['profile_image']); ?>" alt="Profile Image" style="max-width:120px;max-height:120px;border-radius:50%;margin-bottom:10px;display:block;">
+                            <?php else: ?>
+                                <img id="profileImagePreview" src="https://via.placeholder.com/120x120?text=No+Image" alt="Profile Image" style="max-width:120px;max-height:120px;border-radius:50%;margin-bottom:10px;display:block;">
+                            <?php endif; ?>
+                            <input type="file" class="form-control" id="profileImageInput" name="profile_image" accept="image/*">
+                            <input type="hidden" name="cropped_profile_image" id="croppedProfileImage">
+                            <div id="cropperContainer" style="width:400px;height:400px;overflow:hidden;margin-top:15px;display:none;">
+                                <img id="cropperImage" style="max-width:100%;max-height:100%;display:block;margin:auto;">
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary mt-2" id="cropProfileImageBtn" style="display:none;">Crop & Preview</button>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($action == 'edit' && $page && $page['slug'] === 'about'): ?>
+                            <!-- Blok duplikat upload foto profil About dihapus sesuai permintaan user -->
+                        <?php endif; ?>
                         <div class="mb-3">
                             <label for="content" class="form-label">Content *</label>
-                            <textarea name="content" class="tinymce" id="content" name="content" rows="20"><?php echo $page['content'] ?? ''; ?></textarea>
+                            <textarea class="form-control tinymce" id="content" name="content" rows="10" required><?php echo htmlspecialchars($page['content'] ?? ''); ?></textarea>
                         </div>
-                        
                         <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
-                                <option value="draft" <?php echo ($page['status'] ?? '') == 'draft' ? 'selected' : ''; ?>>Draft</option>
                                 <option value="published" <?php echo ($page['status'] ?? '') == 'published' ? 'selected' : ''; ?>>Published</option>
+                                <option value="draft" <?php echo ($page['status'] ?? '') == 'draft' ? 'selected' : ''; ?>>Draft</option>
                             </select>
                         </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-save me-2"></i><?php echo $action == 'new' ? 'Create Page' : 'Update Page'; ?>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Page
                         </button>
                     </div>
                 </div>
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h6 class="card-title mb-0">Preview</h6>
-                    </div>
-                    <div class="card-body" id="preview-panel">
-                        <!-- Content will be loaded here -->
+            </form>
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"/>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+            <script>
+            let cropper;
+            const cropperImage = document.getElementById('cropperImage');
+            const cropperContainer = document.getElementById('cropperContainer');
+            const cropBtn = document.getElementById('cropProfileImageBtn');
+            const profileImageInput = document.getElementById('profileImageInput');
+            const profileImagePreview = document.getElementById('profileImagePreview');
+
+            profileImageInput?.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        cropperImage.src = event.target.result;
+                        cropperContainer.style.display = 'block';
+                        cropBtn.style.display = 'inline-block';
+                        if (cropper) {
+                            cropper.destroy();
+                            cropper = null;
+                        }
+                        cropper = new Cropper(cropperImage, {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                            autoCropArea: 1,
+                            dragMode: 'move',
+                            responsive: false,
+                            background: false
+                        });
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            cropBtn?.addEventListener('click', function() {
+                if (cropper) {
+                    cropper.getCroppedCanvas({width: 400, height: 400}).toBlob(function(blob) {
+                        const reader = new FileReader();
+                        reader.onloadend = function() {
+                            document.getElementById('croppedProfileImage').value = reader.result;
+                            profileImagePreview.src = reader.result;
+                        };
+                        reader.readAsDataURL(blob);
+                    }, 'image/png');
+                }
+            });
+            </script>
+        <?php endif; ?>
+    <?php elseif ($tab === 'navigation'): ?>
+        <?php if ($action == 'list'): ?>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">Navigation/Menu Management</h1>
+                <a href="?tab=navigation&action=new" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add New Item
+                </a>
+            </div>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 align-items-center mb-4">
+                        <input type="hidden" name="tab" value="navigation">
+                        <input type="hidden" name="action" value="list">
+                        <div class="col-md-4">
+                            <input type="text" name="search" class="form-control" placeholder="Search items..." value="<?php echo $_GET['search'] ?? ''; ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="status_filter" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="active" <?php echo (($_GET['status_filter'] ?? '') == 'active') ? 'selected' : ''; ?>>Active</option>
+                                <option value="inactive" <?php echo (($_GET['status_filter'] ?? '') == 'inactive') ? 'selected' : ''; ?>>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-auto">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </div>
+                    </form>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>URL</th>
+                                    <th>Order</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if ($navigation_items): ?>
+                                    <?php foreach ($navigation_items as $item): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($item['name']); ?></td>
+                                            <td><?php echo htmlspecialchars($item['url']); ?></td>
+                                            <td><?php echo (int)$item['display_order']; ?></td>
+                                            <td><span class="badge bg-<?php echo $item['status'] == 'active' ? 'success' : 'secondary'; ?>"><?php echo ucfirst($item['status']); ?></span></td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="?tab=navigation&action=edit&id=<?php echo $item['id']; ?>" class="btn btn-outline-primary">Edit</a>
+                                                    <a href="?tab=navigation&action=delete&id=<?php echo $item['id']; ?>" class="btn btn-outline-danger delete-btn" data-item="navigation item">Delete</a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">No navigation items found.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        </div>
-    </form>
-<?php endif; ?>
+        <?php elseif ($action == 'new' || $action == 'edit'): ?>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2"><?php echo $action == 'new' ? 'Add New Navigation Item' : 'Edit Navigation Item'; ?></h1>
+                <a href="?tab=navigation&action=list" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to List
+                </a>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="form_type" value="navigation">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($navigation_item['name'] ?? ''); ?>" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="url" class="form-label">URL *</label>
+                            <input type="text" class="form-control" id="url" name="url" value="<?php echo htmlspecialchars($navigation_item['url'] ?? ''); ?>" required>
+                            <small class="form-text text-muted">e.g., index.php, page.php?slug=about, https://external.com</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="display_order" class="form-label">Display Order</label>
+                            <input type="number" class="form-control" id="display_order" name="display_order" value="<?php echo (int)($navigation_item['display_order'] ?? 0); ?>">
+                            <small class="form-text text-muted">Lower numbers appear first.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="active" <?php echo ($navigation_item['status'] ?? '') == 'active' ? 'selected' : ''; ?>>Active</option>
+                                <option value="inactive" <?php echo ($navigation_item['status'] ?? '') == 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Item
+                        </button>
+                    </div>
+                </div>
+            </form>
+        <?php endif; ?>
+    <?php endif; ?>
+</div>
 
+<script src="https://cdn.tiny.cloud/1/7t4ysw5ibpvf6otxc72fed05syoih8onsdc91gce3e4sqi3a/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    tinymce.init({
+        selector: 'textarea.tinymce',
+        plugins: 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+        toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+        height: 400,
+        menubar: false
+    });
+</script>
 <?php include 'includes/footer.php'; ?>
+<?php ob_end_flush(); ?>

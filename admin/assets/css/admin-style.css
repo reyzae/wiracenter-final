@@ -5,7 +5,7 @@
 :root {
     --primary-color: #1e90ff; /* Dodger Blue */
     --secondary-color: #6c757d;
-    --sidebar-bg: #2c3e50; /* Darker Blue-Gray */
+    --sidebar-bg: #24344d; /* Biru gelap lembut, UI friendly */
     --sidebar-link-color: #ecf0f1; /* Light Gray */
     --sidebar-link-hover: #ffffff;
     --sidebar-link-active-bg: #1a2b3c; /* Even Darker Blue-Gray */
@@ -151,6 +151,11 @@ body, html {
 #sidebar-wrapper .list-group-item:hover {
     background-color: var(--sidebar-link-active-bg);
     color: var(--sidebar-link-hover);
+}
+
+#sidebar-wrapper .list-group-item[role="button"] {
+    cursor: pointer;
+    user-select: none;
 }
 
 /* Top Navbar */
@@ -317,6 +322,31 @@ body, html {
     transform: rotate(180deg);
 }
 
+/* Highlight menu utama yang sedang terbuka (open/active) */
+#sidebar-wrapper .list-group-item.open,
+#sidebar-wrapper .list-group-item[aria-expanded="true"] {
+    background-color: #e6f0fa; /* Biru muda, UI friendly */
+    color: var(--primary-color);
+    border-left: 4px solid #1e90ff; /* Biru solid */
+    font-weight: 600;
+}
+
+/* Chevron berputar saat menu terbuka */
+#sidebar-wrapper .list-group-item .collapse-icon {
+    transition: transform 0.3s ease;
+}
+#sidebar-wrapper .list-group-item[aria-expanded="true"] .collapse-icon {
+    transform: rotate(180deg);
+}
+
+/* Submenu aktif lebih jelas */
+#sidebar-wrapper .list-group-item.ps-5.active {
+    background-color: #e6f0fa !important;
+    color: #1e90ff !important;
+    font-weight: 600;
+    border-left: 4px solid #1e90ff;
+}
+
 /* ================= RESPONSIVE ADMIN DASHBOARD ================= */
 @media (max-width: 1200px) {
   #sidebar-wrapper {
@@ -406,4 +436,13 @@ body, html {
     display: inline-block !important;
     margin-left: 0.5rem;
   }
+}
+
+/* Fix: Bootstrap collapse for sidebar submenu */
+.collapse {
+  display: none;
+  transition: height 0.3s ease;
+}
+.collapse.show {
+  display: block;
 }

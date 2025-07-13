@@ -40,8 +40,43 @@ include 'includes/header.php';
     <div class="container">
         <div class="row">
             <div class="col-lg-8 mx-auto">
-                <h1 class="display-5 mb-3"><?php echo htmlspecialchars($article['title']); ?></h1>
-                <p class="text-muted mb-4">Published on <?php echo formatDate($article['publish_date']); ?></p>
+                <h1 data-i18n="articles.title"><?php echo htmlspecialchars($article['title']); ?></h1>
+                <p class="text-muted mb-4" data-i18n="articles.published">Published on <?php echo formatDate($article['publish_date']); ?></p>
+                
+                <!-- Social Share Buttons -->
+                <div class="social-share">
+                    <h4 data-i18n="share.article"><i class="fas fa-share-alt me-2"></i>Share this article</h4>
+                    <div class="share-buttons">
+                        <button class="share-btn facebook" onclick="shareContent('facebook')">
+                            <i class="fab fa-facebook-f"></i>
+                            <span>Facebook</span>
+                        </button>
+                        <button class="share-btn twitter" onclick="shareContent('twitter')">
+                            <i class="fab fa-twitter"></i>
+                            <span>Twitter</span>
+                        </button>
+                        <button class="share-btn linkedin" onclick="shareContent('linkedin')">
+                            <i class="fab fa-linkedin-in"></i>
+                            <span>LinkedIn</span>
+                        </button>
+                        <button class="share-btn whatsapp" onclick="shareContent('whatsapp')">
+                            <i class="fab fa-whatsapp"></i>
+                            <span>WhatsApp</span>
+                        </button>
+                        <button class="share-btn telegram" onclick="shareContent('telegram')">
+                            <i class="fab fa-telegram-plane"></i>
+                            <span>Telegram</span>
+                        </button>
+                        <button class="share-btn email" onclick="shareContent('email')">
+                            <i class="fas fa-envelope"></i>
+                            <span>Email</span>
+                        </button>
+                        <button class="share-btn copy-link" onclick="shareContent('copy')">
+                            <i class="fas fa-link"></i>
+                            <span>Copy Link</span>
+                        </button>
+                    </div>
+                </div>
                 
                 <?php if (!empty($article['featured_image'])) : ?>
                     <img src="<?php echo htmlspecialchars(UPLOAD_PATH . $article['featured_image']); ?>" class="img-fluid rounded mb-4" alt="<?php echo htmlspecialchars($article['title']); ?>">
@@ -56,3 +91,4 @@ include 'includes/header.php';
 </section>
 
 <?php include 'includes/footer.php'; ?>
+<script src="assets/js/script.js"></script>

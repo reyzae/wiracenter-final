@@ -11,6 +11,11 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item"><a class="nav-link" href="dashboard.php">Dashboard</a></li>
         <li class="nav-item"><a class="nav-link" href="users.php">Users</a></li>
+        <li class="nav-item">
+          <a class="nav-link<?php echo (basename($_SERVER['PHP_SELF']) == 'contact_messages.php') ? ' active' : ''; ?>" href="contact_messages.php">
+            <i class="fas fa-envelope me-1"></i>Contact Messages
+          </a>
+        </li>
         <li class="nav-item"><a class="nav-link" href="articles.php">Articles</a></li>
         <li class="nav-item"><a class="nav-link" href="projects.php">Projects</a></li>
         <li class="nav-item"><a class="nav-link" href="tools.php">Tools</a></li>

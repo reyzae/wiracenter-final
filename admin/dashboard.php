@@ -93,6 +93,17 @@ $recent_messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $recent_messages = [];
     $error_message = 'Table contact_messages not found in database.';
 }
+
+// Get recent tools
+$recent_tools = [];
+try {
+$stmt = $conn->prepare("SELECT id, title, status, publish_date FROM tools ORDER BY created_at DESC LIMIT 5");
+$stmt->execute();
+$recent_tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $recent_tools = [];
+    $error_message = 'Table tools not found in database.';
+}
 ?>
 
 <!-- Statistics Cards -->
@@ -185,7 +196,7 @@ $recent_messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <!-- Recent Content -->
 <div class="row g-4 <?php echo !hasPermission('admin') ? 'justify-content-center' : ''; ?>">
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">Recent Articles</h5>
@@ -218,7 +229,7 @@ $recent_messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
     
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">Recent Projects</h5>
@@ -245,6 +256,39 @@ $recent_messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="text-center text-muted py-4">
                         <i class="fas fa-code fa-3x mb-3"></i>
                         <p>No projects yet.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Tools</h5>
+            </div>
+            <div class="card-body">
+                <?php if ($recent_tools): ?>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($recent_tools as $tool): ?>
+                            <a href="tools.php?action=edit&id=<?php echo $tool['id']; ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1"><?php echo $tool['title']; ?></h6>
+                                    <small class="text-muted"><?php echo formatDateTime($tool['publish_date'] ?? 'Draft'); ?></small>
+                                </div>
+                                <span class="badge bg-<?php echo $tool['status'] == 'published' ? 'success' : 'warning'; ?> rounded-pill">
+                                    <?php echo ucfirst($tool['status']); ?>
+                                </span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="tools.php" class="btn btn-sm btn-outline-primary">View All Tools</a>
+                    </div>
+                <?php else: ?>
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-tools fa-3x mb-3"></i>
+                        <p>No tools yet.</p>
                     </div>
                 <?php endif; ?>
             </div>

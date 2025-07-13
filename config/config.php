@@ -53,7 +53,7 @@ if (file_exists(__DIR__ . '/../.env')) {
 require_once 'database.php';
 
 // Site configuration
-define('SITE_URL', $_ENV['SITE_URL'] ?? 'http://localhost:8000');
+define('SITE_URL', $_ENV['SITE_URL'] ?? 'http://localhost:81');
 define('ADMIN_URL', $_ENV['ADMIN_URL'] ?? SITE_URL . '/admin');
 define('UPLOAD_PATH', $_ENV['UPLOAD_PATH'] ?? 'uploads/');
 define('MAX_FILE_SIZE', $_ENV['MAX_FILE_SIZE'] ?? 5 * 1024 * 1024); // 5MB

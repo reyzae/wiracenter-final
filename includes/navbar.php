@@ -15,7 +15,7 @@
           <a class="nav-link<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? ' active' : ''; ?>" href="index.php">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link<?php echo (basename($_SERVER['PHP_SELF']) == 'about.php') ? ' active' : ''; ?>" href="about.php">About</a>
+          <a class="nav-link<?php echo ((basename($_SERVER['PHP_SELF']) == 'page.php' && ($_GET['slug'] ?? '') == 'about') || basename($_SERVER['PHP_SELF']) == 'about.php') ? ' active' : ''; ?>" href="page.php?slug=about">About</a>
         </li>
         <li class="nav-item">
           <a class="nav-link<?php echo (basename($_SERVER['PHP_SELF']) == 'my-spaces.php') ? ' active' : ''; ?>" href="my-spaces.php">My Spaces</a>
@@ -24,6 +24,7 @@
           <a class="nav-link<?php echo (basename($_SERVER['PHP_SELF']) == 'contact.php') ? ' active' : ''; ?>" href="contact.php">Contact</a>
         </li>
       </ul>
+      <?php if (function_exists('renderHeaderControls')) renderHeaderControls(); ?>
     </div>
   </div>
 </nav> 

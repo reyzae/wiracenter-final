@@ -5,16 +5,18 @@ class Database {
     private $username;
     private $password;
     private $conn;
+    private $port;
 
     public function __construct() {
         // Load environment variables if not already loaded
         $this->loadEnvironmentVariables();
         
         // Use environment variables with fallbacks for XAMPP
-        $this->host = $_ENV['DB_HOST'] ?? 'localhost';
-        $this->db_name = $_ENV['DB_NAME'] ?? 'wiracenter_db2';
-        $this->username = $_ENV['DB_USER'] ?? 'root';
-        $this->password = $_ENV['DB_PASS'] ?? '';
+        $this->host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+        $this->db_name = $_ENV['DB_NAME'] ?? 'wiracent_db2';
+        $this->username = $_ENV['DB_USER'] ?? 'wiracent_admin';
+        $this->password = $_ENV['DB_PASS'] ?? 'Wiracenter!';
+        $this->port = $_ENV['DB_PORT'] ?? '3306';
         
         // Log configuration for debugging (only in debug mode)
         if (isset($_ENV['DEBUG_MODE']) && $_ENV['DEBUG_MODE'] == '1') {

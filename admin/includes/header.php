@@ -19,7 +19,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/admin-style.css"> <!-- Updated CSS link -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Hapus script Bootstrap JS di head, pindahkan ke sebelum </body> -->
     <script src="https://cdn.tiny.cloud/1/7t4ysw5ibpvf6otxc72fed05syoih8onsdc91gce3e4sqi3a/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
         // Definisikan variabel global untuk autosave TinyMCE
@@ -52,7 +52,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
                 ?>
 
                 <?php if (hasPermission('editor')): ?>
-                <div class="list-group-item list-group-item-action bg-dark text-white d-flex justify-content-between align-items-center <?php echo $is_content_management_active; ?>" data-bs-toggle="collapse" data-bs-target="#contentManagementSubmenu" role="button" aria-expanded="<?php echo $is_content_management_active ? 'true' : 'false'; ?>" aria-controls="contentManagementSubmenu">
+                <div class="list-group-item list-group-item-action bg-dark text-white d-flex justify-content-between align-items-center <?php echo $is_content_management_active; ?><?php echo $is_content_management_active ? ' open' : ''; ?>" data-bs-toggle="collapse" data-bs-target="#contentManagementSubmenu" role="button" aria-expanded="<?php echo $is_content_management_active ? 'true' : 'false'; ?>" aria-controls="contentManagementSubmenu">
                     <div class="d-flex align-items-center flex-grow-1"><i class="fas fa-folder-open me-2"></i><span class="menu-text">Content Management</span></div>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
@@ -68,9 +68,6 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
                     </a>
                     <a href="pages.php" class="list-group-item list-group-item-action bg-dark text-white ps-5 <?php echo $current_page == 'pages' ? 'active' : ''; ?>">
                         <i class="fas fa-file-alt me-2"></i><span class="menu-text">Pages</span>
-                    </a>
-                    <a href="navigation.php" class="list-group-item list-group-item-action bg-dark text-white ps-5 <?php echo $current_page == 'navigation' ? 'active' : ''; ?>">
-                        <i class="fas fa-bars me-2"></i><span class="menu-text">Navigation</span>
                     </a>
                     <a href="faqs.php" class="list-group-item list-group-item-action bg-dark text-white ps-5 <?php echo $current_page == 'faqs' ? 'active' : ''; ?>">
                         <i class="fas fa-question-circle me-2"></i><span class="menu-text">FAQs</span>
@@ -88,7 +85,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
                 <?php endif; ?>
 
                 <?php if (hasPermission('admin')): ?>
-                <div class="list-group-item list-group-item-action bg-dark text-white d-flex justify-content-between align-items-center <?php echo $is_admin_active; ?>" data-bs-toggle="collapse" data-bs-target="#administrationSubmenu" role="button" aria-expanded="<?php echo $is_admin_active ? 'true' : 'false'; ?>" aria-controls="administrationSubmenu">
+                <div class="list-group-item list-group-item-action bg-dark text-white d-flex justify-content-between align-items-center <?php echo $is_admin_active; ?><?php echo $is_admin_active ? ' open' : ''; ?>" data-bs-toggle="collapse" data-bs-target="#administrationSubmenu" role="button" aria-expanded="<?php echo $is_admin_active ? 'true' : 'false'; ?>" aria-controls="administrationSubmenu">
                     <div class="d-flex align-items-center flex-grow-1"><i class="fas fa-cogs me-2"></i><span class="menu-text">Administration</span></div>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
@@ -109,6 +106,12 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
                         <i class="fas fa-file-export me-2"></i><span class="menu-text">Export Data</span>
                     </a>
                 </div>
+                <?php endif; ?>
+
+                <?php if (hasPermission('admin')): ?>
+                <a href="contact_messages.php" class="list-group-item list-group-item-action bg-dark text-white <?php echo $current_page == 'contact_messages' ? 'active' : ''; ?>">
+                    <i class="fas fa-envelope me-2"></i><span class="menu-text">Contact Messages</span>
+                </a>
                 <?php endif; ?>
 
                 <a href="help.php" class="list-group-item list-group-item-action bg-dark text-white <?php echo $current_page == 'help' ? 'active' : ''; ?>">
@@ -141,6 +144,10 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
                             $stmt->execute([$_SESSION['user_id']]);
                             $unread_notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         }
+                        // Contact messages notification
+                        $stmt = $conn->query("SELECT id, name, email, subject, created_at FROM contact_messages WHERE status = 'unread' ORDER BY created_at DESC LIMIT 5");
+                        $unread_contact_msgs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        $unread_contact_count = $conn->query("SELECT COUNT(*) FROM contact_messages WHERE status = 'unread'")->fetchColumn();
                         ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownNotifications" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -169,6 +176,32 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
                                     <a class="dropdown-item text-center" href="notifications.php">Open Notifications</a>
                                 <?php else: ?>
                                     <a class="dropdown-item" href="#">No new notifications</a>
+                                <?php endif; ?>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle position-relative" href="#" id="navbarDropdownContactMsgs" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-envelope"></i>
+                                <?php if ($unread_contact_count > 0): ?>
+                                    <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                                        <?php echo $unread_contact_count; ?>
+                                    </span>
+                                <?php endif; ?>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownContactMsgs" style="min-width:320px;">
+                                <div class="dropdown-header fw-bold">New Contact Messages</div>
+                                <?php if ($unread_contact_count > 0): ?>
+                                    <?php foreach ($unread_contact_msgs as $msg): ?>
+                                        <a href="contact_messages.php?view=<?php echo $msg['id']; ?>" class="dropdown-item">
+                                            <div class="fw-bold text-truncate"><?php echo htmlspecialchars($msg['name']); ?> &lt;<?php echo htmlspecialchars($msg['email']); ?>&gt;</div>
+                                            <div class="text-truncate small text-muted"><?php echo htmlspecialchars($msg['subject']); ?></div>
+                                            <div class="small text-muted"><?php echo date('d M Y H:i', strtotime($msg['created_at'])); ?></div>
+                                        </a>
+                                    <?php endforeach; ?>
+                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item text-center" href="contact_messages.php">View All Messages</a>
+                                <?php else: ?>
+                                    <span class="dropdown-item text-muted">No new messages</span>
                                 <?php endif; ?>
                             </div>
                         </li>

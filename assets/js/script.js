@@ -1,4 +1,5 @@
 // Main JavaScript file for Wiracenter Portfolio
+console.log('script.js loaded');
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all components
@@ -9,7 +10,198 @@ document.addEventListener('DOMContentLoaded', function() {
     initSearchFilter();
     initTooltips();
     initModals();
+    initBackToTop();
+    initReadingProgress();
+    initSocialShare();
+    renderFloatingSocialSidebar(); // Call the new function here
 });
+
+
+
+
+
+// Back to Top Button Functionality
+function initBackToTop() {
+    const backToTopBtn = document.getElementById('backToTop');
+    
+    if (backToTopBtn) {
+        // Show/hide button based on scroll position
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+        
+        // Smooth scroll to top when clicked
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+}
+
+// Reading Progress Bar Functionality
+function initReadingProgress() {
+    const progressBar = document.getElementById('readingProgress');
+    
+    if (progressBar) {
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            
+            progressBar.style.width = scrollPercent + '%';
+        });
+    }
+}
+
+// Social Share Buttons Functionality
+function initSocialShare() {
+    // Add social share buttons to content pages
+    const currentPage = window.location.pathname.split('/').pop();
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAboutPage = currentPage === 'page.php' && urlParams.get('slug') === 'about';
+    const isContentPage = (currentPage === 'article.php' || 
+                         currentPage === 'project.php' || 
+                         currentPage === 'tool.php' || 
+                         (currentPage === 'page.php' && urlParams.has('slug') && !isAboutPage));
+    
+    if (isContentPage) {
+        addSocialShareButtons();
+    }
+}
+
+function addSocialShareButtons() {
+    // Find the main content area
+    const contentArea = document.querySelector('.main-content .container') || 
+                       document.querySelector('.main-content') ||
+                       document.querySelector('article') ||
+                       document.querySelector('.content');
+    
+    if (!contentArea) return;
+    
+    // Create social share section
+    const socialShareSection = document.createElement('div');
+    socialShareSection.className = 'social-share';
+    socialShareSection.innerHTML = `
+        <h4><i class="fas fa-share-alt me-2"></i>Share this content</h4>
+        <div class="share-buttons">
+            <button class="share-btn facebook" onclick="shareContent('facebook')">
+                <i class="fab fa-facebook-f"></i>
+                <span>Facebook</span>
+            </button>
+            <button class="share-btn twitter" onclick="shareContent('twitter')">
+                <i class="fab fa-twitter"></i>
+                <span>Twitter</span>
+            </button>
+            <button class="share-btn linkedin" onclick="shareContent('linkedin')">
+                <i class="fab fa-linkedin-in"></i>
+                <span>LinkedIn</span>
+            </button>
+            <button class="share-btn whatsapp" onclick="shareContent('whatsapp')">
+                <i class="fab fa-whatsapp"></i>
+                <span>WhatsApp</span>
+            </button>
+            <button class="share-btn telegram" onclick="shareContent('telegram')">
+                <i class="fab fa-telegram-plane"></i>
+                <span>Telegram</span>
+            </button>
+            <button class="share-btn email" onclick="shareContent('email')">
+                <i class="fas fa-envelope"></i>
+                <span>Email</span>
+            </button>
+            <button class="share-btn copy-link" onclick="shareContent('copy')">
+                <i class="fas fa-link"></i>
+                <span>Copy Link</span>
+            </button>
+        </div>
+    `;
+    
+    // Insert after the first h1 or at the beginning of content
+    const firstH1 = contentArea.querySelector('h1');
+    if (firstH1) {
+        firstH1.parentNode.insertBefore(socialShareSection, firstH1.nextSibling);
+    } else {
+        contentArea.insertBefore(socialShareSection, contentArea.firstChild);
+    }
+}
+
+// Global function for sharing content
+function shareContent(platform) {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(document.title);
+    const text = encodeURIComponent(document.querySelector('meta[name="description"]')?.content || 'Check out this content from Wiracenter');
+    
+    let shareUrl = '';
+    
+    switch (platform) {
+        case 'facebook':
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+            break;
+        case 'twitter':
+            shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+            break;
+        case 'linkedin':
+            shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+            break;
+        case 'whatsapp':
+            shareUrl = `https://wa.me/?text=${title}%20${url}`;
+            break;
+        case 'telegram':
+            shareUrl = `https://t.me/share/url?url=${url}&text=${title}`;
+            break;
+        case 'email':
+            shareUrl = `mailto:?subject=${title}&body=${text}%20${url}`;
+            break;
+        case 'copy':
+            copyToClipboard(window.location.href);
+            showAlert('success', 'Link copied to clipboard!');
+            return;
+    }
+    
+    if (shareUrl) {
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+}
+
+// Enhanced copy to clipboard function
+function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        // Use the modern clipboard API
+        navigator.clipboard.writeText(text).then(() => {
+            showAlert('success', 'Link copied to clipboard!');
+        }).catch(() => {
+            fallbackCopyToClipboard(text);
+        });
+    } else {
+        // Fallback for older browsers
+        fallbackCopyToClipboard(text);
+    }
+}
+
+function fallbackCopyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showAlert('success', 'Link copied to clipboard!');
+    } catch (err) {
+        showAlert('error', 'Failed to copy link');
+    }
+    
+    document.body.removeChild(textArea);
+}
 
 // Sidebar functionality
 function initSidebar() {
@@ -254,23 +446,10 @@ function initModals() {
 }
 
 // Utility functions
+// OVERRIDE: Disable all popup notifications
 function showAlert(type, message) {
-    const alertContainer = document.querySelector('.alert-container') || document.body;
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} alert-dismissible fade show`;
-    alert.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    alertContainer.appendChild(alert);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (alert.parentNode) {
-            alert.remove();
-        }
-    }, 5000);
+    // Popup disabled by request
+    return;
 }
 
 function showConfirmModal(title, message, type, onConfirm) {

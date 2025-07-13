@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error_message = 'Your account has been deleted. Please contact the administrator if you believe this is a mistake.';
             } elseif (isset($user['status']) && $user['status'] === 'suspended') {
                 $error_message = 'Your account has been suspended. Please contact the administrator for more information.';
-            } elseif ($user && isset($user['temp_password']) && $user['temp_password'] && password_verify($password, $user['password'])) {
+            } elseif ($user && $user['role'] !== 'admin' && isset($user['temp_password']) && $user['temp_password'] && password_verify($password, $user['password'])) {
                 // Cek expired
                 if (isset($user['temp_password_expired_at']) && strtotime($user['temp_password_expired_at']) < time()) {
                     $error_message = 'Your temporary password has expired. Please contact the administrator to get a new password.';

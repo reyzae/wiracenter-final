@@ -134,37 +134,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var menuToggle = document.getElementById('menu-toggle');
     var wrapper = document.getElementById('wrapper');
     if (menuToggle && wrapper) {
-        // Patch classList.remove untuk #wrapper agar tidak bisa menghapus 'toggled' kecuali dari toggle
-        var origRemove = wrapper.classList.remove;
-        wrapper.classList.remove = function(...args) {
-            if (args.includes('toggled')) {
-                console.warn('Blocked attempt to remove class toggled from #wrapper');
-                return;
-            }
-            return origRemove.apply(this, args);
-        };
-        menuToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Before toggle, class on #wrapper:', wrapper.className);
-            if (wrapper.classList.contains('toggled')) {
-                wrapper.classList.remove('toggled');
-            } else {
-                wrapper.classList.add('toggled');
-            }
-            console.log('After toggle, class on #wrapper:', wrapper.className);
-            var sidebar = document.getElementById('sidebar-wrapper');
-            if (sidebar) {
-                console.log('Sidebar found in DOM');
-            } else {
-                console.log('Sidebar NOT found in DOM');
-            }
+        menuToggle.addEventListener('click', function() {
+            wrapper.classList.toggle('toggled');
         });
-        // Interval log untuk memantau perubahan class
-        setInterval(function() {
-            var w = document.getElementById('wrapper');
-            if (w) {
-                console.log('[Interval] Class on #wrapper:', w.className);
-            }
-        }, 1000);
     }
 });

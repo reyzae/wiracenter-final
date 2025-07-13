@@ -1,375 +1,189 @@
 <?php
+ob_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 $page_title = 'Site Settings';
 include 'includes/header.php';
+
+$db = new Database();
+$conn = $db->connect();
 
 $success_message = '';
 $error_message = '';
 
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    try {
-        $settings = [
-            'site_name' => sanitize($_POST['site_name']),
-            'site_description' => sanitize($_POST['site_description']),
-            'site_keywords' => sanitize($_POST['site_keywords']),
-            'site_logo' => sanitize($_POST['site_logo'] ?? ''), // Assuming you might add an input for this later
-            'site_favicon' => sanitize($_POST['site_favicon'] ?? ''),
-            'hero_title' => sanitize($_POST['hero_title']),
-            'hero_subtitle' => sanitize($_POST['hero_subtitle']),
-            'about_title' => sanitize($_POST['about_title']),
-            'about_content' => $_POST['about_content'],
-            'contact_email' => sanitize($_POST['contact_email']),
-            'contact_phone' => sanitize($_POST['contact_phone']),
-            'contact_address' => sanitize($_POST['contact_address'] ?? ''),
-            'operating_hours' => sanitize($_POST['operating_hours'] ?? ''),
-            'social_media' => json_encode([
-                'instagram' => sanitize($_POST['instagram']),
-                'threads' => sanitize($_POST['threads']),
-                'linkedin' => sanitize($_POST['linkedin']),
-                'github' => sanitize($_POST['github'])
-            ]),
-            'theme_mode' => sanitize($_POST['theme_mode'] ?? 'light'),
-            'debug_mode' => sanitize($_POST['debug_mode'] ?? '0'),
-            'google_analytics_id' => sanitize($_POST['google_analytics_id'] ?? ''),
-            'maintenance_mode' => sanitize($_POST['maintenance_mode'] ?? '0'),
-            'maintenance_message' => sanitize($_POST['maintenance_message'] ?? ''),
-            'maintenance_countdown' => sanitize($_POST['maintenance_countdown'] ?? ''),
-            'log_retention_days' => sanitize($_POST['log_retention_days'] ?? '30')
-        ];
-        
-        // Update each setting
-        foreach ($settings as $key => $value) {
-            setSetting($key, $value);
-        }
-        
-        $success_message = 'Settings updated successfully!';
-        
-    } catch (Exception $e) {
-        $error_message = 'Error updating settings: ' . $e->getMessage();
-    }
+// Fetch all settings
+$stmt = $conn->query("SELECT * FROM site_settings ORDER BY id ASC");
+$settings = [];
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $settings[$row['setting_key']] = $row;
 }
 
-// Get current settings
-$current_settings = [
-    'site_name' => getSetting('site_name', 'Wiracenter'),
-    'site_description' => getSetting('site_description', 'Personal Portfolio Website'),
-    'site_keywords' => getSetting('site_keywords', 'portfolio, web development, programming'),
-    'hero_title' => getSetting('hero_title', 'Welcome to Wiracenter'),
-    'hero_subtitle' => getSetting('hero_subtitle', 'Your Digital Solutions Partner'),
-    'about_title' => getSetting('about_title', 'About Me'),
-    'about_content' => getSetting('about_content', 'I am a passionate web developer...'),
-    'contact_email' => getSetting('contact_email', 'contact@wiracenter.com'),
-    'contact_phone' => getSetting('contact_phone', '+1234567890'),
-    'social_media' => json_decode(getSetting('social_media', '{}'), true)
+// Handle update
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    foreach ($settings as $key => $setting) {
+        $val = $_POST[$key] ?? '';
+        if ($setting['setting_type'] === 'image') {
+            if (!empty($_FILES[$key]['name'])) {
+                $uploadDir = '../assets/img/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+                $ext = pathinfo($_FILES[$key]['name'], PATHINFO_EXTENSION);
+                $filename = $key . '_' . time() . '.' . $ext;
+                $filepath = $uploadDir . $filename;
+                if (move_uploaded_file($_FILES[$key]['tmp_name'], $filepath)) {
+                    $val = 'assets/img/' . $filename;
+                } else {
+                    $error_message .= 'Failed to upload image for ' . $key . '. ';
+                    continue;
+                }
+            } else {
+                $val = $setting['setting_value'];
+            }
+        } elseif ($setting['setting_type'] === 'json') {
+            $json_val = json_decode($val, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $error_message .= 'Invalid JSON for ' . $key . '. ';
+                continue;
+            }
+            $val = json_encode($json_val);
+        } elseif ($setting['setting_type'] === 'text' && isset($_POST[$key])) {
+            $val = trim($_POST[$key]);
+        } elseif ($setting['setting_type'] === 'textarea' && isset($_POST[$key])) {
+            $val = trim($_POST[$key]);
+        }
+        $stmt2 = $conn->prepare("UPDATE site_settings SET setting_value = ?, updated_at = NOW() WHERE setting_key = ?");
+        $stmt2->execute([$val, $key]);
+    }
+    if (!$error_message) {
+        $success_message = 'Settings updated successfully!';
+    }
+    // Refresh settings after update
+    header('Location: settings.php?msg=' . urlencode($success_message ?: $error_message));
+    ob_end_clean();
+    exit();
+}
+if (isset($_GET['msg'])) {
+    $success_message = urldecode($_GET['msg']);
+}
+// Group settings by category
+$categories = [
+    'General' => ['site_name', 'site_description', 'site_keywords', 'site_logo', 'site_favicon'], // Pengaturan umum website (nama, deskripsi, logo, favicon, SEO)
+    'Homepage' => ['hero_title', 'hero_subtitle'], // Konten utama di halaman depan
+    'About' => ['about_title', 'about_content'], // Konten halaman About
+    'Contact' => ['contact_email', 'contact_phone', 'contact_address', 'operating_hours'], // Info kontak dan jam operasional
+    'Social' => ['social_media'], // Link sosial media (format JSON)
+    'Theme' => ['theme_mode'], // Mode tema (light/dark)
+    'Maintenance' => ['maintenance_mode', 'maintenance_message', 'maintenance_countdown'], // Mode & pesan maintenance
+    'Advanced' => ['google_analytics_id', 'debug_mode', 'log_retention_days'], // Pengaturan lanjutan (analytics, debug, log)
 ];
 ?>
-
-<?php if ($success_message): ?>
-    <div class="alert alert-success alert-dismissible fade show">
-        <?php echo $success_message; ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-cog me-2"></i>Site Settings</h1>
     </div>
-<?php endif; ?>
-
-<?php if ($error_message): ?>
-    <div class="alert alert-danger alert-dismissible fade show">
-        <?php echo $error_message; ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
-
-<h1 class="h2 mb-4">Site Settings</h1>
-
-<form method="POST">
-    <div class="row">
-        <div class="col-md-8">
-            <!-- General Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">General Settings</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="site_name" class="form-label">Site Name</label>
-                                <input type="text" class="form-control" id="site_name" name="site_name" value="<?php echo $current_settings['site_name']; ?>" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="contact_email" class="form-label">Contact Email</label>
-                                <input type="email" class="form-control" id="contact_email" name="contact_email" value="<?php echo $current_settings['contact_email']; ?>" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="site_description" class="form-label">Site Description</label>
-                        <textarea class="form-control" id="site_description" name="site_description" rows="3"><?php echo $current_settings['site_description']; ?></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="site_keywords" class="form-label">SEO Keywords</label>
-                        <input type="text" class="form-control" id="site_keywords" name="site_keywords" value="<?php echo $current_settings['site_keywords']; ?>">
-                        <small class="form-text text-muted">Separate keywords with commas</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="contact_phone" class="form-label">Contact Phone</label>
-                        <input type="text" class="form-control" id="contact_phone" name="contact_phone" value="<?php echo getSetting('contact_phone', ''); ?>">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="contact_address" class="form-label">Contact Address</label>
-                        <textarea class="form-control" id="contact_address" name="contact_address" rows="3"><?php echo getSetting('contact_address', ''); ?></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="operating_hours" class="form-label">Operating Hours</label>
-                        <input type="text" class="form-control" id="operating_hours" name="operating_hours" value="<?php echo getSetting('operating_hours', ''); ?>">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="site_favicon" class="form-label">Site Favicon URL</label>
-                        <input type="text" class="form-control" id="site_favicon" name="site_favicon" value="<?php echo getSetting('site_favicon', ''); ?>">
-                        <small class="form-text text-muted">URL to your favicon (e.g., /assets/images/favicon.ico)</small>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Homepage Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Homepage Settings</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="hero_title" class="form-label">Hero Title</label>
-                        <input type="text" class="form-control" id="hero_title" name="hero_title" value="<?php echo $current_settings['hero_title']; ?>">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="hero_subtitle" class="form-label">Hero Subtitle</label>
-                        <input type="text" class="form-control" id="hero_subtitle" name="hero_subtitle" value="<?php echo $current_settings['hero_subtitle']; ?>">
-                    </div>
-                </div>
-            </div>
-            
-            <!-- About Page Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">About Page Settings</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="about_title" class="form-label">About Title</label>
-                        <input type="text" class="form-control" id="about_title" name="about_title" value="<?php echo $current_settings['about_title']; ?>">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="about_content" class="form-label">About Content</label>
-                        <textarea class="form-control tinymce" id="about_content" name="about_content" rows="10"><?php echo $current_settings['about_content']; ?></textarea>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Social Media Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Social Media Links</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="instagram" class="form-label">Instagram URL</label>
-                                <input type="url" class="form-control" id="instagram" name="instagram" value="<?php echo $current_settings['social_media']['instagram'] ?? ''; ?>">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="threads" class="form-label">Threads URL</label>
-                                <input type="url" class="form-control" id="threads" name="threads" value="<?php echo $current_settings['social_media']['threads'] ?? ''; ?>">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="linkedin" class="form-label">LinkedIn URL</label>
-                                <input type="url" class="form-control" id="linkedin" name="linkedin" value="<?php echo $current_settings['social_media']['linkedin'] ?? ''; ?>">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="github" class="form-label">GitHub URL</label>
-                                <input type="url" class="form-control" id="github" name="github" value="<?php echo $current_settings['social_media']['github'] ?? ''; ?>">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Theme Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Theme Settings</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Theme Mode</label>
-                        <div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="theme_mode" id="theme_light" value="light" <?php echo (getSetting('theme_mode', 'light') == 'light') ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="theme_light">Light</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="theme_mode" id="theme_dark" value="dark" <?php echo (getSetting('theme_mode', 'light') == 'dark') ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="theme_dark">Dark</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Debug Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Debug Settings</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Debug Mode</label>
-                        <div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="debug_mode" id="debug_on" value="1" <?php echo (getSetting('debug_mode', '0') == '1') ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="debug_on">On</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="debug_mode" id="debug_off" value="0" <?php echo (getSetting('debug_mode', '0') == '0') ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="debug_off">Off</label>
-                            </div>
-                        </div>
-                        <small class="form-text text-muted">Turning debug mode on will display PHP errors. Use only for development.</small>
-                    </div>
-                </div>
-            </div>
+    <?php if ($success_message): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i><?php echo $success_message; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-
-            <!-- Google Analytics Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Google Analytics Settings</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="google_analytics_id" class="form-label">Google Analytics Tracking ID</label>
-                        <input type="text" class="form-control" id="google_analytics_id" name="google_analytics_id" value="<?php echo getSetting('google_analytics_id', ''); ?>">
-                        <small class="form-text text-muted">e.g., UA-XXXXX-Y or G-XXXXXXXXXX</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Maintenance Mode Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Maintenance Mode Settings</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Enable Maintenance Mode</label>
-                        <div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="maintenance_mode" id="maintenance_on" value="1" <?php echo (getSetting('maintenance_mode', '0') == '1') ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="maintenance_on">On</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="maintenance_mode" id="maintenance_off" value="0" <?php echo (getSetting('maintenance_mode', '0') == '0') ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="maintenance_off">Off</label>
+    <?php endif; ?>
+    <?php if ($error_message): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i><?php echo $error_message; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="accordion" id="settingsAccordion">
+            <?php $catIndex = 0; foreach (
+                $categories as $cat => $fields):
+                // Hide About section from settings UI
+                if ($cat === 'About') {
+            ?>
+                <div class="accordion-item mb-3">
+                    <h2 class="accordion-header" id="heading<?php echo $catIndex; ?>">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $catIndex; ?>" aria-expanded="false" aria-controls="collapse<?php echo $catIndex; ?>">
+                            <?php echo $cat; ?>
+                        </button>
+                    </h2>
+                    <div id="collapse<?php echo $catIndex; ?>" class="accordion-collapse collapse" aria-labelledby="heading<?php echo $catIndex; ?>" data-bs-parent="#settingsAccordion">
+                        <div class="accordion-body">
+                            <div class="alert alert-warning mb-0">
+                                <strong>Perhatian:</strong> Konten halaman <b>About</b> yang tampil ke publik <u>tidak diambil dari sini</u>.<br>
+                                Silakan edit halaman About melalui menu <b>Pages</b> (slug: <code>about</code>) di Content Management.<br>
+                                <span class="text-muted">(Bagian ini hanya untuk referensi lama, tidak digunakan di website publik.)</span>
                             </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="maintenance_message" class="form-label">Maintenance Message</label>
-                        <textarea class="form-control" id="maintenance_message" name="maintenance_message" rows="3"><?php echo getSetting('maintenance_message', 'Our website is currently undergoing scheduled maintenance. We will be back shortly!'); ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="maintenance_countdown" class="form-label">Countdown End Time (YYYY-MM-DD HH:MM:SS)</label>
-                        <input type="text" class="form-control" id="maintenance_countdown" name="maintenance_countdown" value="<?php echo getSetting('maintenance_countdown', ''); ?>" placeholder="e.g., 2025-12-31 23:59:59">
-                        <small class="form-text text-muted">Optional. Leave empty to not show a countdown.</small>
+                </div>
+            <?php $catIndex++; continue; }
+            ?>
+                <div class="accordion-item mb-3">
+                    <h2 class="accordion-header" id="heading<?php echo $catIndex; ?>">
+                        <button class="accordion-button<?php if ($catIndex > 0) echo ' collapsed'; ?>" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $catIndex; ?>" aria-expanded="<?php echo $catIndex === 0 ? 'true' : 'false'; ?>" aria-controls="collapse<?php echo $catIndex; ?>">
+                            <?php echo $cat; ?>
+                        </button>
+                    </h2>
+                    <div id="collapse<?php echo $catIndex; ?>" class="accordion-collapse collapse<?php if ($catIndex === 0) echo ' show'; ?>" aria-labelledby="heading<?php echo $catIndex; ?>" data-bs-parent="#settingsAccordion">
+                        <div class="accordion-body">
+                            <?php // Tambahkan penjelasan kategori di sini ?>
+                            <?php if ($cat === 'General'): ?>
+                                <div class="alert alert-info py-2 mb-3">Pengaturan umum website: nama, deskripsi, logo, favicon, dan SEO.</div>
+                            <?php elseif ($cat === 'Homepage'): ?>
+                                <div class="alert alert-info py-2 mb-3">Konten utama yang tampil di halaman depan website.</div>
+                            <?php elseif ($cat === 'About'): ?>
+                                <div class="alert alert-info py-2 mb-3">Konten yang tampil di halaman About.</div>
+                            <?php elseif ($cat === 'Contact'): ?>
+                                <div class="alert alert-info py-2 mb-3">Informasi kontak, email, telepon, alamat, dan jam operasional.</div>
+                            <?php elseif ($cat === 'Social'): ?>
+                                <div class="alert alert-info py-2 mb-3">Link ke sosial media (format JSON, contoh: {"instagram": "url", "linkedin": "url"}).</div>
+                            <?php elseif ($cat === 'Theme'): ?>
+                                <div class="alert alert-info py-2 mb-3">Pengaturan mode tema website (light/dark).</div>
+                            <?php elseif ($cat === 'Maintenance'): ?>
+                                <div class="alert alert-info py-2 mb-3">Mode maintenance, pesan, dan countdown jika website sedang perbaikan.</div>
+                            <?php elseif ($cat === 'Advanced'): ?>
+                                <div class="alert alert-info py-2 mb-3">Pengaturan lanjutan: Google Analytics, debug mode, dan retensi log.</div>
+                            <?php endif; ?>
+                            <?php foreach ($fields as $key): if (!isset($settings[$key])) continue; $setting = $settings[$key]; ?>
+                                <div class="mb-3 row align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold" for="<?php echo $key; ?>"><?php echo ucwords(str_replace('_', ' ', $key)); ?></label>
+                                    <div class="col-md-9">
+                                        <?php if ($setting['setting_type'] === 'text'): ?>
+                                            <input type="text" class="form-control" id="<?php echo $key; ?>" name="<?php echo $key; ?>" value="<?php echo htmlspecialchars($setting['setting_value']); ?>">
+                                        <?php elseif ($setting['setting_type'] === 'textarea'): ?>
+                                            <textarea class="form-control" id="<?php echo $key; ?>" name="<?php echo $key; ?>" rows="3"><?php echo htmlspecialchars($setting['setting_value']); ?></textarea>
+                                        <?php elseif ($setting['setting_type'] === 'image'): ?>
+                                            <?php if (!empty($setting['setting_value'])): ?>
+                                                <img src="../<?php echo $setting['setting_value']; ?>" alt="<?php echo $key; ?>" style="max-height:60px;max-width:120px;" class="mb-2 d-block">
+                                            <?php endif; ?>
+                                            <input type="file" class="form-control" id="<?php echo $key; ?>" name="<?php echo $key; ?>">
+                                        <?php elseif ($setting['setting_type'] === 'json'): ?>
+                                            <textarea class="form-control" id="<?php echo $key; ?>" name="<?php echo $key; ?>" rows="3"><?php echo htmlspecialchars($setting['setting_value']); ?></textarea>
+                                            <small class="text-muted">Format: JSON. Contoh: {"instagram": "url", "linkedin": "url"}</small>
+                                        <?php elseif ($setting['setting_type'] === 'text' && ($key === 'theme_mode' || $key === 'maintenance_mode' || $key === 'debug_mode')): ?>
+                                            <select class="form-select" id="<?php echo $key; ?>" name="<?php echo $key; ?>">
+                                                <?php if ($key === 'theme_mode'): ?>
+                                                    <option value="light" <?php if ($setting['setting_value'] === 'light') echo 'selected'; ?>>Light</option>
+                                                    <option value="dark" <?php if ($setting['setting_value'] === 'dark') echo 'selected'; ?>>Dark</option>
+                                                <?php elseif ($key === 'maintenance_mode' || $key === 'debug_mode'): ?>
+                                                    <option value="1" <?php if ($setting['setting_value'] == '1') echo 'selected'; ?>>On</option>
+                                                    <option value="0" <?php if ($setting['setting_value'] == '0') echo 'selected'; ?>>Off</option>
+                                                <?php endif; ?>
+                                            </select>
+                                        <?php else: ?>
+                                            <input type="text" class="form-control" id="<?php echo $key; ?>" name="<?php echo $key; ?>" value="<?php echo htmlspecialchars($setting['setting_value']); ?>">
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Database Cleanup Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Database Cleanup Settings</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="log_retention_days" class="form-label">Activity Log Retention (Days)</label>
-                        <input type="number" class="form-control" id="log_retention_days" name="log_retention_days" value="<?php echo getSetting('log_retention_days', '30'); ?>" min="0">
-                        <small class="form-text text-muted">Number of days to retain activity logs. Set to 0 for indefinite retention.</small>
-                    </div>
-                </div>
-            </div>
+            <?php $catIndex++; endforeach; ?>
         </div>
-        
-        <div class="col-md-4">
-            <!-- Save Settings -->
-            <div class="card mb-4 sticky-top">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">Actions</h6>
-                </div>
-                <div class="card-body">
-                    <button type="submit" class="btn btn-primary w-100 mb-3">
-                        <i class="fas fa-save me-2"></i>Save Settings
-                    </button>
-                    
-                    <a href="../index.php" class="btn btn-outline-primary w-100 mb-3" target="_blank">
-                        <i class="fas fa-external-link-alt me-2"></i>Preview Site
-                    </a>
-                    
-                    <hr>
-                    
-                    <h6>Quick Links</h6>
-                    <div class="list-group list-group-flush">
-                        <a href="articles.php" class="list-group-item list-group-item-action">
-                            <i class="fas fa-newspaper me-2"></i>Manage Articles
-                        </a>
-                        <a href="projects.php" class="list-group-item list-group-item-action">
-                            <i class="fas fa-code me-2"></i>Manage Projects
-                        </a>
-                        <a href="files.php" class="list-group-item list-group-item-action">
-                            <i class="fas fa-folder me-2"></i>Manage Files
-                        </a>
-                        <a href="users.php" class="list-group-item list-group-item-action">
-                            <i class="fas fa-users me-2"></i>Manage Users
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- System Info -->
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">System Information</h6>
-                </div>
-                <div class="card-body">
-                    <small class="text-muted">
-                        <strong>PHP Version:</strong> <?php echo PHP_VERSION; ?><br>
-                        <strong>Server:</strong> <?php echo $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'; ?><br>
-                        <strong>Database:</strong> MySQL<br>
-                        <strong>Upload Max Size:</strong> <?php echo ini_get('upload_max_filesize'); ?><br>
-                        <strong>Time Zone:</strong> <?php echo date_default_timezone_get(); ?>
-                    </small>
-                </div>
-            </div>
+        <div class="text-end mt-4">
+            <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i>Save Settings</button>
         </div>
-    </div>
-</form>
-
+    </form>
+</div>
 <?php include 'includes/footer.php'; ?>

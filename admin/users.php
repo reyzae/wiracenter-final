@@ -33,15 +33,7 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     $id = $_GET['id'];
     $logMsg = '';
     
-    if ($_GET['action'] === 'delete') {
-        $stmt = $conn->prepare("UPDATE users SET deleted_at = NOW() WHERE id = ?");
-        $stmt->execute([$id]);
-        $logMsg = 'Delete user id '.$id;
-    } elseif ($_GET['action'] === 'restore') {
-        $stmt = $conn->prepare("UPDATE users SET deleted_at = NULL WHERE id = ?");
-        $stmt->execute([$id]);
-        $logMsg = 'Restore user id '.$id;
-    } elseif ($_GET['action'] === 'reset_password') {
+    if ($_GET['action'] === 'reset_password') {
         $rand = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
         $temp_password = '#user-' . $rand;
         $hashed = password_hash($temp_password, PASSWORD_DEFAULT);
@@ -90,23 +82,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
     }
 }
 
+// Handle user status actions
+if (isset($_GET['action']) && isset($_GET['id'])) {
+    $id = $_GET['id'];
+    $logMsg = '';
+    
+    if ($_GET['action'] === 'reset_password') {
+        $rand = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
+        $temp_password = '#user-' . $rand;
+        $hashed = password_hash($temp_password, PASSWORD_DEFAULT);
+        $expired_at = date('Y-m-d H:i:s', time() + 3600);
+        $stmt = $conn->prepare("UPDATE users SET password=?, temp_password=?, temp_password_expired_at=? WHERE id=?");
+        $stmt->execute([$hashed, $temp_password, $expired_at, $id]);
+        $logMsg = 'Reset password user id '.$id;
+        file_put_contents(__DIR__.'/debug_users_action.log', date('Y-m-d H:i:s')." | ".$logMsg.PHP_EOL, FILE_APPEND);
+        if (!headers_sent()) {
+            header('Location: users.php?tab=active&resetpw='.$id);
+            ob_end_clean();
+            exit();
+        }
+    } elseif ($_GET['action'] === 'suspend') {
+        $stmt = $conn->prepare("UPDATE users SET status='suspended' WHERE id=?");
+        $stmt->execute([$id]);
+        $logMsg = 'Suspend user id '.$id;
+        if (!headers_sent()) {
+            header('Location: users.php?tab=active&msg=User suspended successfully!');
+            ob_end_clean();
+            exit();
+        }
+    } elseif ($_GET['action'] === 'unsuspend') {
+        $stmt = $conn->prepare("UPDATE users SET status='active' WHERE id=?");
+        $stmt->execute([$id]);
+        $logMsg = 'Unsuspend user id '.$id;
+        if (!headers_sent()) {
+            header('Location: users.php?tab=active&msg=User activated successfully!');
+            ob_end_clean();
+            exit();
+        }
+    } elseif ($_GET['action'] === 'set_inactive') {
+        $stmt = $conn->prepare("UPDATE users SET status='inactive' WHERE id=?");
+        $stmt->execute([$id]);
+        $logMsg = 'Set inactive user id '.$id;
+        if (!headers_sent()) {
+            header('Location: users.php?tab=active&msg=User set to inactive successfully!');
+            ob_end_clean();
+            exit();
+        }
+    } elseif ($_GET['action'] === 'activate') {
+        $stmt = $conn->prepare("UPDATE users SET status='active' WHERE id=?");
+        $stmt->execute([$id]);
+        $logMsg = 'Activate user id '.$id;
+        if (!headers_sent()) {
+            header('Location: users.php?tab=inactive&msg=User activated successfully!');
+            ob_end_clean();
+            exit();
+        }
+    } elseif ($_GET['action'] === 'delete') {
+        $stmt = $conn->prepare("DELETE FROM users WHERE id=?");
+        $stmt->execute([$id]);
+        $logMsg = 'Delete user id '.$id;
+        if (!headers_sent()) {
+            header('Location: users.php?tab=active&msg=User deleted successfully!');
+            ob_end_clean();
+            exit();
+        }
+    }
+    file_put_contents(__DIR__.'/debug_users_action.log', date('Y-m-d H:i:s')." | ".$logMsg.PHP_EOL, FILE_APPEND);
+    if (!headers_sent()) {
+        header('Location: users.php?tab=active');
+        ob_end_clean();
+        exit();
+    }
+}
+
 // Filter
 $role_filter = $_GET['role'] ?? '';
 $status_filter = $_GET['status'] ?? '';
 
-if ($tab === 'trashed') {
-    $sql = "SELECT * FROM users WHERE deleted_at IS NOT NULL";
+// Query users based on tab
+if ($tab === 'inactive') {
+    $sql = "SELECT * FROM users WHERE status = 'inactive'";
     $params = [];
     if ($role_filter && $role_filter !== 'all') {
         $sql .= " AND role = ?";
         $params[] = $role_filter;
     }
-    $sql .= " ORDER BY deleted_at DESC";
+    $sql .= " ORDER BY created_at DESC";
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} else {
-    $sql = "SELECT * FROM users WHERE deleted_at IS NULL";
+} elseif ($tab === 'active') {
+    $sql = "SELECT * FROM users WHERE status IN ('active', 'suspended')";
     $params = [];
     if ($role_filter && $role_filter !== 'all') {
         $sql .= " AND role = ?";
@@ -143,32 +209,81 @@ include 'includes/header.php';
             <a class="nav-link<?php if ($tab == 'active') echo ' active'; ?>" href="?tab=active">Active Users</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link<?php if ($tab == 'trashed') echo ' active'; ?>" href="?tab=trashed">Trashed Users</a>
+            <a class="nav-link<?php if ($tab == 'inactive') echo ' active'; ?>" href="?tab=inactive">Inactive Users</a>
         </li>
     </ul>
-    <form method="GET" class="row g-3 align-items-center mb-3">
-        <input type="hidden" name="tab" value="<?php echo htmlspecialchars($tab); ?>">
-        <div class="col-md-3">
-            <select name="role" class="form-select">
-                <option value="all">All Roles</option>
-                <?php foreach ($roles as $role): ?>
-                    <option value="<?php echo $role; ?>" <?php if ($role_filter === $role) echo 'selected'; ?>><?php echo ucfirst($role); ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <?php if ($tab !== 'trashed'): ?>
-        <div class="col-md-3">
-            <select name="status" class="form-select">
-                <option value="all">All Statuses</option>
-                <option value="active" <?php if ($status_filter === 'active') echo 'selected'; ?>>Active</option>
-                <option value="suspended" <?php if ($status_filter === 'suspended') echo 'selected'; ?>>Suspended</option>
-            </select>
-        </div>
-        <?php endif; ?>
-        <div class="col-md-auto">
-            <button type="submit" class="btn btn-primary">Filter</button>
-        </div>
-    </form>
+
+<?php if ($tab === 'active'): ?>
+<form method="GET" class="row g-3 align-items-center mb-3">
+    <input type="hidden" name="tab" value="<?php echo htmlspecialchars($tab); ?>">
+    <div class="col-md-3">
+        <select name="role" class="form-select">
+            <option value="all">All Roles</option>
+            <?php foreach ($roles as $role): ?>
+                <option value="<?php echo $role; ?>" <?php if ($role_filter === $role) echo 'selected'; ?>><?php echo ucfirst($role); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select name="status" class="form-select">
+            <option value="all">All Statuses</option>
+            <option value="active" <?php if ($status_filter === 'active') echo 'selected'; ?>>Active</option>
+            <option value="suspended" <?php if ($status_filter === 'suspended') echo 'selected'; ?>>Suspended</option>
+        </select>
+    </div>
+    <div class="col-md-auto">
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </div>
+</form>
+
+<div class="card mb-4">
+    <div class="card-header"><b>Create User</b></div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Role</label>
+                    <select name="role" class="form-select">
+                        <option value="admin">Admin</option>
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Password</label>
+                    <div class="input-group mb-2" style="max-width:400px;">
+                        <input type="password" id="createUserPassword" class="form-control bg-light" value="" readonly style="background:#eee;">
+                        <button class="btn btn-outline-secondary" type="button" id="toggleCreatePwBtn" onclick="toggleCreateUserPassword()">Show</button>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyCreateUserPassword()">Copy</button>
+                        <button class="btn btn-outline-secondary" type="button" onclick="setCreateUserPassword(generateCreateUserPassword())">Generate</button>
+                    </div>
+                    <small class="text-muted">Password format: #user-xxxx (valid 1 hour, user must change on first login)</small>
+                </div>
+                <div class="col-12 text-end mt-2">
+                    <button type="submit" name="create_user" value="1" class="btn btn-primary px-4">Create User</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
+
     <?php if (!empty($success_message)): ?>
         <div class="alert alert-success alert-dismissible fade show">
             <?php echo $success_message; ?>
@@ -181,56 +296,73 @@ include 'includes/header.php';
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
-    <div class="card mb-4">
-        <div class="card-header"><b>Create User</b></div>
-        <div class="card-body">
-            <form method="POST">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Username</label>
-                        <input type="text" name="username" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Role</label>
-                        <select name="role" class="form-select">
-                            <option value="admin">Admin</option>
-                            <option value="editor">Editor</option>
-                            <option value="viewer">Viewer</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Status</label>
-                        <select name="status" class="form-select">
-                            <option value="active">Active</option>
-                            <option value="suspended">Suspended</option>
-                        </select>
-                    </div>
-                    <div class="col-md-12">
-                        <label class="form-label">Password</label>
-                        <div class="input-group mb-2" style="max-width:400px;">
-                            <input type="password" id="createUserPassword" class="form-control bg-light" value="" readonly style="background:#eee;">
-                            <button class="btn btn-outline-secondary" type="button" id="toggleCreatePwBtn" onclick="toggleCreateUserPassword()">Show</button>
-                            <button class="btn btn-outline-secondary" type="button" onclick="copyCreateUserPassword()">Copy</button>
-                            <button class="btn btn-outline-secondary" type="button" onclick="setCreateUserPassword(generateCreateUserPassword())">Generate</button>
-                        </div>
-                        <small class="text-muted">Password format: #user-xxxx (valid 1 hour, user must change on first login)</small>
-                    </div>
-                    <div class="col-12 text-end mt-2">
-                        <button type="submit" name="create_user" value="1" class="btn btn-primary px-4">Create User</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+    <?php if ($tab === 'inactive'): ?>
     <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-user-slash me-2"></i>Inactive Users</h5>
+        </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
-                    <thead>
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($users): foreach ($users as $user): ?>
+                        <tr>
+                            <td>
+                                <strong><?php echo htmlspecialchars($user['username']); ?></strong>
+                                <?php if ($user['username'] === 'admin'): ?>
+                                    <span class="badge bg-warning ms-2">Admin</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($user['email']); ?></td>
+                            <td><span class="badge bg-<?php echo $user['role'] === 'admin' ? 'danger' : ($user['role'] === 'editor' ? 'primary' : 'secondary'); ?>"><?php echo ucfirst($user['role']); ?></span></td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <?php if ($user['username'] !== 'admin'): ?>
+                                        <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="activate" data-id="<?php echo $user['id']; ?>" title="Activate User">
+                                            <i class="fas fa-user-check"></i> Activate
+                                        </a>
+                                    <?php endif; ?>
+                                    <a href="users.php?action=edit&id=<?php echo $user['id']; ?>" class="btn btn-sm btn-primary" title="Edit User">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="delete" data-id="<?php echo $user['id']; ?>" title="Delete User">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; else: ?>
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="fas fa-user-slash fa-2x mb-3 d-block"></i>
+                                <strong>No inactive users found</strong><br>
+                                <small>Users set to inactive will appear here</small>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+<?php if ($tab === 'active'): ?>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Active Users</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-primary">
                         <tr>
                             <th>Username</th>
                             <th>Email</th>
@@ -243,41 +375,76 @@ include 'includes/header.php';
                     <tbody>
                     <?php if ($users): foreach ($users as $user): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($user['username']); ?></td>
+                            <td>
+                                <strong><?php echo htmlspecialchars($user['username']); ?></strong>
+                                <?php if ($user['username'] === 'admin'): ?>
+                                    <span class="badge bg-warning ms-2">Admin</span>
+                                <?php endif; ?>
+                            </td>
                             <td><?php echo htmlspecialchars($user['email']); ?></td>
-                            <td><?php echo htmlspecialchars($user['role'] ?? '-'); ?></td>
-                            <td><?php echo htmlspecialchars($user['status'] ?? '-'); ?></td>
+                            <td><span class="badge bg-<?php echo $user['role'] === 'admin' ? 'danger' : ($user['role'] === 'editor' ? 'primary' : 'secondary'); ?>"><?php echo ucfirst($user['role']); ?></span></td>
+                            <td>
+                                <span class="badge bg-<?php echo $user['status'] === 'active' ? 'success' : 'warning'; ?>">
+                                    <?php echo ucfirst($user['status']); ?>
+                                </span>
+                            </td>
                             <td><?php echo isset($user['created_at']) ? date('Y-m-d H:i', strtotime($user['created_at'])) : '-'; ?></td>
                             <td>
-                                <?php if ($tab === 'trashed'): ?>
-                                    <a href="users.php?action=restore&id=<?php echo $user['id']; ?>" class="btn btn-sm btn-success" onclick="return confirm('Restore this user?');">Restore</a>
-                                <?php else: ?>
-                                    <a href="users.php?action=edit&id=<?php echo $user['id']; ?>" class="btn btn-sm btn-primary">Edit</a>
-                                    <?php if (($user['status'] ?? '') === 'active'): ?>
-                                        <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="suspend" data-id="<?php echo $user['id']; ?>">Suspend</a>
-                                    <?php elseif (($user['status'] ?? '') === 'suspended'): ?>
-                                        <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="unsuspend" data-id="<?php echo $user['id']; ?>">Unsuspend</a>
+                                <div class="btn-group" role="group">
+                                    <?php if (($user['status'] ?? '') === 'active' && $user['username'] !== 'admin'): ?>
+                                        <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="suspend" data-id="<?php echo $user['id']; ?>" title="Suspend User">
+                                            <i class="fas fa-user-slash"></i> Suspend
+                                        </a>
+                                        <a href="#" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="set_inactive" data-id="<?php echo $user['id']; ?>" title="Set Inactive">
+                                            <i class="fas fa-user-times"></i> Inactive
+                                        </a>
+                                    <?php elseif (($user['status'] ?? '') === 'suspended' && $user['username'] !== 'admin'): ?>
+                                        <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="unsuspend" data-id="<?php echo $user['id']; ?>" title="Activate User">
+                                            <i class="fas fa-user-check"></i> Activate
+                                        </a>
                                     <?php endif; ?>
-                                    <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="delete" data-id="<?php echo $user['id']; ?>">Delete</a>
+                                    <a href="users.php?action=edit&id=<?php echo $user['id']; ?>" class="btn btn-sm btn-primary" title="Edit User">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
                                     <?php if (($user['status'] ?? '') === 'active'): ?>
-                                        <button type="button" class="btn btn-sm btn-info" onclick="showResetPasswordModal(<?php echo $user['id']; ?>)">Reset Password</button>
+                                        <button type="button" class="btn btn-sm btn-info" onclick="showResetPasswordModal(<?php echo $user['id']; ?>)" title="Reset Password">
+                                            <i class="fas fa-key"></i> Reset PW
+                                        </button>
                                     <?php endif; ?>
                                     <?php if (!empty($user['temp_password']) && (!isset($user['temp_password_expired_at']) || strtotime($user['temp_password_expired_at']) > time())): ?>
-                                        <button type="button" class="btn btn-sm btn-secondary" onclick="showTempPasswordModal('<?php echo $user['id']; ?>', '<?php echo htmlspecialchars($user['temp_password']); ?>', '<?php echo $user['temp_password_expired_at']; ?>')">Show Temp Password</button>
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="showTempPasswordModal('<?php echo $user['id']; ?>', '<?php echo htmlspecialchars($user['temp_password']); ?>', '<?php echo $user['temp_password_expired_at']; ?>')" title="Show Temp Password">
+                                            <i class="fas fa-eye"></i> Temp PW
+                                        </button>
                                     <?php elseif (!empty($user['temp_password']) && isset($user['temp_password_expired_at']) && strtotime($user['temp_password_expired_at']) <= time()): ?>
-                                        <form method="GET" action="users.php" style="display:inline-block"><input type="hidden" name="action" value="reset_password"><input type="hidden" name="id" value="<?php echo $user['id']; ?>"><button type="submit" class="btn btn-sm btn-warning">Generate New Temp Password</button></form>
+                                        <form method="GET" action="users.php" style="display:inline-block">
+                                            <input type="hidden" name="action" value="reset_password">
+                                            <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+                                            <button type="submit" class="btn btn-sm btn-warning" title="Generate New Temp Password">
+                                                <i class="fas fa-sync"></i> New Temp PW
+                                            </button>
+                                        </form>
                                     <?php endif; ?>
-                                <?php endif; ?>
+                                    <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" data-action="delete" data-id="<?php echo $user['id']; ?>" title="Delete User">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; else: ?>
-                        <tr><td colspan="6" class="text-center text-muted">No users found.</td></tr>
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-users fa-2x mb-3 d-block"></i>
+                                <strong>No active users found</strong><br>
+                                <small>Active and suspended users will appear here</small>
+                            </td>
+                        </tr>
                     <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+<?php endif; ?>
 </div>
 <?php include 'includes/footer.php'; ?>
 <?php if ($tab === 'active'): ?>
@@ -462,6 +629,8 @@ confirmModal.addEventListener('show.bs.modal', function (event) {
   if(action === 'suspend') actionText = 'Suspend user ini?';
   else if(action === 'unsuspend') actionText = 'Aktifkan kembali user ini?';
   else if(action === 'delete') actionText = 'Hapus user ini?';
+  else if(action === 'set_inactive') actionText = 'Set user ini ke status Inactive?';
+  else if(action === 'activate') actionText = 'Aktifkan kembali user ini?';
   modalBody.textContent = actionText;
   confirmUrl = 'users.php?action=' + action + '&id=' + id;
 });

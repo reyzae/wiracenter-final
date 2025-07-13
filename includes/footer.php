@@ -2,7 +2,7 @@
   <div class="container">
     <div class="row align-items-center">
       <div class="col-12 col-md-6 mb-2 mb-md-0 text-md-start">
-        <span class="fw-bold">&copy; <?php echo date('Y'); ?> <?php echo getSetting('site_name', 'Wiracenter'); ?>.</span> All rights reserved.
+        <span data-i18n="footer.copyright">© 2024 Wiracenter. All rights reserved.</span>
       </div>
       <div class="col-12 col-md-6 text-md-end">
         <span>Contact: <a href="mailto:<?php echo getSetting('site_email', 'info@wiracenter.com'); ?>" class="text-primary text-decoration-none"><?php echo getSetting('site_email', 'info@wiracenter.com'); ?></a></span>
@@ -20,3 +20,4 @@
     </div>
   </div>
 </footer>
+<script src="assets/js/script.js"></script>

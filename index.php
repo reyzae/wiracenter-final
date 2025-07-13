@@ -1,202 +1,649 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+session_start();
 require_once 'config/config.php';
+require_once 'config/database.php';
 
-// Check for maintenance mode
-$maintenance_mode = getSetting('maintenance_mode', '0');
-if ($maintenance_mode == '1' && !isLoggedIn()) {
-    header('Location: maintenance.php');
-    exit();
-}
+// Initialize database connection
+$db = new Database();
+$conn = $db->getConnection();
 
-// Get site settings
-$site_name = getSetting('site_name', 'Wiracenter');
-$hero_title = getSetting('hero_title', 'Welcome to Wiracenter');
-$hero_subtitle = getSetting('hero_subtitle', 'Your Digital Solutions Partner');
+// Initialize empty arrays
+$latest_articles = [];
+$latest_projects = [];
+$latest_tools = [];
+$featured_articles = [];
+$featured_projects = [];
+$featured_tools = [];
 
-// Ensure $site_name is always defined
-if (!isset($site_name) || empty($site_name)) {
-    $site_name = 'Wiracenter';
-}
-
-// Initialize arrays
-$projects = [];
-$articles = [];
-$tools = [];
-
-// Get recent projects
 try {
-    $db = new Database();
-    $conn = $db->connect();
-    
-    if ($conn) {
-        // Get recent projects
-        $stmt = $conn->prepare("SELECT * FROM projects WHERE status = 'published' AND deleted_at IS NULL ORDER BY publish_date DESC LIMIT 6");
-        $stmt->execute();
-        $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Get recent articles
-        $stmt = $conn->prepare("SELECT * FROM articles WHERE status = 'published' AND deleted_at IS NULL ORDER BY publish_date DESC LIMIT 3");
-        $stmt->execute();
-        $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Get recent tools
-        $stmt = $conn->prepare("SELECT * FROM tools WHERE status = 'published' AND deleted_at IS NULL ORDER BY publish_date DESC LIMIT 3");
-        $stmt->execute();
-        $tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    // Get latest articles (3)
+    $stmt = $conn->prepare("SELECT id, title, excerpt, featured_image, created_at, slug FROM articles WHERE status = 'published' ORDER BY created_at DESC LIMIT 3");
+    $stmt->execute();
+    $latest_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    error_log("Database connection failed in index.php: " . $e->getMessage());
-    // Continue without database data
+    // Log error or handle gracefully
+    error_log("Error fetching articles: " . $e->getMessage());
 }
+
+try {
+    // Get latest projects (3)
+    $stmt = $conn->prepare("SELECT id, title, description, featured_image, created_at, slug FROM projects WHERE status = 'published' ORDER BY created_at DESC LIMIT 3");
+    $stmt->execute();
+    $latest_projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Error fetching projects: " . $e->getMessage());
+}
+
+try {
+    // Get latest tools (3)
+    $stmt = $conn->prepare("SELECT id, title, description, featured_image, created_at, slug FROM tools WHERE status = 'published' ORDER BY created_at DESC LIMIT 3");
+    $stmt->execute();
+    $latest_tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Error fetching tools: " . $e->getMessage());
+}
+
+try {
+    // Get featured content for slider (note: featured column doesn't exist, so we'll use latest published)
+    $stmt = $conn->prepare("SELECT id, title, excerpt, featured_image, 'article' as type, slug FROM articles WHERE status = 'published' ORDER BY created_at DESC LIMIT 2");
+    $stmt->execute();
+    $featured_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt = $conn->prepare("SELECT id, title, description, featured_image, 'project' as type, slug FROM projects WHERE status = 'published' ORDER BY created_at DESC LIMIT 2");
+    $stmt->execute();
+    $featured_projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt = $conn->prepare("SELECT id, title, description, featured_image, 'tool' as type, slug FROM tools WHERE status = 'published' ORDER BY created_at DESC LIMIT 1");
+    $stmt->execute();
+    $featured_tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Error fetching featured content: " . $e->getMessage());
+}
+
+$slider_items = array_merge($featured_articles, $featured_projects, $featured_tools);
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($site_name); ?> - Portfolio</title>
-    <meta name="description" content="<?php echo htmlspecialchars(getSetting('site_description', 'Personal Portfolio Website')); ?>">
-    <meta name="keywords" content="<?php echo htmlspecialchars(getSetting('site_keywords', 'portfolio, web development')); ?>">
-    <?php if (getSetting('site_favicon')): ?>
-    <link rel="icon" href="<?php echo htmlspecialchars(getSetting('site_favicon')); ?>" type="image/x-icon">
-    <?php endif; ?>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Wiracenter - Platform Digital untuk Wirausaha</title>
+    <meta name="description" content="Wiracenter adalah platform digital yang menyediakan artikel, proyek, dan tools untuk membantu wirausaha berkembang.">
+    <meta name="keywords" content="wirausaha, bisnis, artikel, proyek, tools, digital">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
+    
+    <!-- Custom CSS for Homepage -->
+    <style>
+        :root {
+            --primary-cyan: #00BCD4;
+            --secondary-cyan: #0097A7;
+            --accent-cyan: #26C6DA;
+            --light-cyan: #B2EBF2;
+            --dark-cyan: #00695C;
+        }
+
+        /* Hero Section & Slider */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-cyan), var(--secondary-cyan));
+            color: white;
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-slider {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 400px;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide-content {
+            max-width: 600px;
+            z-index: 3; /* dinaikkan agar di atas tombol */
+            padding-left: 60px;
+            padding-right: 60px;
+        }
+
+        .slide-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .slide-description {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .slide-bg {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.3;
+            border-radius: 20px 0 0 20px;
+        }
+
+        /* Slider Navigation */
+        .slider-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 3;
+        }
+
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .slider-dot.active {
+            background: white;
+            transform: scale(1.2);
+        }
+
+        .slider-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 3;
+        }
+
+        .slider-arrow:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .slider-arrow.prev {
+            left: -30px;
+        }
+
+        .slider-arrow.next {
+            right: -30px;
+        }
+
+        /* Sections */
+        .section {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: var(--dark-cyan);
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--secondary-cyan));
+            border-radius: 2px;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .card-icon {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--light-cyan), var(--accent-cyan));
+            font-size: 4rem;
+            color: white;
+        }
+
+        .card-content {
+            padding: 25px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark-cyan);
+        }
+
+        .card-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .card-date {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .read-more {
+            color: var(--primary-cyan);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .read-more:hover {
+            color: var(--secondary-cyan);
+        }
+
+        /* About Section */
+        .about-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .about-description {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        /* CTA Button */
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--secondary-cyan));
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,188,212,0.3);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .slide-title {
+                font-size: 2rem;
+            }
+            
+            .slide-description {
+                font-size: 1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .slider-arrow {
+                display: none;
+            }
+            .slide-content {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
-    <?php include 'includes/navbar.php'; ?>
+    <?php include 'includes/header.php'; ?>
 
-    <!-- Main Content -->
-    <div class="main-content" style="margin-left:0;">
-        <!-- Hero Section -->
-        <section class="hero-section text-center">
-            <div class="container">
-                <h1 class="display-3 text-white mb-3"><?php echo htmlspecialchars($hero_title); ?></h1>
-                <p class="lead text-white-50 mb-4"><?php echo htmlspecialchars($hero_subtitle); ?></p>
-                <a href="my-spaces.php" class="btn btn-primary btn-lg">Explore My Work</a>
-            </div>
-        </section>
-
-    <!-- Recent Articles Section -->
-    <section class="py-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <h2 class="text-center mb-5">Recent Articles</h2>
+    <!-- Hero Section with Slider -->
+    <section class="hero-section">
+        <div class="hero-slider">
+            <!-- Slide 1: Welcome -->
+            <div class="slide active" data-slide="0">
+                <div class="slide-content">
+                    <h1 data-i18n="home.welcome">Selamat Datang di Wiracenter</h1>
+                    <p class="slide-description" data-i18n="home.description">Platform digital terdepan untuk wirausaha Indonesia. Temukan inspirasi, pengetahuan, dan tools yang Anda butuhkan untuk mengembangkan bisnis.</p>
+                    <a href="#about" class="cta-button" data-i18n="home.view_projects">Pelajari Lebih Lanjut</a>
                 </div>
+                <div class="slide-bg" style="background-image: url('assets/images/hero-bg.jpg')"></div>
             </div>
-            <div class="row">
-                <?php if (!empty($articles)): ?>
-                    <?php foreach ($articles as $article): ?>
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title"><?php echo htmlspecialchars($article['title']); ?></h5>
-                                    <p class="card-text"><?php echo htmlspecialchars($article['excerpt'] ?? substr(strip_tags($article['content']), 0, 100) . '...'); ?></p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <a href="article.php?slug=<?php echo htmlspecialchars($article['slug']); ?>" class="btn btn-outline-primary">Read More</a>
-                                        <small class="text-muted"><?php echo $article['publish_date'] ? formatDate($article['publish_date']) : '-'; ?></small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="col-12">
-                        <div class="text-center">
-                            <p class="text-muted">No articles available at the moment.</p>
-                        </div>
+
+            <!-- Dynamic Slides from Database -->
+            <?php if (!empty($slider_items)): ?>
+                <?php foreach ($slider_items as $index => $item): ?>
+                <div class="slide" data-slide="<?php echo $index + 1; ?>">
+                    <div class="slide-content">
+                        <h2 class="slide-title"><?php echo htmlspecialchars($item['title']); ?></h2>
+                        <p class="slide-description">
+                            <?php 
+                            $description = isset($item['excerpt']) ? $item['excerpt'] : $item['description'];
+                            echo htmlspecialchars(substr($description, 0, 150)) . '...';
+                            ?>
+                        </p>
+                        <a href="<?php echo $item['type']; ?>.php?slug=<?php echo $item['slug']; ?>" class="cta-button">Baca Selengkapnya</a>
                     </div>
-                <?php endif; ?>
+                    <div class="slide-bg" style="background-image: url('<?php echo isset($item['featured_image']) ? 'uploads/' . $item['featured_image'] : 'assets/images/default-' . $item['type'] . '.jpg'; ?>')"></div>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            <!-- Navigation -->
+            <button class="slider-arrow prev" onclick="changeSlide(-1)">‹</button>
+            <button class="slider-arrow next" onclick="changeSlide(1)">›</button>
+            
+            <div class="slider-nav">
+                <?php 
+                $total_slides = 1 + count($slider_items); // 1 for welcome slide + dynamic slides
+                for ($i = 0; $i < $total_slides; $i++): 
+                ?>
+                <div class="slider-dot <?php echo $i === 0 ? 'active' : ''; ?>" onclick="goToSlide(<?php echo $i; ?>)"></div>
+                <?php endfor; ?>
             </div>
         </div>
     </section>
 
-    <!-- Featured Projects Section -->
-    <section class="py-5 bg-light">
+    <!-- Latest Articles Section -->
+    <section class="section">
         <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <h2 class="text-center mb-5">Featured Projects</h2>
-                </div>
-            </div>
-            <div class="row">
-                <?php if (!empty($projects)): ?>
-                    <?php foreach ($projects as $project): ?>
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100 shadow-sm">
-                                <?php if ($project['featured_image']): ?>
-                                    <img src="<?php echo htmlspecialchars(UPLOAD_PATH . $project['featured_image']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($project['title']); ?>">
-                                <?php endif; ?>
-                                <div class="card-body">
-                                    <h5 class="card-title"><?php echo htmlspecialchars($project['title']); ?></h5>
-                                    <p class="card-text"><?php echo htmlspecialchars(substr($project['description'], 0, 100) . '...'); ?></p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <a href="project.php?slug=<?php echo htmlspecialchars($project['slug']); ?>" class="btn btn-primary">View Project</a>
-                                        <small class="text-muted"><?php echo $project['publish_date'] ? formatDate($project['publish_date']) : '-'; ?></small>
-                                    </div>
-                                </div>
+            <h2 class="section-title" data-i18n="home.latest_articles">Artikel Terbaru</h2>
+            <div class="card-grid">
+                <?php if (!empty($latest_articles)): ?>
+                    <?php foreach ($latest_articles as $article): ?>
+                    <div class="card loading">
+                        <?php if ($article['featured_image']): ?>
+                        <img src="uploads/<?php echo htmlspecialchars($article['featured_image']); ?>" alt="<?php echo htmlspecialchars($article['title']); ?>" class="card-image">
+                        <?php else: ?>
+                        <div class="card-icon">📄</div>
+                        <?php endif; ?>
+                        <div class="card-content">
+                            <h3 class="card-title"><?php echo htmlspecialchars($article['title']); ?></h3>
+                            <p class="card-description"><?php echo htmlspecialchars($article['excerpt']); ?></p>
+                            <div class="card-meta">
+                                <span class="card-date">
+                                    📅 <?php echo date('d M Y', strtotime($article['created_at'])); ?>
+                                </span>
+                                <a href="article.php?slug=<?php echo $article['slug']; ?>" class="read-more">Baca Selengkapnya →</a>
                             </div>
                         </div>
+                    </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="col-12">
-                        <div class="text-center">
-                            <p class="text-muted">No projects available at the moment.</p>
+                    <div class="card loading" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <div class="card-icon">📄</div>
+                        <div class="card-content">
+                            <h3 class="card-title" data-i18n="home.no_articles">Belum Ada Artikel</h3>
+                            <p class="card-description" data-i18n="home.articles_coming">Artikel akan ditampilkan di sini setelah dipublikasikan.</p>
                         </div>
                     </div>
                 <?php endif; ?>
             </div>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="articles.php" class="cta-button" data-i18n="home.view_all_articles">Lihat Semua Artikel</a>
+            </div>
         </div>
     </section>
 
-    <!-- Recent My Tools Section -->
-    <section class="py-5 bg-light">
+    <!-- Latest Projects Section -->
+    <section class="section" style="background: #f8f9fa;">
         <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <h2 class="text-center mb-5">Recent My Tools</h2>
-                </div>
-            </div>
-            <div class="row">
-                <?php if (!empty($tools)): ?>
-                    <?php foreach ($tools as $tool): ?>
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100 shadow-sm">
-                                <?php if ($tool['featured_image']): ?>
-                                    <img src="<?php echo htmlspecialchars(UPLOAD_PATH . $tool['featured_image']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($tool['title']); ?>">
-                                <?php endif; ?>
-                                <div class="card-body">
-                                    <h5 class="card-title"><?php echo htmlspecialchars($tool['title']); ?></h5>
-                                    <p class="card-text"><?php echo htmlspecialchars($tool['excerpt'] ?? substr(strip_tags($tool['content']), 0, 100) . '...'); ?></p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <a href="tool.php?slug=<?php echo htmlspecialchars($tool['slug']); ?>" class="btn btn-primary">View Tool</a>
-                                        <small class="text-muted"><?php echo $tool['publish_date'] ? formatDate($tool['publish_date']) : '-'; ?></small>
-                                    </div>
-                                </div>
+            <h2 class="section-title" data-i18n="home.latest_projects">Proyek Terbaru</h2>
+            <div class="card-grid">
+                <?php if (!empty($latest_projects)): ?>
+                    <?php foreach ($latest_projects as $project): ?>
+                    <div class="card loading">
+                        <?php if ($project['featured_image']): ?>
+                        <img src="uploads/<?php echo htmlspecialchars($project['featured_image']); ?>" alt="<?php echo htmlspecialchars($project['title']); ?>" class="card-image">
+                        <?php else: ?>
+                        <div class="card-icon">🚀</div>
+                        <?php endif; ?>
+                        <div class="card-content">
+                            <h3 class="card-title"><?php echo htmlspecialchars($project['title']); ?></h3>
+                            <p class="card-description"><?php echo htmlspecialchars(substr($project['description'], 0, 120)) . '...'; ?></p>
+                            <div class="card-meta">
+                                <span class="card-date">
+                                    📅 <?php echo date('d M Y', strtotime($project['created_at'])); ?>
+                                </span>
+                                <a href="project.php?slug=<?php echo $project['slug']; ?>" class="read-more">Lihat Detail →</a>
                             </div>
                         </div>
+                    </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="col-12">
-                        <div class="text-center">
-                            <p class="text-muted">No tools available at the moment.</p>
+                    <div class="card loading" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <div class="card-icon">🚀</div>
+                        <div class="card-content">
+                            <h3 class="card-title" data-i18n="home.no_projects">Belum Ada Proyek</h3>
+                            <p class="card-description" data-i18n="home.projects_coming">Proyek akan ditampilkan di sini setelah dipublikasikan.</p>
                         </div>
                     </div>
                 <?php endif; ?>
             </div>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="projects.php" class="cta-button" data-i18n="home.view_all_projects">Lihat Semua Proyek</a>
+            </div>
         </div>
     </section>
 
-    
-    </div>
+    <!-- Latest Tools Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title" data-i18n="home.latest_tools">Tools Terbaru</h2>
+            <div class="card-grid">
+                <?php if (!empty($latest_tools)): ?>
+                    <?php foreach ($latest_tools as $tool): ?>
+                    <div class="card loading">
+                        <?php if ($tool['featured_image']): ?>
+                        <img src="uploads/<?php echo htmlspecialchars($tool['featured_image']); ?>" alt="<?php echo htmlspecialchars($tool['title']); ?>" class="card-image">
+                        <?php else: ?>
+                        <div class="card-icon">🛠️</div>
+                        <?php endif; ?>
+                        <div class="card-content">
+                            <h3 class="card-title"><?php echo htmlspecialchars($tool['title']); ?></h3>
+                            <p class="card-description"><?php echo htmlspecialchars(substr($tool['description'], 0, 120)) . '...'; ?></p>
+                            <div class="card-meta">
+                                <span class="card-date">
+                                    📅 <?php echo date('d M Y', strtotime($tool['created_at'])); ?>
+                                </span>
+                                <a href="tool.php?slug=<?php echo $tool['slug']; ?>" class="read-more">Gunakan Tool →</a>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="card loading" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <div class="card-icon">🛠️</div>
+                        <div class="card-content">
+                            <h3 class="card-title" data-i18n="home.no_tools">Belum Ada Tools</h3>
+                            <p class="card-description" data-i18n="home.tools_coming">Tools akan ditampilkan di sini setelah dipublikasikan.</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="tools.php" class="cta-button" data-i18n="home.view_all_tools">Lihat Semua Tools</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="section about-section" id="about">
+        <div class="container">
+            <div class="about-content">
+                <h2 class="section-title" data-i18n="home.about_wiracenter">Tentang Wiracenter</h2>
+                <p class="lead" data-i18n="home.main_description">Wiracenter adalah platform digital yang didedikasikan untuk mendukung pertumbuhan wirausaha Indonesia. Kami menyediakan artikel informatif, showcase proyek inspiratif, dan tools praktis yang dapat membantu Anda mengembangkan bisnis dari ide hingga eksekusi yang sukses.</p>
+                <a href="about.php" class="cta-button" data-i18n="home.learn_more">Pelajari Lebih Lanjut</a>
+            </div>
+        </div>
+    </section>
+
     <?php include 'includes/footer.php'; ?>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
+    <!-- JavaScript -->
     <script src="assets/js/script.js"></script>
+    <script>
+        // Slider functionality
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.slider-dot');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            currentSlide = (n + totalSlides) % totalSlides;
+            
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+
+        function changeSlide(direction) {
+            showSlide(currentSlide + direction);
+        }
+
+        function goToSlide(n) {
+            showSlide(n);
+        }
+
+        // Auto slide every 5 seconds (only if there are multiple slides)
+        if (totalSlides > 1) {
+            setInterval(() => {
+                changeSlide(1);
+            }, 5000);
+        }
+
+        // Loading animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationDelay = Math.random() * 0.3 + 's';
+                    entry.target.classList.add('loading');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.card').forEach(card => {
+            observer.observe(card);
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
