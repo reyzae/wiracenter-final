@@ -4,7 +4,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2 sticky-top" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
   <div class="container">
     <a class="navbar-brand fw-bold" href="index.php" style="font-size:1.5rem; letter-spacing:1px; color:#1a1a2e;">
-      <?php echo getSetting('site_name', 'Wiracenter'); ?>
+      Wiracenter
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>

@@ -86,7 +86,7 @@ include 'includes/header.php';
 
                 <!-- Article Header -->
                 <header class="article-header mb-4">
-                    <h1 class="article-title"><?php echo htmlspecialchars_decode($title); ?></h1>
+                    <h1 class="article-title"><?php echo html_entity_decode($article['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></h1>
                     
                     <!-- Article Meta -->
                     <div class="article-meta">
@@ -130,7 +130,7 @@ include 'includes/header.php';
 
                 <!-- Article Content -->
                 <div class="article-content">
-                    <?php echo $content; ?>
+                    <?php echo html_entity_decode($article['content'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>
                 </div>
 
                 <!-- Action Buttons -->

@@ -34,8 +34,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
         <!-- Sidebar -->
         <div class="bg-dark border-right" id="sidebar-wrapper">
             <div class="sidebar-heading text-white text-center py-4">
-                <h3 class="mb-1" style="font-weight: bold;"><?php echo getSetting('site_name', 'Wiracenter'); ?></h3>
-                <h4>Dashboard</h4>
+                <h3 class="mb-1" style="font-weight: bold;">Wiracenter Dashboard</h3>
             </div>
             <div class="list-group list-group-flush">
                 <a href="dashboard.php" class="list-group-item list-group-item-action bg-dark text-white <?php echo $current_page == 'dashboard' ? 'active' : ''; ?> ">

@@ -72,7 +72,7 @@ class Database {
         }
     }
 
-    public function connect() {
+    public function connect(): ?PDO {
         $this->conn = null;
         
         // Try multiple connection methods for different environments

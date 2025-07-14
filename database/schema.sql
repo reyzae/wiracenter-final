@@ -173,6 +173,7 @@ CREATE TABLE IF NOT EXISTS `faqs` (
     `status` ENUM('active', 'inactive') DEFAULT 'active',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` DATETIME DEFAULT NULL,
     INDEX `idx_faqs_status` (`status`),
     INDEX `idx_faqs_order` (`display_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -262,6 +263,7 @@ CREATE TABLE IF NOT EXISTS `contact_messages` (
     `message` TEXT NOT NULL,
     `status` ENUM('unread', 'read', 'replied') DEFAULT 'unread',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `deleted_at` DATETIME DEFAULT NULL,
     INDEX `idx_contact_status` (`status`),
     INDEX `idx_contact_email` (`email`),
     INDEX `idx_contact_created_at` (`created_at`)

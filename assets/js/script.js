@@ -58,6 +58,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     */
     // --- [END DISABLED navbar toggler fix] ---
+
+    // Cookie Consent Banner
+    if (!localStorage.getItem('cookieConsent')) {
+        var consent = document.createElement('div');
+        consent.id = 'cookie-consent-banner';
+        consent.style.position = 'fixed';
+        consent.style.bottom = '0';
+        consent.style.left = '0';
+        consent.style.width = '100%';
+        consent.style.background = '#222';
+        consent.style.color = '#fff';
+        consent.style.padding = '16px';
+        consent.style.textAlign = 'center';
+        consent.style.zIndex = '9999';
+        consent.innerHTML = 'Website ini menggunakan cookie untuk meningkatkan pengalaman Anda. <button id="accept-cookie" style="margin-left:16px;padding:6px 18px;background:#1e90ff;color:#fff;border:none;border-radius:4px;cursor:pointer;">OK, Saya Mengerti</button>';
+        document.body.appendChild(consent);
+        document.getElementById('accept-cookie').onclick = function() {
+            localStorage.setItem('cookieConsent', '1');
+            consent.remove();
+        };
+    }
 });
 
 
@@ -596,3 +617,117 @@ window.addEventListener('DOMContentLoaded', function() {
   updateSliderProgressBar(0, total);
 });
 // --- END SLIDER PROGRESS BAR LOGIC ---
+
+// Translation keys untuk halaman compliance
+window.translations = window.translations || {
+  id: {
+    'privacy.title': 'Kebijakan Privasi',
+    'privacy.intro': 'Privasi Anda penting bagi kami. Halaman ini menjelaskan bagaimana informasi pribadi Anda dikumpulkan, digunakan, dan dilindungi di website Wiracenter.',
+    'privacy.collect_title': 'Informasi yang Kami Kumpulkan',
+    'privacy.collect_1': 'Informasi yang Anda masukkan pada form kontak, pendaftaran, atau fitur lain.',
+    'privacy.collect_2': 'Data penggunaan website secara anonim untuk analitik.',
+    'privacy.use_title': 'Penggunaan Informasi',
+    'privacy.use_1': 'Menanggapi pertanyaan atau permintaan Anda.',
+    'privacy.use_2': 'Meningkatkan layanan dan fitur website.',
+    'privacy.use_3': 'Tidak membagikan data pribadi Anda ke pihak ketiga tanpa izin.',
+    'privacy.security_title': 'Keamanan Data',
+    'privacy.security': 'Kami berkomitmen menjaga keamanan data Anda dengan teknologi dan prosedur yang sesuai.',
+    'privacy.cookie_title': 'Cookie',
+    'privacy.cookie': 'Website ini dapat menggunakan cookie untuk meningkatkan pengalaman pengguna. Anda dapat mengatur browser untuk menolak cookie.',
+    'privacy.change_title': 'Perubahan Kebijakan',
+    'privacy.change': 'Kebijakan ini dapat diperbarui sewaktu-waktu. Perubahan akan diumumkan di halaman ini.',
+    'privacy.contact_title': 'Kontak',
+    'privacy.contact': 'Jika ada pertanyaan tentang privasi, silakan hubungi kami melalui halaman <a href="contact.php">Kontak</a>.',
+    'terms.title': 'Syarat & Ketentuan',
+    'terms.intro': 'Dengan mengakses dan menggunakan website Wiracenter, Anda setuju untuk mematuhi syarat dan ketentuan berikut:',
+    'terms.1': 'Konten di website ini hanya untuk tujuan informasi dan edukasi.',
+    'terms.2': 'Dilarang menggunakan website untuk aktivitas ilegal atau merugikan pihak lain.',
+    'terms.3': 'Kami berhak mengubah konten, fitur, atau syarat layanan kapan saja tanpa pemberitahuan.',
+    'terms.4': 'Hak cipta konten milik pemilik website kecuali dinyatakan lain.',
+    'terms.5': 'Penggunaan data dan layanan tunduk pada Kebijakan Privasi.',
+    'terms.contact_title': 'Kontak',
+    'terms.contact': 'Jika ada pertanyaan tentang syarat layanan, silakan hubungi kami melalui halaman <a href="contact.php">Kontak</a>.',
+    // HAPUS seluruh key about.* dan aboutme.*
+  },
+  en: {
+    'privacy.title': 'Privacy Policy',
+    'privacy.intro': 'Your privacy is important to us. This page explains how your personal information is collected, used, and protected on the Wiracenter website.',
+    'privacy.collect_title': 'Information We Collect',
+    'privacy.collect_1': 'Information you enter in contact forms, registration, or other features.',
+    'privacy.collect_2': 'Anonymous website usage data for analytics.',
+    'privacy.use_title': 'Use of Information',
+    'privacy.use_1': 'Responding to your questions or requests.',
+    'privacy.use_2': 'Improving website services and features.',
+    'privacy.use_3': 'We do not share your personal data with third parties without permission.',
+    'privacy.security_title': 'Data Security',
+    'privacy.security': 'We are committed to keeping your data secure with appropriate technology and procedures.',
+    'privacy.cookie_title': 'Cookies',
+    'privacy.cookie': 'This website may use cookies to enhance your experience. You can set your browser to refuse cookies.',
+    'privacy.change_title': 'Policy Changes',
+    'privacy.change': 'This policy may be updated at any time. Changes will be announced on this page.',
+    'privacy.contact_title': 'Contact',
+    'privacy.contact': 'If you have questions about privacy, please contact us via the <a href="contact.php">Contact</a> page.',
+    'terms.title': 'Terms of Service',
+    'terms.intro': 'By accessing and using the Wiracenter website, you agree to comply with the following terms and conditions:',
+    'terms.1': 'Content on this website is for informational and educational purposes only.',
+    'terms.2': 'It is prohibited to use the website for illegal activities or to harm others.',
+    'terms.3': 'We reserve the right to change content, features, or terms of service at any time without notice.',
+    'terms.4': 'Copyright of content belongs to the website owner unless otherwise stated.',
+    'terms.5': 'Use of data and services is subject to the Privacy Policy.',
+    'terms.contact_title': 'Contact',
+    'terms.contact': 'If you have questions about the terms of service, please contact us via the <a href="contact.php">Contact</a> page.',
+    // HAPUS seluruh key about.* dan aboutme.*
+  }
+};
+
+// Extend setLanguage to support aboutTranslations
+function setLanguage(lang) {
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n');
+    if (window.translations[lang] && window.translations[lang][key]) {
+      if (el.tagName.toLowerCase() === 'input' || el.tagName.toLowerCase() === 'textarea') {
+        el.placeholder = window.translations[lang][key];
+      } else {
+        el.innerHTML = window.translations[lang][key];
+      }
+    } // jika tidak ditemukan, biarkan default text di HTML
+  });
+  // About page translation
+  document.querySelectorAll('[data-i18n^="about."]').forEach(function(el) {
+    const key = el.getAttribute('data-i18n');
+    if (window.translations[lang] && window.translations[lang][key]) {
+      if (el.tagName.toLowerCase() === 'input' || el.tagName.toLowerCase() === 'textarea') {
+        el.placeholder = window.translations[lang][key];
+      } else {
+        el.innerHTML = window.translations[lang][key];
+      }
+    } // jika tidak ditemukan, biarkan default text di HTML
+  });
+  // About Me section translation
+  document.querySelectorAll('[data-i18n^="aboutme."]').forEach(function(el) {
+    const key = el.getAttribute('data-i18n');
+    if (window.translations[lang] && window.translations[lang][key]) {
+      if (el.tagName.toLowerCase() === 'input' || el.tagName.toLowerCase() === 'textarea') {
+        el.placeholder = window.translations[lang][key];
+      } else if (key === 'aboutme.why_list') {
+        el.innerHTML = window.translations[lang][key];
+      } else {
+        el.textContent = window.translations[lang][key];
+      }
+    } // jika tidak ditemukan, biarkan default text di HTML
+  });
+  localStorage.setItem('lang', lang);
+}
+
+// Toggle switch listener (asumsi ada tombol/elemen dengan id 'lang-toggle' atau class 'lang-switch')
+document.addEventListener('DOMContentLoaded', function() {
+  var lang = localStorage.getItem('lang') || 'id';
+  setLanguage(lang);
+  var langToggles = document.querySelectorAll('.lang-switch, #lang-toggle');
+  langToggles.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var newLang = (localStorage.getItem('lang') === 'id') ? 'en' : 'id';
+      setLanguage(newLang);
+    });
+  });
+});

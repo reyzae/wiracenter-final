@@ -4,7 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $page_title ?? getSetting('site_name', 'Wiracenter'); ?></title>
+    <title><?php
+    $site_name = 'Wiracenter';
+    if (isset($page_title) && $page_title) {
+        echo html_entity_decode($page_title, ENT_QUOTES | ENT_HTML5, 'UTF-8') . ' | ' . $site_name;
+    } else {
+        echo $site_name;
+    }
+?></title>
     <meta name="description" content="<?php echo $page_description ?? getSetting('site_description', 'Personal Portfolio and Tech Blog'); ?>">
     <?php if (getSetting('site_favicon')): ?>
     <link rel="icon" href="<?php echo getSetting('site_favicon'); ?>" type="image/x-icon">
@@ -189,6 +196,7 @@
 
     <!-- Main Content -->
     <div class="main-content">
+        <a href="#main-content" class="visually-hidden-focusable skip-link">Lewati ke Konten Utama</a>
 
     <!-- Integrated Language & Theme Toggle Script -->
     <script>

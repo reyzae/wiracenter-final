@@ -68,7 +68,7 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wiracenter - Platform Digital untuk Wirausaha</title>
+    <title><?php echo isset($page_title) ? html_entity_decode($page_title, ENT_QUOTES | ENT_HTML5, 'UTF-8') : getSetting('site_name', 'Wiracenter'); ?></title>
     <meta name="description" content="Wiracenter adalah platform digital yang menyediakan artikel, proyek, dan tools untuk membantu wirausaha berkembang.">
     <meta name="keywords" content="wirausaha, bisnis, artikel, proyek, tools, digital">
     
@@ -425,11 +425,11 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
                 <?php foreach ($slider_items as $index => $item): ?>
                 <div class="slide" data-slide="<?php echo $index + 1; ?>">
                     <div class="slide-content">
-                        <h2 class="slide-title"><?php echo htmlspecialchars_decode($item['title']); ?></h2>
+                        <h2 class="slide-title"><?php echo html_entity_decode($item['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></h2>
                         <p class="slide-description">
                             <?php 
                             $description = isset($item['excerpt']) ? $item['excerpt'] : $item['description'];
-                            echo htmlspecialchars_decode(substr($description, 0, 150)) . '...';
+                            echo html_entity_decode(substr($description, 0, 150)) . '...';
                             ?>
                         </p>
                         <a href="<?php echo $item['type']; ?>.php?slug=<?php echo $item['slug']; ?>" class="cta-button">Read More</a>
@@ -480,8 +480,8 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
                         <div class="card-icon">📄</div>
                         <?php endif; ?>
                         <div class="card-content">
-                            <h3 class="card-title"><?php echo htmlspecialchars_decode($article['title']); ?></h3>
-                            <p class="card-description"><?php echo htmlspecialchars_decode($article['excerpt']); ?></p>
+                            <h3 class="card-title"><?php echo html_entity_decode($article['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></h3>
+                            <p class="card-description"><?php echo html_entity_decode($article['excerpt'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></p>
                             <div class="card-meta">
                                 <span class="card-date">
                                     📅 <?php echo date('d M Y', strtotime($article['created_at'])); ?>
@@ -521,8 +521,8 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
                         <div class="card-icon">🚀</div>
                         <?php endif; ?>
                         <div class="card-content">
-                            <h3 class="card-title"><?php echo htmlspecialchars($project['title']); ?></h3>
-                            <p class="card-description"><?php echo htmlspecialchars(substr($project['description'], 0, 120)) . '...'; ?></p>
+                            <h3 class="card-title"><?php echo htmlspecialchars_decode($project['title']); ?></h3>
+                            <p class="card-description"><?php echo htmlspecialchars_decode(substr($project['description'], 0, 120)) . '...'; ?></p>
                             <div class="card-meta">
                                 <span class="card-date">
                                     📅 <?php echo date('d M Y', strtotime($project['created_at'])); ?>
@@ -562,8 +562,8 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
                         <div class="card-icon">🛠️</div>
                         <?php endif; ?>
                         <div class="card-content">
-                            <h3 class="card-title"><?php echo htmlspecialchars($tool['title']); ?></h3>
-                            <p class="card-description"><?php echo htmlspecialchars(substr($tool['description'], 0, 120)) . '...'; ?></p>
+                            <h3 class="card-title"><?php echo htmlspecialchars_decode($tool['title']); ?></h3>
+                            <p class="card-description"><?php echo htmlspecialchars_decode(substr($tool['description'], 0, 120)) . '...'; ?></p>
                             <div class="card-meta">
                                 <span class="card-date">
                                     📅 <?php echo date('d M Y', strtotime($tool['created_at'])); ?>
@@ -593,9 +593,9 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
     <section class="section about-section" id="about">
         <div class="container">
             <div class="about-content">
-                <h2 class="section-title" data-i18n="home.about_wiracenter">Tentang Wiracenter</h2>
-                <p class="lead" data-i18n="home.main_description">Wiracenter adalah platform digital yang didedikasikan untuk mendukung pertumbuhan wirausaha Indonesia. Kami menyediakan artikel informatif, showcase proyek inspiratif, dan tools praktis yang dapat membantu Anda mengembangkan bisnis dari ide hingga eksekusi yang sukses.</p>
-                <a href="about.php" class="cta-button" data-i18n="home.learn_more">Pelajari Lebih Lanjut</a>
+                <h2 class="section-title" data-i18n="home.about_wiracenter">About Wiracenter</h2>
+                <p class="lead" data-i18n="home.main_description"><?php echo getSetting('site_description', 'Wiracenter is a digital playground for tech enthusiasts, learners, and makers. Here, you\'ll find hands-on experiments, practical guides, and real project showcases—built to inspire curiosity, share knowledge, and connect with fellow explorers in the world of technology.'); ?></p>
+                <a href="about.php" class="cta-button" data-i18n="home.learn_more">Learn More</a>
             </div>
         </div>
     </section>

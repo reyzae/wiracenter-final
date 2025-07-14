@@ -120,7 +120,7 @@ $site_name = getSetting('site_name', 'Wiracenter');
 $site_description = getSetting('site_description', 'Showcase of projects, experiments, and stories in tech, and digital world.');
 
 // Set page variables for header.php
-$page_title = "My Spaces - " . $site_name;
+$page_title = 'My Spaces';
 $page_description = "Explore my digital spaces - articles, projects, and tools for tech enthusiasts and digital creators.";
 ?>
 
@@ -223,10 +223,8 @@ $page_description = "Explore my digital spaces - articles, projects, and tools f
                                 <div class="card-type-badge"><?php echo ucfirst($item['type']); ?></div>
                             </div>
                             <div class="card-content">
-                                <h3 class="card-title"><?php echo htmlspecialchars_decode($item['title']); ?></h3>
-                                <p class="card-excerpt">
-                                    <?php echo htmlspecialchars_decode($item['excerpt'] ?? $item['description'] ?? substr(strip_tags($item['content'] ?? ''), 0, 150) . '...'); ?>
-                                </p>
+                                <h3 class="card-title"><?php echo html_entity_decode($item['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></h3>
+                                <p class="card-excerpt"><?php echo html_entity_decode(isset($item['excerpt']) ? $item['excerpt'] : (isset($item['description']) ? $item['description'] : (isset($item['content']) ? substr(strip_tags($item['content']), 0, 150) . '...' : '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></p>
                                 <div class="card-meta">
                                     <span class="card-date">
                                         <i class="far fa-calendar-alt"></i>

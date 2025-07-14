@@ -240,19 +240,17 @@ function getSetting($key, $default = '') {
     if (!$db) {
         $db = new Database();
     }
-    
     try {
         $conn = $db->connect();
         if ($conn) {
-            $stmt = $conn->prepare("SELECT value FROM site_settings WHERE setting_key = ?");
+            $stmt = $conn->prepare("SELECT setting_value FROM site_settings WHERE setting_key = ?");
             $stmt->execute([$key]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result ? $result['value'] : $default;
+            return $result ? $result['setting_value'] : $default;
         }
     } catch (Exception $e) {
         error_log("Error getting setting: " . $e->getMessage());
     }
-    
     return $default;
 }
 

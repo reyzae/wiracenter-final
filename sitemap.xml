@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://your-domain.com/</loc>
+  </url>
+  <url>
+    <loc>https://your-domain.com/about.php</loc>
+  </url>
+  <url>
+    <loc>https://your-domain.com/my-spaces.php</loc>
+  </url>
+  <url>
+    <loc>https://your-domain.com/contact.php</loc>
+  </url>
+  <url>
+    <loc>https://your-domain.com/article.php</loc>
+  </url>
+  <url>
+    <loc>https://your-domain.com/project.php</loc>
+  </url>
+  <url>
+    <loc>https://your-domain.com/tool.php</loc>
+  </url>
+  <!-- Tambahkan URL dinamis lain jika perlu -->
+</urlset> 

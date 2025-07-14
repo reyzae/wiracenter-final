@@ -3,7 +3,7 @@ require_once 'config/config.php';
 
 // Sanitize and validate input
 $slug = trim($_GET['slug'] ?? '');
-$slug = filter_var($slug, FILTER_SANITIZE_STRING);
+$slug = preg_replace('/[^a-zA-Z0-9_-]/', '', $slug);
 if (empty($slug)) {
     header("Location: index.php");
     exit();
@@ -101,7 +101,7 @@ include 'includes/header.php';
 
                 <!-- Tool Header -->
                 <header class="article-header mb-4">
-                    <h1 class="article-title"><?php echo htmlspecialchars_decode($title); ?></h1>
+                    <h1 class="article-title"><?php echo html_entity_decode($tool['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?></h1>
                     
                     <!-- Tool Meta -->
                     <div class="article-meta">

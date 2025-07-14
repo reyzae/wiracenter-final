@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error_message)) {
 }
 
 // Set page variables
-$page_title = "Contact Us - " . $site_name;
+$page_title = 'Contact | Wiracenter';
 $page_description = "Get in touch with us. We'd love to hear from you and answer any questions you might have.";
 ?>
 
