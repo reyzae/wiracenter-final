@@ -94,6 +94,7 @@ $categories = [
         </div>
     <?php endif; ?>
     <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
         <div class="accordion" id="settingsAccordion">
             <?php $catIndex = 0; foreach (
                 $categories as $cat => $fields):

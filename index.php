@@ -404,6 +404,18 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
                     <h1 data-i18n="home.welcome">Selamat Datang di Wiracenter</h1>
                     <p class="slide-description" data-i18n="home.description">Platform digital terdepan untuk wirausaha Indonesia. Temukan inspirasi, pengetahuan, dan tools yang Anda butuhkan untuk mengembangkan bisnis.</p>
                     <a href="#about" class="cta-button" data-i18n="home.view_projects">Pelajari Lebih Lanjut</a>
+                    <!-- [SLIDER NAV INSIDE .slide-content - COMMENTED OUT] -->
+                    <?php /*
+                    if ($slider_items): ?>
+                    <div class="slider-nav">
+                        <?php 
+                        $total_slides = 1 + count($slider_items);
+                        for ($i = 0; $i < $total_slides; $i++): 
+                        ?>
+                        <div class="slider-dot <?php echo $i === 0 ? 'active' : ''; ?>" onclick="goToSlide(<?php echo $i; ?>)"></div>
+                        <?php endfor; ?>
+                    </div>
+                    <?php endif; */ ?>
                 </div>
                 <div class="slide-bg" style="background-image: url('assets/images/hero-bg.jpg')"></div>
             </div>
@@ -413,14 +425,26 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
                 <?php foreach ($slider_items as $index => $item): ?>
                 <div class="slide" data-slide="<?php echo $index + 1; ?>">
                     <div class="slide-content">
-                        <h2 class="slide-title"><?php echo htmlspecialchars($item['title']); ?></h2>
+                        <h2 class="slide-title"><?php echo htmlspecialchars_decode($item['title']); ?></h2>
                         <p class="slide-description">
                             <?php 
                             $description = isset($item['excerpt']) ? $item['excerpt'] : $item['description'];
-                            echo htmlspecialchars(substr($description, 0, 150)) . '...';
+                            echo htmlspecialchars_decode(substr($description, 0, 150)) . '...';
                             ?>
                         </p>
-                        <a href="<?php echo $item['type']; ?>.php?slug=<?php echo $item['slug']; ?>" class="cta-button">Baca Selengkapnya</a>
+                        <a href="<?php echo $item['type']; ?>.php?slug=<?php echo $item['slug']; ?>" class="cta-button">Read More</a>
+                        <!-- [SLIDER NAV INSIDE .slide-content - COMMENTED OUT] -->
+                        <?php /*
+                        if ($slider_items): ?>
+                        <div class="slider-nav">
+                            <?php 
+                            $total_slides = 1 + count($slider_items);
+                            for ($i = 0; $i < $total_slides; $i++): 
+                            ?>
+                            <div class="slider-dot <?php echo $i === ($index + 1) ? 'active' : ''; ?>" onclick="goToSlide(<?php echo $i; ?>)"></div>
+                            <?php endfor; ?>
+                        </div>
+                        <?php endif; */ ?>
                     </div>
                     <div class="slide-bg" style="background-image: url('<?php echo isset($item['featured_image']) ? 'uploads/' . $item['featured_image'] : 'assets/images/default-' . $item['type'] . '.jpg'; ?>')"></div>
                 </div>
@@ -430,7 +454,7 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
             <!-- Navigation -->
             <button class="slider-arrow prev" onclick="changeSlide(-1)">‹</button>
             <button class="slider-arrow next" onclick="changeSlide(1)">›</button>
-            
+            <!-- [SLIDER NAV OUTSIDE .slide-content - RESTORED] -->
             <div class="slider-nav">
                 <?php 
                 $total_slides = 1 + count($slider_items); // 1 for welcome slide + dynamic slides
@@ -456,13 +480,13 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
                         <div class="card-icon">📄</div>
                         <?php endif; ?>
                         <div class="card-content">
-                            <h3 class="card-title"><?php echo htmlspecialchars($article['title']); ?></h3>
-                            <p class="card-description"><?php echo htmlspecialchars($article['excerpt']); ?></p>
+                            <h3 class="card-title"><?php echo htmlspecialchars_decode($article['title']); ?></h3>
+                            <p class="card-description"><?php echo htmlspecialchars_decode($article['excerpt']); ?></p>
                             <div class="card-meta">
                                 <span class="card-date">
                                     📅 <?php echo date('d M Y', strtotime($article['created_at'])); ?>
                                 </span>
-                                <a href="article.php?slug=<?php echo $article['slug']; ?>" class="read-more">Baca Selengkapnya →</a>
+                                <a href="article.php?slug=<?php echo $article['slug']; ?>" class="read-more">Read More →</a>
                             </div>
                         </div>
                     </div>
@@ -503,7 +527,7 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
                                 <span class="card-date">
                                     📅 <?php echo date('d M Y', strtotime($project['created_at'])); ?>
                                 </span>
-                                <a href="project.php?slug=<?php echo $project['slug']; ?>" class="read-more">Lihat Detail →</a>
+                                <a href="project.php?slug=<?php echo $project['slug']; ?>" class="read-more">View Details →</a>
                             </div>
                         </div>
                     </div>
@@ -544,7 +568,7 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
                                 <span class="card-date">
                                     📅 <?php echo date('d M Y', strtotime($tool['created_at'])); ?>
                                 </span>
-                                <a href="tool.php?slug=<?php echo $tool['slug']; ?>" class="read-more">Gunakan Tool →</a>
+                                <a href="tool.php?slug=<?php echo $tool['slug']; ?>" class="read-more">Use Tool →</a>
                             </div>
                         </div>
                     </div>

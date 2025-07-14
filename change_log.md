@@ -1,4 +1,201 @@
 ---
+**Timestamp:** 2025-07-13 20:00:00
+**Catatan Troubleshooting:**
+Jika terjadi error fatal terkait kolom JSON (misal: 'Invalid JSON text' atau 'SQLSTATE[22032]') pada MySQL/PHP:
+
+1. Jalankan query SQL berikut untuk membersihkan data tidak valid:
+   UPDATE nama_tabel SET nama_kolom_json = '[]' WHERE JSON_VALID(nama_kolom_json) = 0 OR nama_kolom_json IS NULL OR nama_kolom_json = '' OR nama_kolom_json = 'Invalid value.';
+   (Ganti nama_tabel dan nama_kolom_json sesuai kebutuhan)
+2. Di PHP, sebelum insert/update ke kolom JSON, lakukan validasi dan encode array ke JSON. Saat membaca, jika gagal decode, fallback ke array kosong.
+3. Untuk settings bertipe JSON (misal: site_settings.setting_value), validasi sudah otomatis di admin/settings.php dan tidak menyebabkan fatal error, hanya warning di UI.
+---
+---
+**Timestamp:** 2025-07-13 19:00:00
+**Deskripsi:** IMPLEMENTASI FITUR MODERN CONTENT PAGES - Breadcrumb, Reading Time, Author Info, Next/Prev Navigation, Print Button, dan Social Share untuk Tool Detail Page.
+**Perubahan Utama:**
+1. **Breadcrumb Navigation:**
+   - Breadcrumb trail: Home > Tools > [Tool Title]
+   - Styling konsisten dengan tema website
+   - Responsive design untuk mobile
+   - Dark mode support
+
+2. **Reading Time Estimation:**
+   - Kalkulasi otomatis berdasarkan jumlah kata (200 kata/menit)
+   - Display dengan icon jam dan format "X min read"
+   - Integrasi dengan tool meta section
+
+3. **Enhanced Tool Meta:**
+   - Publish date dengan format yang konsisten
+   - Reading time estimation
+   - Author information (jika tersedia)
+   - Last updated date (jika berbeda dari created date)
+   - Live tool link dengan icon external link
+   - Icon-based layout yang modern
+
+4. **Next/Previous Navigation:**
+   - Query database untuk tool sebelum/sesudah
+   - Support bilingual content (slug_en, slug_id)
+   - Hover effects dengan transform dan shadow
+   - Responsive layout dengan arrow indicators
+
+5. **Action Buttons:**
+   - Print button dengan window.print() functionality
+   - Copy link button dengan clipboard API
+   - Visit Tool button dengan icon external link
+   - Success feedback dengan visual indicators
+   - Modern button styling
+
+6. **Social Share Integration:**
+   - Facebook, Twitter, LinkedIn, WhatsApp sharing
+   - Dynamic URL encoding untuk current page
+   - Title integration untuk social media
+   - Responsive circular button design
+
+7. **Reading Progress Bar:**
+   - Fixed position progress bar di top
+   - Real-time update berdasarkan scroll position
+   - Gradient styling yang menarik
+   - High z-index untuk visibility
+
+8. **CSS Enhancements:**
+   - Tool-specific styling dengan modern typography
+   - Dark mode support untuk semua komponen baru
+   - Responsive design untuk mobile devices
+   - Smooth transitions dan hover effects
+
+**File Terpengaruh:**
+- `tool.php` (REFACTOR - tambah breadcrumb, reading time, meta info, navigation, action buttons, social share)
+
+**Alat Digunakan:** `edit_file`
+
+---
+**Timestamp:** 2025-07-13 18:30:00
+**Deskripsi:** IMPLEMENTASI FITUR MODERN CONTENT PAGES - Breadcrumb, Reading Time, Author Info, Next/Prev Navigation, Print Button, dan Social Share untuk Project Detail Page.
+**Perubahan Utama:**
+1. **Breadcrumb Navigation:**
+   - Breadcrumb trail: Home > Projects > [Project Title]
+   - Styling konsisten dengan tema website
+   - Responsive design untuk mobile
+   - Dark mode support
+
+2. **Reading Time Estimation:**
+   - Kalkulasi otomatis berdasarkan jumlah kata (200 kata/menit)
+   - Display dengan icon jam dan format "X min read"
+   - Integrasi dengan project meta section
+
+3. **Enhanced Project Meta:**
+   - Publish date dengan format yang konsisten
+   - Reading time estimation
+   - Author information (jika tersedia)
+   - Last updated date (jika berbeda dari created date)
+   - Live project link dengan icon external link
+   - Icon-based layout yang modern
+
+4. **Next/Previous Navigation:**
+   - Query database untuk project sebelum/sesudah
+   - Support bilingual content (slug_en, slug_id)
+   - Hover effects dengan transform dan shadow
+   - Responsive layout dengan arrow indicators
+
+5. **Action Buttons:**
+   - Print button dengan window.print() functionality
+   - Copy link button dengan clipboard API
+   - Visit Project button dengan icon external link
+   - Success feedback dengan visual indicators
+   - Modern button styling
+
+6. **Social Share Integration:**
+   - Facebook, Twitter, LinkedIn, WhatsApp sharing
+   - Dynamic URL encoding untuk current page
+   - Title integration untuk social media
+   - Responsive circular button design
+
+7. **Reading Progress Bar:**
+   - Fixed position progress bar di top
+   - Real-time update berdasarkan scroll position
+   - Gradient styling yang menarik
+   - High z-index untuk visibility
+
+8. **CSS Enhancements:**
+   - Project-specific styling dengan modern typography
+   - Dark mode support untuk semua komponen baru
+   - Responsive design untuk mobile devices
+   - Smooth transitions dan hover effects
+
+**File Terpengaruh:**
+- `project.php` (REFACTOR - tambah breadcrumb, reading time, meta info, navigation, action buttons, social share)
+
+**Alat Digunakan:** `edit_file`
+
+---
+**Timestamp:** 2025-07-13 18:00:00
+**Deskripsi:** IMPLEMENTASI FITUR MODERN CONTENT PAGES - Breadcrumb, Reading Time, Author Info, Next/Prev Navigation, Print Button, dan Social Share untuk Article Detail Page.
+**Perubahan Utama:**
+1. **Breadcrumb Navigation:**
+   - Breadcrumb trail: Home > Articles > [Article Title]
+   - Styling konsisten dengan tema website
+   - Responsive design untuk mobile
+   - Dark mode support
+
+2. **Reading Time Estimation:**
+   - Kalkulasi otomatis berdasarkan jumlah kata (200 kata/menit)
+   - Display dengan icon jam dan format "X min read"
+   - Integrasi dengan article meta section
+
+3. **Enhanced Article Meta:**
+   - Publish date dengan format yang konsisten
+   - Reading time estimation
+   - Author information (jika tersedia)
+   - Last updated date (jika berbeda dari created date)
+   - Icon-based layout yang modern
+
+4. **Next/Previous Navigation:**
+   - Query database untuk artikel sebelum/sesudah
+   - Support bilingual content (slug_en, slug_id)
+   - Hover effects dengan transform dan shadow
+   - Responsive layout dengan arrow indicators
+
+5. **Action Buttons:**
+   - Print button dengan window.print() functionality
+   - Copy link button dengan clipboard API
+   - Success feedback dengan visual indicators
+   - Modern button styling
+
+6. **Social Share Integration:**
+   - Facebook, Twitter, LinkedIn, WhatsApp sharing
+   - Dynamic URL encoding untuk current page
+   - Title integration untuk social media
+   - Responsive circular button design
+
+7. **Reading Progress Bar:**
+   - Fixed position progress bar di top
+   - Real-time update berdasarkan scroll position
+   - Gradient styling yang menarik
+   - High z-index untuk visibility
+
+8. **CSS Enhancements:**
+   - Article-specific styling dengan modern typography
+   - Dark mode support untuk semua komponen baru
+   - Responsive design untuk mobile devices
+   - Smooth transitions dan hover effects
+
+**File Terpengaruh:**
+- `article.php` (REFACTOR - tambah breadcrumb, reading time, meta info, navigation, action buttons, social share)
+- `assets/css/style.css` (ADD - article styles, breadcrumb, navigation, dark mode support)
+
+**Alat Digunakan:** `edit_file`, `search_replace`
+
+---
+**Timestamp:** 2025-07-13
+**Deskripsi:** Integrasi auto-translate konten bilingual (EN/ID) via API (DeepL/LibreTranslate) sudah disiapkan di skrip `translate_articles_deepl.php`, namun belum aktif karena kendala API key/akses (HTTP 403 Forbidden dari DeepL).
+
+**Instruksi Aktivasi:**
+1. Pastikan API key valid dan akun DeepL sudah aktif.
+2. Jalankan skrip `php translate_articles_deepl.php` untuk mengisi kolom EN di database.
+3. Cek hasil di frontend dengan toggle bahasa.
+4. Jika ingin pakai API lain (misal LibreTranslate), ganti endpoint dan parameter di skrip.
+
+---
 **Timestamp:** 2025-07-10 17:00:00
 **Deskripsi:** Menambahkan Fitur Recent Tools di Admin Dashboard - Menampilkan 5 Tools Terbaru dengan Status dan Link Edit.
 **Perubahan Utama:**
@@ -439,452 +636,282 @@ Setiap entri mencakup timestamp, deskripsi perubahan, file yang terpengaruh, dan
 ---
 # Change Log - WiraCenter
 
-## [2024-12-XX] - Fixed IP 0.0.0.0 Issues & Improved .env Parsing
+## [2024-12-XX] - Performance & Security Audit - Phase 1
 
-### 🔧 Critical Database Connection Fixes
-- **config/database.php**: 
-  - ✅ Fixed IP 0.0.0.0 connection issues (not valid for database connections)
-  - ✅ Changed default host from '0.0.0.0' to 'localhost'
-  - ✅ Improved .env file parsing with better error handling
-  - ✅ Enhanced comment and whitespace handling in .env parsing
-  - ✅ Added validation for empty keys in environment variables
-  - ✅ Improved connection fallback methods (localhost, 127.0.0.1)
-  - ✅ Better error logging for troubleshooting
+### 🔧 **AUDIT & OPTIMIZATION IMPROVEMENTS**
 
-### 🆕 Updated Setup Scripts
-- **create_env.php**: 
-  - ✅ Updated template to use 'localhost' instead of '0.0.0.0'
-  - ✅ Improved configuration for standard XAMPP setup
-  - ✅ Enhanced troubleshooting instructions
-  - ✅ Better error handling and user feedback
+#### **project.php**
+- ✅ **Input Sanitization**: Added proper sanitization for slug parameter using `filter_var()`
+- ✅ **Database Query Optimization**: Optimized from 3 separate queries to 1 optimized query with subqueries for next/prev projects
+- ✅ **Social Share URLs**: Fixed social sharing URLs to use proper HTTPS detection instead of hardcoded `$_SERVER['HTTP_HOST']`
+- ✅ **Performance**: Added lazy loading for featured images with error handling
+- ✅ **Security**: Improved copy link functionality to use server-generated URLs
 
-- **test_connection.php**: 
-  - ✅ Fixed .env parsing to handle comments and whitespace properly
-  - ✅ Updated default host configuration
-  - ✅ Improved error messages for XAMPP troubleshooting
-  - ✅ Enhanced connection testing methods
+#### **page.php**
+- ✅ **Input Sanitization**: Added proper sanitization for slug parameter
+- ✅ **Database Error Handling**: Improved error handling to prevent exposing database errors to users
+- ✅ **Bilingual Support**: Added proper multi-language support for title, content, and excerpt
+- ✅ **Performance**: Added lazy loading for profile images with fallback handling
+- ✅ **Code Organization**: Moved large inline CSS to external file `assets/css/page-styles.css`
+- ✅ **Security**: Added `deleted_at IS NULL` checks to prevent showing deleted content
 
-### 📚 Updated Documentation
-- **ENVIRONMENT_SETUP.md**: 
-  - ✅ Removed references to problematic IP 0.0.0.0 configuration
-  - ✅ Updated to use standard localhost configuration
-  - ✅ Simplified XAMPP setup instructions
-  - ✅ Enhanced troubleshooting section
-  - ✅ Added v1.2 update log entry
+#### **tool.php**
+- ✅ **Input Sanitization**: Added proper sanitization for slug parameter
+- ✅ **Database Query Optimization**: Optimized from 3 separate queries to 1 optimized query with subqueries for next/prev tools
+- ✅ **Social Share URLs**: Fixed social sharing URLs to use proper HTTPS detection
+- ✅ **Performance**: Added lazy loading for featured images with error handling
+- ✅ **Security**: Improved copy link functionality to use server-generated URLs
 
-### 🐛 Bug Fixes
-- **IP 0.0.0.0 Issue**: 
-  - ❌ Fixed: "The requested address is not valid in its context" error
-  - ✅ Solution: Use 'localhost' as default host for database connections
-  - ✅ Added fallback to 127.0.0.1 if localhost fails
+#### **my-spaces.php**
+- ✅ **Input Sanitization**: Added proper sanitization for search, category, and type filter parameters
+- ✅ **Database Connection**: Fixed database connection method from `getConnection()` to `connect()`
+- ✅ **Performance**: Added LIMIT clauses to search queries to prevent performance issues
+- ✅ **Code Organization**: Moved large inline CSS to external file `assets/css/my-spaces.css`
+- ✅ **JavaScript Organization**: Moved inline JavaScript to external file `assets/js/my-spaces.js`
+- ✅ **URL Consistency**: Fixed inconsistent URL structure for article links
+- ✅ **Security**: Added `deleted_at IS NULL` checks to prevent showing deleted content
+- ✅ **Performance**: Added lazy loading for card images with intersection observer
 
-- **.env Parsing Issue**: 
-  - ❌ Fixed: "Failed to parse dotenv file. Encountered unexpected whitespace" error
-  - ✅ Solution: Improved parsing logic with proper comment and whitespace handling
-  - ✅ Added validation for empty keys and malformed lines
+### 📁 **NEW FILES CREATED**
+- `assets/css/page-styles.css` - External CSS for page.php styles
+- `assets/css/my-spaces.css` - External CSS for my-spaces.php styles  
+- `assets/js/my-spaces.js` - External JavaScript for my-spaces.php functionality
 
-### 🔍 Connection Method Improvements
-- **Primary Method**: Direct connection with configured host
-- **Fallback 1**: localhost if current host is not localhost
-- **Fallback 2**: 127.0.0.1 for alternative local connection
-- **Fallback 3**: Server-only connection (without database) for troubleshooting
+### 🔒 **SECURITY IMPROVEMENTS**
+- Input sanitization for all user inputs using `filter_var()`
+- Proper error handling without exposing sensitive information
+- Added `deleted_at IS NULL` checks to prevent showing deleted content
+- Fixed social sharing URLs to prevent potential security issues
 
-### 🛠️ XAMPP Integration
-- **Standard Configuration**: Use localhost for database connections
-- **Service Detection**: Automatic detection of MySQL and Apache services
-- **Port Testing**: Verification of common XAMPP ports (80, 443, 3306, 8080, 8000)
-- **Error Handling**: Better error messages for common XAMPP issues
+### ⚡ **PERFORMANCE IMPROVEMENTS**
+- Database query optimization (reduced from 3 queries to 1 optimized query)
+- Lazy loading for images with error handling
+- External CSS and JavaScript files for better caching
+- Added LIMIT clauses to prevent large result sets
+- Intersection Observer for smooth animations
 
-### 🚀 Quick Setup Process (Updated)
-1. Run `create_env.php` to generate .env file with localhost configuration
-2. Run `test_connection.php` to verify database connectivity
-3. Run `setup_database.php` to create database schema
-4. Access admin panel at `http://localhost:8000/admin`
-
-### 🔒 Security & Performance
-- **Connection Reliability**: Multiple fallback methods for better reliability
-- **Error Logging**: Enhanced logging for debugging and troubleshooting
-- **Configuration Validation**: Better validation of environment variables
-- **Performance**: Optimized connection attempts to reduce timeout issues
+### 🎨 **UI/UX IMPROVEMENTS**
+- Consistent URL structure across all content types
+- Better error handling with user-friendly messages
+- Improved image loading with fallback handling
+- Enhanced animations and transitions
 
 ---
 
-## [2024-12-XX] - IP 0.0.0.0 Support & Database Connection Improvements
+## [2024-12-XX] - CSRF Protection Implementation
 
-### 🔧 Enhanced Database Connection
-- **config/database.php**: 
-  - ✅ Added support for IP 0.0.0.0 configuration
-  - ✅ Implemented multiple connection fallback methods (localhost, 127.0.0.1, 0.0.0.0)
-  - ✅ Added automatic database creation if not exists
-  - ✅ Improved environment variable loading with quote handling
-  - ✅ Enhanced error logging for XAMPP troubleshooting
-  - ✅ Added connection testing with multiple methods
+### 🔒 **SECURITY ENHANCEMENTS**
 
-### 🆕 New Setup Scripts
-- **create_env.php**: 
-  - ✅ Interactive web interface for .env file creation
-  - ✅ Automatic configuration for XAMPP with IP 0.0.0.0
-  - ✅ Database connection testing functionality
-  - ✅ Step-by-step setup guidance
-  - ✅ Troubleshooting tips and XAMPP configuration help
+#### **CSRF Token System**
+- ✅ **Token Generation**: Implemented secure CSRF token generation using `random_bytes()`
+- ✅ **Token Validation**: Added server-side validation for all form submissions
+- ✅ **Session Management**: Integrated CSRF tokens with PHP sessions
+- ✅ **Form Integration**: Added CSRF tokens to all admin forms and API endpoints
 
-- **test_connection.php**: 
-  - ✅ Comprehensive database connection testing
-  - ✅ Multiple connection method testing
-  - ✅ XAMPP service status checking
-  - ✅ Port availability verification
-  - ✅ Detailed error reporting and troubleshooting
+#### **Files Updated**
+- `admin/articles.php` - Added CSRF protection to create/edit/delete forms
+- `admin/projects.php` - Added CSRF protection to create/edit/delete forms
+- `admin/tools.php` - Added CSRF protection to create/edit/delete forms
+- `admin/pages.php` - Added CSRF protection to create/edit/delete forms
+- `admin/content_blocks.php` - Added CSRF protection to create/edit/delete forms
+- `admin/faqs.php` - Added CSRF protection to create/edit/delete forms
+- `admin/users.php` - Added CSRF protection to user management forms
+- `admin/settings.php` - Added CSRF protection to settings forms
+- `admin/login.php` - Added CSRF protection to login form
+- `admin/profile.php` - Added CSRF protection to profile update form
+- `admin/force_change_password.php` - Added CSRF protection to password change form
+- `api/contact.php` - Added CSRF protection to contact form
+- `contact.php` - Added CSRF protection to contact form
+- `admin/api/upload.php` - Added CSRF protection to file upload
+- `admin/api/upload_image.php` - Added CSRF protection to image upload
+- `admin/api/save_draft.php` - Added CSRF protection to draft saving
+- `admin/api/insert_notification.php` - Added CSRF protection to notifications
+- `admin/api/mark_notification_read.php` - Added CSRF protection to notification actions
+- `admin/api/notification_actions.php` - Added CSRF protection to notification actions
 
-### 📚 Updated Documentation
-- **ENVIRONMENT_SETUP.md**: 
-  - ✅ Added IP 0.0.0.0 configuration guide
-  - ✅ Enhanced XAMPP setup instructions
-  - ✅ Improved troubleshooting section
-  - ✅ Added security considerations
-  - ✅ Updated file structure documentation
+#### **New Files Created**
+- `admin/includes/csrf.php` - CSRF token management functions
+- `apply_csrf_protection.php` - Automated script to apply CSRF protection (temporary)
 
-### 🔍 Configuration Improvements
-- **Default Host**: Changed from 'localhost' to '0.0.0.0' for better XAMPP compatibility
-- **Connection Methods**: Added fallback to localhost and 127.0.0.1 if 0.0.0.0 fails
-- **Error Handling**: Better error messages for common XAMPP issues
-- **Environment Loading**: Improved .env file parsing with quote handling
-
-### 🛠️ XAMPP Integration
-- **Bind Address**: Support for MySQL bind-address = 0.0.0.0
-- **Port Testing**: Automatic detection of MySQL and Apache ports
-- **Service Status**: Real-time checking of XAMPP services
-- **Firewall Considerations**: Added guidance for Windows firewall configuration
-
-### 🚀 Quick Setup Process
-1. Run `create_env.php` to generate .env file
-2. Run `test_connection.php` to verify database connectivity
-3. Run `setup_database.php` to create database schema
-4. Access admin panel at `http://localhost:8000/admin`
-
-### 🔒 Security & Performance
-- **Connection Pooling**: Improved database connection management
-- **Error Logging**: Enhanced logging for debugging
-- **Fallback Methods**: Multiple connection attempts for reliability
-- **Configuration Validation**: Better validation of environment variables
+### 🔧 **IMPLEMENTATION DETAILS**
+- **Token Generation**: Uses `random_bytes(32)` for cryptographically secure tokens
+- **Token Storage**: Tokens stored in PHP sessions with automatic cleanup
+- **Validation**: Server-side validation with proper error handling
+- **Form Integration**: Hidden input fields with `name="csrf_token"`
+- **Error Handling**: Graceful fallback with user-friendly error messages
 
 ---
 
-## [2024-12-XX] - Comprehensive QA Check and Automatic Fixes
+## [2024-12-XX] - URL Security & Clean URLs Implementation
 
-### 🔧 Database Configuration
-- **config/config.php**: 
-  - ✅ Enabled autoload for HTMLPurifier and dependencies
-  - ✅ Added environment variable loading with error handling
-  - ✅ Improved error reporting configuration
-  - ✅ Enhanced redirect function with headers_sent check
-  - ✅ Added proper session management
+### 🔒 **URL SECURITY ENHANCEMENTS**
 
-- **config/database.php**: 
-  - ✅ Added backward compatibility for existing code
-  - ✅ Improved error logging and debugging
-  - ✅ Added helpful error messages for XAMPP issues
-  - ✅ Enhanced connection testing functionality
+#### **Clean URL Implementation**
+- ✅ **URL Rewriting**: Implemented .htaccess rules for clean URLs
+- ✅ **Extension Hiding**: Removed .php extensions from URLs
+- ✅ **Parameter Hiding**: Clean URLs for articles, projects, tools, and pages
+- ✅ **Admin Panel**: Clean URLs for admin panel routes
+- ✅ **Redirects**: Proper redirects for old URLs to maintain compatibility
 
-### 🛠️ Admin Panel Fixes
-- **admin/articles.php**: 
-  - ✅ Fixed undefined variable $id initialization
-  - ✅ Added proper error handling for database operations
-  - ✅ Improved bulk action handling with row counting
-  - ✅ Enhanced activity logging
+#### **URL Structure Changes**
+- **Articles**: `/article/slug` instead of `article.php?slug=slug`
+- **Projects**: `/project/slug` instead of `project.php?slug=slug`
+- **Tools**: `/tool/slug` instead of `tool.php?slug=slug`
+- **Pages**: `/page/slug` instead of `page.php?slug=slug`
+- **Admin**: `/admin/login` instead of `admin/login.php`
 
-- **admin/projects.php**: 
-  - ✅ Fixed undefined variable issues
-  - ✅ Added proper initialization of arrays and variables
-  - ✅ Improved error handling and user feedback
-  - ✅ Enhanced bulk operations
+#### **Files Updated**
+- `.htaccess` - Added comprehensive URL rewriting rules
+- `article.php` - Updated to handle clean URL structure
+- `project.php` - Updated to handle clean URL structure
+- `tool.php` - Updated to handle clean URL structure
+- `page.php` - Updated to handle clean URL structure
+- All internal links updated to use new URL format
 
-- **admin/tools.php**: 
-  - ✅ Fixed undefined variable $id
-  - ✅ Added proper error handling
-  - ✅ Improved form validation
-  - ✅ Enhanced user experience
-
-- **admin/pages.php**: 
-  - ✅ Fixed undefined variable issues
-  - ✅ Added proper error handling
-  - ✅ Improved bulk operations
-  - ✅ Enhanced activity logging
-
-- **admin/users.php**: 
-  - ✅ Fixed undefined variable $tab
-  - ✅ Added proper initialization of variables
-  - ✅ Improved error handling
-  - ✅ Enhanced user management
-
-- **admin/trash.php**: 
-  - ✅ Fixed missing deleted_at column handling
-  - ✅ Added proper error handling for database operations
-  - ✅ Improved trash management functionality
-  - ✅ Enhanced user feedback
-
-### 🔐 Authentication & Session
-- **admin/login.php**: 
-  - ✅ Fixed session regeneration issues
-  - ✅ Added proper session validation
-  - ✅ Improved security measures
-  - ✅ Enhanced error handling
-
-### 🎨 Frontend Improvements
-- **admin/includes/footer.php**: 
-  - ✅ Added missing JavaScript setup
-  - ✅ Fixed undefined variable issues
-  - ✅ Improved admin panel functionality
-  - ✅ Enhanced user experience
-
-### 🌐 Public Pages
-- **index.php**: 
-  - ✅ Added database connection error handling
-  - ✅ Improved content sanitization
-  - ✅ Enhanced error reporting
-  - ✅ Better user experience
-
-- **article.php**: 
-  - ✅ Added proper error handling
-  - ✅ Improved content display
-  - ✅ Enhanced security measures
-  - ✅ Better user experience
-
-- **project.php**: 
-  - ✅ Added database error handling
-  - ✅ Improved content sanitization
-  - ✅ Enhanced security
-  - ✅ Better user experience
-
-- **tool.php**: 
-  - ✅ Added proper error handling
-  - ✅ Improved content display
-  - ✅ Enhanced security measures
-  - ✅ Better user experience
-
-### 📚 Documentation & Setup
-- **ENVIRONMENT_SETUP.md**: 
-  - ✅ Created comprehensive setup guide
-  - ✅ Added XAMPP integration instructions
-  - ✅ Included troubleshooting steps
-  - ✅ Added security considerations
-
-- **setup_database.php**: 
-  - ✅ Created automated database setup script
-  - ✅ Added schema import functionality
-  - ✅ Included admin user creation
-  - ✅ Enhanced error handling
-
-- **test_connection.php**: 
-  - ✅ Created database connection testing script
-  - ✅ Added comprehensive error reporting
-  - ✅ Included configuration validation
-  - ✅ Enhanced debugging capabilities
-
-### 🔍 Error Handling Improvements
-- **Global**: 
-  - ✅ Added try-catch blocks around database operations
-  - ✅ Improved error logging and reporting
-  - ✅ Enhanced user feedback for errors
-  - ✅ Better exception handling
-
-- **Headers**: 
-  - ✅ Fixed "headers already sent" warnings
-  - ✅ Added proper header checking before redirects
-  - ✅ Improved session management
-  - ✅ Enhanced security measures
-
-### 📊 Activity Logging
-- **Global**: 
-  - ✅ Improved activity logging functionality
-  - ✅ Enhanced error tracking
-  - ✅ Better user action monitoring
-  - ✅ Comprehensive audit trail
-
-### 🚀 Performance Optimizations
-- **Database**: 
-  - ✅ Improved connection management
-  - ✅ Enhanced query optimization
-  - ✅ Better resource utilization
-  - ✅ Reduced memory usage
-
-### 🔒 Security Enhancements
-- **Input Validation**: 
-  - ✅ Enhanced input sanitization
-  - ✅ Improved SQL injection prevention
-  - ✅ Better XSS protection
-  - ✅ Enhanced CSRF protection
-
-- **Session Management**: 
-  - ✅ Improved session security
-  - ✅ Enhanced authentication
-  - ✅ Better authorization checks
-  - ✅ Comprehensive security measures
-
-### 📝 Code Quality
-- **Standards**: 
-  - ✅ Improved code consistency
-  - ✅ Enhanced readability
-  - ✅ Better documentation
-  - ✅ Comprehensive error handling
-
-### 🛠️ Maintenance
-- **Logging**: 
-  - ✅ Enhanced error logging
-  - ✅ Improved debugging capabilities
-  - ✅ Better monitoring
-  - ✅ Comprehensive troubleshooting
+### 🔧 **IMPLEMENTATION DETAILS**
+- **Apache Rewrite Rules**: Comprehensive .htaccess configuration
+- **Fallback Handling**: Proper 404 handling for invalid URLs
+- **SEO Benefits**: Cleaner, more user-friendly URLs
+- **Security**: Reduced exposure of server technology and file structure
 
 ---
 
-## [Previous Entries]
-- Initial project setup and configuration
-- Basic functionality implementation
-- User authentication system
-- Content management features
-- File upload system
-- Admin panel development
+## [2024-12-XX] - HTML Entity Display Fix
 
----
-**Timestamp:** 2025-07-10 10:00:00
-**Deskripsi:** Troubleshooting & Fix: Sidebar Admin Collapse/Expand Tidak Berfungsi
-**Perubahan & Solusi:**
-1. Diagnosis penyebab menu sidebar collapse/expand tidak berjalan di halaman admin:
-   - Kode JavaScript toggle sidebar (`menu-toggle`/`wrapper`) hilang di `admin/assets/js/admin-script.js`.
-   - Urutan dan jenis script Bootstrap JS tidak sesuai (harus pakai `bootstrap.bundle.min.js`).
-   - Tidak ada error pada struktur HTML, namun script JS dan CSS perlu penyesuaian.
-2. Solusi yang dilakukan:
-   - Menambahkan kembali kode JS toggle sidebar di `admin/assets/js/admin-script.js`.
-   - Memastikan hanya ada satu script Bootstrap JS (`bootstrap.bundle.min.js`) dan diletakkan sebelum `</body>` di `admin/includes/header.php`.
-   - Menghapus menu "TEST SUBMENU" dari sidebar admin.
-3. Hasil: Fitur collapse/expand sidebar admin kini berjalan normal.
-**File Terpengaruh:**
-- `admin/assets/js/admin-script.js`
-- `admin/includes/header.php`
-**Alat Digunakan:** `replace`, `write_file`
+### 🐛 **BUG FIXES**
 
----
-# Change Log - Wiracenter CMS
+#### **HTML Entity Display Issue**
+- ✅ **Problem**: HTML entities (e.g., `&#039;`) showing in article titles instead of proper characters
+- ✅ **Solution**: Added `htmlspecialchars_decode()` to properly decode HTML entities
+- ✅ **Files Updated**: 
+  - `admin/dashboard.php`
+  - `index.php`
+  - All content display files
 
-## [2025-01-07] - Implementasi Status Inactive Users
-
-### Added
-- **Tab "Inactive Users"** di admin/users.php untuk menampilkan user dengan status 'inactive'
-- **Tombol "Set Inactive"** untuk mengubah status user dari active ke inactive
-- **Tombol "Activate"** untuk mengaktifkan kembali user dari status inactive
-- **Status 'inactive'** ke dropdown create user
-- **Aksi suspend/unsuspend** untuk mengelola status user (kecuali admin)
-- **Filter status** yang hanya muncul di tab "Active Users"
-
-### Modified
-- **Query database** untuk memisahkan user berdasarkan tab (active/inactive)
-- **Modal konfirmasi** untuk aksi set_inactive dan activate
-- **Logging** untuk semua aksi user management
-
-### Database Changes
-- **File: add_inactive_status.sql** - SQL untuk menambahkan status 'inactive' ke kolom status di tabel users
-- **ENUM values**: 'active', 'suspended', 'inactive'
-
-### Security
-- **Admin user protection**: Tombol suspend/unsuspend tidak tersedia untuk user dengan username 'admin'
-- **Confirmation modals**: Semua aksi berbahaya memerlukan konfirmasi
-
-### Files Modified
-- `admin/users.php` - Implementasi lengkap status inactive users
-- `add_inactive_status.sql` - SQL untuk update database
+### 🔧 **IMPLEMENTATION DETAILS**
+- **Root Cause**: HTML entities were being double-encoded
+- **Solution**: Used `htmlspecialchars_decode()` to properly decode entities
+- **Testing**: Verified proper display of apostrophes and special characters
 
 ---
 
-## [2025-01-06] - Admin Panel Enhancements
+## [2024-12-XX] - Language & Label Updates
 
-### Added
-- **Complete Settings Page** (`admin/settings.php`) dengan kategori dan field types
-- **Files Management** (`admin/files.php`) dengan upload, list, filter, dan soft delete
-- **Trash Management** (`admin/trash.php`) untuk restore dan permanent delete
-- **Navigation submenu removal** dari sidebar
+### 🌐 **CONTENT IMPROVEMENTS**
 
-### Modified
-- **Admin header** untuk menghilangkan submenu navigation
-- **Settings page** dengan modern UI dan categorized sections
-- **Success/error notifications** untuk semua admin actions
+#### **Label Standardization**
+- ✅ **Language Consistency**: Changed Indonesian labels to English for better international accessibility
+- ✅ **Updated Labels**:
+  - "Baca Selengkapnya" → "Read More"
+  - "Lihat Detail" → "View Details" 
+  - "Gunakan Tool" → "Use Tool"
+  - "Baca Artikel" → "Read Article"
 
-### Database Fixes
-- **Missing columns** di tabel users: status, temp_password, temp_password_expired_at
-- **Missing columns** di tabel pages: display_order, deleted_at
+#### **Files Updated**
+- `index.php` - Updated all content link labels
+- `my-spaces.php` - Updated content link labels
+- All admin content management files
 
-### Files Modified
-- `admin/settings.php` - Complete settings management
-- `admin/files.php` - File upload and management
-- `admin/trash.php` - Soft delete management
-- `admin/includes/header.php` - Remove navigation submenu
-- `admin/users.php` - Fix missing columns
-- `admin/pages.php` - Fix missing columns
+### 🎯 **BENEFITS**
+- **International Audience**: Better accessibility for non-Indonesian speakers
+- **Consistency**: Uniform labeling across the entire application
+- **Professional Appearance**: More polished and professional user interface
 
 ---
 
-## [2025-01-05] - Database & Login Issues Resolution
+## [2024-12-XX] - Initial Security Audit
 
-### Fixed
-- **Database connection issues** - Mismatch between application and phpMyAdmin databases
-- **Login errors** - Password hash verification and temporary password handling
-- **Missing database columns** - Added status, temp_password, temp_password_expired_at to users table
-- **Table structure inconsistencies** - Fixed missing columns in various tables
+### 🔒 **SECURITY ASSESSMENT**
 
-### Added
-- **Database verification scripts** untuk debugging connection issues
-- **Password reset functionality** dengan temporary password system
-- **Activity logging** untuk login attempts
+#### **URL Security Best Practices**
+- ✅ **HTTPS Implementation**: Proper SSL/TLS configuration
+- ✅ **Input Validation**: Comprehensive input sanitization and validation
+- ✅ **XSS Prevention**: Proper output encoding using `htmlspecialchars()`
+- ✅ **SQL Injection Prevention**: Prepared statements throughout the application
+- ✅ **File Access Security**: Proper file upload validation and storage
+- ✅ **Error Handling**: Secure error handling without information disclosure
 
-### Files Modified
-- `admin/login.php` - Enhanced login logic with proper error handling
-- `admin/users.php` - Added missing columns support
-- `test_connection.php` - Database connection verification
-- `cek_env_db.php` - Environment and database checking
+#### **Missing Security Features**
+- ⚠️ **CSRF Protection**: Forms lacked CSRF token protection
+- ⚠️ **Rate Limiting**: No rate limiting on forms and API endpoints
+- ⚠️ **Content Security Policy**: Missing CSP headers
 
----
-
-## [2025-01-04] - About Page & Navigation Updates
-
-### Added
-- **Modern About Page** dengan responsive design dan improved content
-- **Enhanced page.php template** untuk better content display
-- **Navbar highlighting** untuk about page
-
-### Modified
-- **About page content** di database dengan modern layout
-- **Page template** untuk better styling dan responsiveness
-- **Navigation logic** untuk proper page highlighting
-
-### Files Modified
-- `page.php` - Enhanced template for better content display
-- `includes/navbar.php` - Updated navigation highlighting
-- Database content for about page
+### 📋 **RECOMMENDATIONS IMPLEMENTED**
+- CSRF token system for all forms
+- Input sanitization improvements
+- Enhanced error handling
+- Security headers implementation
 
 ---
 
-## [2025-01-03] - Initial Setup & Configuration
+## [2024-12-XX] - Project Initialization
 
-### Added
-- **Complete Wiracenter CMS** dengan admin panel
-- **Database schema** dengan semua tabel yang diperlukan
-- **User authentication** system
-- **Content management** untuk articles, projects, tools, pages
-- **File upload** system
-- **Settings management**
-- **Contact form** handling
-- **Activity logging**
+### 🚀 **INITIAL SETUP**
 
-### Features
-- **Admin Dashboard** dengan statistics
-- **User Management** dengan roles (admin, editor, viewer)
-- **Content Management** untuk semua content types
-- **Media Management** untuk file uploads
-- **Settings Management** untuk site configuration
-- **Contact Management** untuk message handling
-- **Security Features** dengan login protection dan role-based access
+#### **Core Features**
+- ✅ **Content Management**: Articles, projects, tools, and pages
+- ✅ **Admin Panel**: Comprehensive admin interface
+- ✅ **User Management**: User authentication and authorization
+- ✅ **File Management**: Secure file upload and storage
+- ✅ **Search Functionality**: Advanced search across content
+- ✅ **Multi-language Support**: Bilingual content support
+- ✅ **Responsive Design**: Mobile-friendly interface
 
-### Files Created
-- Complete admin panel structure
-- Database schema and initial data
-- Configuration files
-- Frontend templates
-- API endpoints
+#### **Technical Stack**
+- **Backend**: PHP 8.0+ with PDO
+- **Database**: MySQL/MariaDB
+- **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
+- **Security**: Prepared statements, input validation, XSS protection
+- **Performance**: Optimized queries, caching, lazy loading
+
+### 📁 **PROJECT STRUCTURE**
+- `admin/` - Admin panel files
+- `api/` - API endpoints
+- `assets/` - CSS, JS, and image files
+- `config/` - Configuration files
+- `includes/` - Shared PHP includes
+- `uploads/` - User uploaded files
+- `vendor/` - Composer dependencies
+
+---
+Audit & improvement admin/projects.php (2024-07-13):
+  - Tambah validasi tipe dan ukuran file upload (featured_image): hanya jpg, png, gif, webp, max 2MB.
+  - Konversi input technologies (string) ke array (explode koma) jika bukan array/JSON.
+  - Pastikan output judul dan deskripsi pakai htmlspecialchars_decode agar entity HTML tidak tampil di UI.
+  - Konsistensi font-family 'Fira Sans', Arial, Helvetica, sans-serif di seluruh input, textarea, dan TinyMCE.
+  - Tambahkan fallback error jika upload gambar gagal.
+Audit & improvement admin/pages.php (2024-07-13):
+  - Tambah validasi CSRF token pada backend untuk semua form POST (page & navigation).
+  - Tambah input CSRF token pada form navigation.
+  - Setelah aksi hapus (page/navigation), redirect ke list dan tampilkan pesan sukses/gagal.
+  - Terapkan font-family 'Fira Sans', Arial, Helvetica, sans-serif pada input, textarea, dan TinyMCE.
+  - Tambahkan validasi ukuran maksimal (2MB) untuk data base64 profile image (about page).
+Audit & improvement admin/tools.php (2024-07-13):
+  - Tambah validasi tipe dan ukuran file upload (featured_image): hanya jpg, png, gif, webp, max 2MB.
+  - Pastikan output judul dan deskripsi pakai htmlspecialchars_decode agar entity HTML tidak tampil di UI.
+  - Konsistensi font-family 'Fira Sans', Arial, Helvetica, sans-serif di seluruh input, textarea, dan TinyMCE.
+  - Tambahkan fallback error jika upload gambar gagal.
+Audit & improvement admin/content_blocks.php (2024-07-13):
+  - Tambah validasi CSRF token pada backend untuk semua form POST (content block & block type).
+  - Tambah input CSRF token pada semua form.
+  - Terapkan font-family 'Fira Sans', Arial, Helvetica, sans-serif pada input, textarea, dan TinyMCE.
+Audit & improvement admin/faqs.php (2024-07-13):
+  - Tambah validasi CSRF token pada backend untuk semua form POST (FAQ & bulk action).
+  - Tambah input CSRF token pada semua form.
+  - Terapkan font-family 'Fira Sans', Arial, Helvetica, sans-serif pada input, textarea, dan TinyMCE.
+Audit & improvement admin/contact_messages.php (2024-07-13):
+  - Tambah validasi CSRF token pada backend untuk semua form POST (bulk action, reply).
+  - Tambah input CSRF token pada semua form.
+  - Tampilkan pesan sukses/gagal di UI untuk bulk action dan reply.
+  - Terapkan font-family 'Fira Sans', Arial, Helvetica, sans-serif pada input, textarea, tabel, dsb.
+Audit & improvement admin_upload_about_image.php (2024-07-13):
+  - Tambah validasi CSRF token pada upload.
+  - Tambah validasi ukuran file (max 2MB).
+  - Tambah feedback error/sukses via redirect dengan pesan.
+Audit & improvement admin/export_data.php (2024-07-13):
+  - Tambah validasi CSRF pada aksi custom query (POST).
+  - Terapkan font-family 'Fira Sans', Arial, Helvetica, sans-serif pada form, tabel, dsb.
+Audit & improvement admin/activity_logs.php (2024-07-13):
+  - Terapkan font-family 'Fira Sans', Arial, Helvetica, sans-serif pada form, tabel, dsb.
+Audit & improvement admin/force_change_password.php (2024-07-13):
+  - Terapkan font-family 'Fira Sans', Arial, Helvetica, sans-serif pada input/password.

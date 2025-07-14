@@ -1,1 +1,0 @@
-<?php echo password_hash('wiracenter!', PASSWORD_DEFAULT);

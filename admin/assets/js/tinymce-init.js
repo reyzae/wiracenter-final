@@ -1,10 +1,15 @@
 document.addEventListener("DOMContentLoaded", function() {
     tinymce.init({
         selector: 'textarea.tinymce',
-        plugins: 'image code table media autosave fullscreen wordcount preview link lists advlist charmap hr anchor',
-        toolbar: 'undo redo | formatselect fontselect fontsizeselect | bold italic underline strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | blockquote hr | link image media table charmap | subscript superscript | code fullscreen preview',
+        plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
+        toolbar: [
+          'undo redo | formatselect fontselect fontsizeselect | bold italic underline strikethrough forecolor backcolor |',
+          'alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | blockquote |',
+          'link image media table charmap emoticons anchor | subscript superscript | code fullscreen preview |',
+          'removeformat | ltr rtl | visualblocks visualchars | searchreplace'
+        ].join(' '),
+        menubar: 'file edit view insert format tools table help',
         height: 500,
-        menubar: false,
         statusbar: true, // pastikan statusbar aktif
         document_base_url: 'http://localhost:8000/',
         images_upload_url: 'api/upload_image.php',
@@ -136,5 +141,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (readTimeElem) readTimeElem.textContent = readTime + ' min';
             });
         }
+    });
+});
+
+// Pastikan tinymce.triggerSave() dipanggil sebelum submit form
+window.addEventListener('DOMContentLoaded', function() {
+    var forms = document.querySelectorAll('form');
+    forms.forEach(function(form) {
+        form.addEventListener('submit', function() {
+            if (typeof tinymce !== 'undefined') {
+                tinymce.triggerSave();
+            }
+        });
     });
 });

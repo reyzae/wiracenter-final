@@ -16,6 +16,16 @@ $user = null; // Inisialisasi default
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // CSRF Protection
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+        if (!headers_sent()) {
+            header('Location: profile.php?error=' . urlencode($error_message));
+            exit();
+        }
+    }
+    
+
     $username = sanitize($_POST['username']);
     $email = sanitize($_POST['email']);
     $password = $_POST['password'];
@@ -94,6 +104,7 @@ if (!$user) {
 <h1 class="h2 mb-4">My Profile</h1>
 
 <form method="POST">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
     <div class="row">
         <div class="col-md-8">
             <div class="card mb-4">

@@ -23,53 +23,58 @@ $faq = null;
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_POST['form_type'] ?? '') === 'faq') {
-    $question = sanitize($_POST['question'] ?? '');
-    $answer = $_POST['answer'] ?? '';
-    $display_order = (int)($_POST['display_order'] ?? 0);
-    $status = $_POST['status'] ?? 'active';
-    
-    // Validation
-    if (empty($question)) $errors[] = 'Question is required.';
-    if (empty($answer)) $errors[] = 'Answer is required.';
-    if (strlen($question) > 65535) $errors[] = 'Question is too long.';
-    if (strlen($answer) > 65535) $errors[] = 'Answer is too long.';
-    if (!in_array($status, ['active', 'inactive'])) $errors[] = 'Invalid status selected.';
-    if ($display_order < 0) $errors[] = 'Display order must be 0 or greater.';
-
-    if (empty($errors)) {
-        if ($action == 'new') {
-            $sql = "INSERT INTO faqs (question, answer, display_order, status) VALUES (?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            if ($stmt->execute([$question, $answer, $display_order, $status])) {
-                $success_message = 'FAQ created successfully!';
-                $action = 'list';
-                logActivity($_SESSION['user_id'], 'Created FAQ', 'faq', $conn->lastInsertId());
-                if (!headers_sent()) {
-                    header('Location: faqs.php?action=list&msg=' . urlencode($success_message));
-                    ob_end_clean();
-                    exit();
-                }
-            } else {
-                $error_message = 'Failed to create FAQ.';
-            }
-        } elseif ($action == 'edit' && $id) {
-            $sql = "UPDATE faqs SET question=?, answer=?, display_order=?, status=? WHERE id=?";
-            $stmt = $conn->prepare($sql);
-            if ($stmt->execute([$question, $answer, $display_order, $status, $id])) {
-                $success_message = 'FAQ updated successfully!';
-                $action = 'list';
-                logActivity($_SESSION['user_id'], 'Updated FAQ', 'faq', $id);
-                if (!headers_sent()) {
-                    header('Location: faqs.php?action=list&msg=' . urlencode($success_message));
-                    ob_end_clean();
-                    exit();
-                }
-            } else {
-                $error_message = 'Failed to update FAQ.';
-            }
-        }
+    // CSRF Protection
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
     } else {
-        $error_message = implode('<br>', $errors);
+        $question = sanitize($_POST['question'] ?? '');
+        $answer = $_POST['answer'] ?? '';
+        $display_order = (int)($_POST['display_order'] ?? 0);
+        $status = $_POST['status'] ?? 'active';
+        
+        // Validation
+        if (empty($question)) $errors[] = 'Question is required.';
+        if (empty($answer)) $errors[] = 'Answer is required.';
+        if (strlen($question) > 65535) $errors[] = 'Question is too long.';
+        if (strlen($answer) > 65535) $errors[] = 'Answer is too long.';
+        if (!in_array($status, ['active', 'inactive'])) $errors[] = 'Invalid status selected.';
+        if ($display_order < 0) $errors[] = 'Display order must be 0 or greater.';
+
+        if (empty($errors)) {
+            if ($action == 'new') {
+                $sql = "INSERT INTO faqs (question, answer, display_order, status) VALUES (?, ?, ?, ?)";
+                $stmt = $conn->prepare($sql);
+                if ($stmt->execute([$question, $answer, $display_order, $status])) {
+                    $success_message = 'FAQ created successfully!';
+                    $action = 'list';
+                    logActivity($_SESSION['user_id'], 'Created FAQ', 'faq', $conn->lastInsertId());
+                    if (!headers_sent()) {
+                        header('Location: faqs.php?action=list&msg=' . urlencode($success_message));
+                        ob_end_clean();
+                        exit();
+                    }
+                } else {
+                    $error_message = 'Failed to create FAQ.';
+                }
+            } elseif ($action == 'edit' && $id) {
+                $sql = "UPDATE faqs SET question=?, answer=?, display_order=?, status=? WHERE id=?";
+                $stmt = $conn->prepare($sql);
+                if ($stmt->execute([$question, $answer, $display_order, $status, $id])) {
+                    $success_message = 'FAQ updated successfully!';
+                    $action = 'list';
+                    logActivity($_SESSION['user_id'], 'Updated FAQ', 'faq', $id);
+                    if (!headers_sent()) {
+                        header('Location: faqs.php?action=list&msg=' . urlencode($success_message));
+                        ob_end_clean();
+                        exit();
+                    }
+                } else {
+                    $error_message = 'Failed to update FAQ.';
+                }
+            }
+        } else {
+            $error_message = implode('<br>', $errors);
+        }
     }
 }
 
@@ -120,56 +125,61 @@ if ($action == 'list') {
 
 // Handle bulk actions
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
-    $bulk_action = $_POST['bulk_action'];
-    $selected_faqs = $_POST['selected_faqs'] ?? [];
-    if (!empty($selected_faqs)) {
-        $placeholders = implode(',', array_fill(0, count($selected_faqs), '?'));
-        $success_count = 0;
-        $error_count = 0;
-        
-        if ($bulk_action == 'delete') {
-            $stmt = $conn->prepare("DELETE FROM faqs WHERE id IN ($placeholders)");
-            if ($stmt->execute($selected_faqs)) {
-                $success_count = count($selected_faqs);
-                foreach ($selected_faqs as $fid) {
-                    logActivity($_SESSION['user_id'], 'Bulk deleted FAQ', 'faq', $fid);
+    // CSRF Protection
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+    } else {
+        $bulk_action = $_POST['bulk_action'];
+        $selected_faqs = $_POST['selected_faqs'] ?? [];
+        if (!empty($selected_faqs)) {
+            $placeholders = implode(',', array_fill(0, count($selected_faqs), '?'));
+            $success_count = 0;
+            $error_count = 0;
+            
+            if ($bulk_action == 'delete') {
+                $stmt = $conn->prepare("DELETE FROM faqs WHERE id IN ($placeholders)");
+                if ($stmt->execute($selected_faqs)) {
+                    $success_count = count($selected_faqs);
+                    foreach ($selected_faqs as $fid) {
+                        logActivity($_SESSION['user_id'], 'Bulk deleted FAQ', 'faq', $fid);
+                    }
+                } else {
+                    $error_count = count($selected_faqs);
                 }
-            } else {
-                $error_count = count($selected_faqs);
-            }
-        } elseif ($bulk_action == 'activate') {
-            $stmt = $conn->prepare("UPDATE faqs SET status = 'active' WHERE id IN ($placeholders)");
-            if ($stmt->execute($selected_faqs)) {
-                $success_count = count($selected_faqs);
-                foreach ($selected_faqs as $fid) {
-                    logActivity($_SESSION['user_id'], 'Bulk activated FAQ', 'faq', $fid);
+            } elseif ($bulk_action == 'activate') {
+                $stmt = $conn->prepare("UPDATE faqs SET status = 'active' WHERE id IN ($placeholders)");
+                if ($stmt->execute($selected_faqs)) {
+                    $success_count = count($selected_faqs);
+                    foreach ($selected_faqs as $fid) {
+                        logActivity($_SESSION['user_id'], 'Bulk activated FAQ', 'faq', $fid);
+                    }
+                } else {
+                    $error_count = count($selected_faqs);
                 }
-            } else {
-                $error_count = count($selected_faqs);
-            }
-        } elseif ($bulk_action == 'deactivate') {
-            $stmt = $conn->prepare("UPDATE faqs SET status = 'inactive' WHERE id IN ($placeholders)");
-            if ($stmt->execute($selected_faqs)) {
-                $success_count = count($selected_faqs);
-                foreach ($selected_faqs as $fid) {
-                    logActivity($_SESSION['user_id'], 'Bulk deactivated FAQ', 'faq', $fid);
+            } elseif ($bulk_action == 'deactivate') {
+                $stmt = $conn->prepare("UPDATE faqs SET status = 'inactive' WHERE id IN ($placeholders)");
+                if ($stmt->execute($selected_faqs)) {
+                    $success_count = count($selected_faqs);
+                    foreach ($selected_faqs as $fid) {
+                        logActivity($_SESSION['user_id'], 'Bulk deactivated FAQ', 'faq', $fid);
+                    }
+                } else {
+                    $error_count = count($selected_faqs);
                 }
-            } else {
-                $error_count = count($selected_faqs);
             }
-        }
-        
-        if ($success_count > 0) {
-            $success_message = "Successfully processed $success_count FAQ(s).";
-        }
-        if ($error_count > 0) {
-            $error_message = "Failed to process $error_count FAQ(s).";
-        }
-        
-        if (!headers_sent()) {
-            header('Location: faqs.php?action=list&msg=' . urlencode($success_message ?: $error_message));
-            ob_end_clean();
-            exit();
+            
+            if ($success_count > 0) {
+                $success_message = "Successfully processed $success_count FAQ(s).";
+            }
+            if ($error_count > 0) {
+                $error_message = "Failed to process $error_count FAQ(s).";
+            }
+            
+            if (!headers_sent()) {
+                header('Location: faqs.php?action=list&msg=' . urlencode($success_message ?: $error_message));
+                ob_end_clean();
+                exit();
+            }
         }
     }
 }
@@ -237,7 +247,8 @@ if (isset($_GET['msg'])) {
                 <!-- FAQs List -->
                 <div class="card">
                     <div class="card-body">
-                        <form method="POST" id="bulk-form">
+                        <form method="POST" id="bulkForm">
+                            <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div class="d-flex align-items-center">
                                     <select class="form-select me-2" name="bulk_action" style="width: auto;">
@@ -339,26 +350,27 @@ if (isset($_GET['msg'])) {
                         </h5>
                     </div>
                     <div class="card-body">
-                        <form method="POST">
+                        <form method="POST" id="faqForm">
                             <input type="hidden" name="form_type" value="faq">
+                            <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                             
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="mb-3">
                                         <label for="question" class="form-label">Question <span class="text-danger">*</span></label>
-                                        <textarea class="form-control" id="question" name="question" rows="3" required><?php echo htmlspecialchars($faq['question'] ?? ''); ?></textarea>
+                                        <textarea class="form-control tinymce" id="question" name="question" rows="3" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo htmlspecialchars($faq['question'] ?? ''); ?></textarea>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label for="answer" class="form-label">Answer <span class="text-danger">*</span></label>
-                                        <textarea class="form-control" id="answer" name="answer" rows="8" required><?php echo htmlspecialchars($faq['answer'] ?? ''); ?></textarea>
+                                        <textarea class="form-control tinymce" id="answer" name="answer" rows="6" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo isset($faq['answer']) ? htmlspecialchars_decode($faq['answer']) : ''; ?></textarea>
                                     </div>
                                 </div>
                                 
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label for="display_order" class="form-label">Display Order</label>
-                                        <input type="number" class="form-control" id="display_order" name="display_order" value="<?php echo $faq['display_order'] ?? 0; ?>" min="0">
+                                        <input type="number" class="form-control" id="display_order" name="display_order" value="<?php echo (int)($faq['display_order'] ?? 0); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                         <div class="form-text">Lower numbers appear first</div>
                                     </div>
                                     
@@ -432,6 +444,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+    tinymce.init({
+        selector: 'textarea.tinymce',
+        plugins: 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+        toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+        height: 300,
+        menubar: false,
+        content_style: "body { font-family: 'Fira Sans', Arial, Helvetica, sans-serif; font-size: 14px; }"
+    });
 </script>
 
 <?php include 'includes/footer.php'; ?>

@@ -2,6 +2,14 @@
 $page_title = 'Dashboard';
 include 'includes/header.php';
 
+// Add Fira Sans font for dashboard
+?>
+<style>
+body, .stats-card, .card, .list-group-item, .btn, .card-title, .card-header, .card-body {
+    font-family: 'Fira Sans', Arial, Helvetica, sans-serif !important;
+}
+</style>
+<?php
 // Get statistics
 $db = new Database();
 $conn = $db->connect();
@@ -106,6 +114,13 @@ $recent_tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
 
+<?php if (!empty($error_message)): ?>
+<div class="alert alert-danger text-center" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <?php echo htmlspecialchars($error_message); ?>
+</div>
+<?php endif; ?>
+
 <!-- Statistics Cards -->
 <div class="row g-4 mb-4 <?php echo !hasPermission('admin') ? 'justify-content-center' : ''; ?>">
     <div class="col-md-<?php echo !hasPermission('admin') ? '4' : '3'; ?>">
@@ -207,7 +222,7 @@ $recent_tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php foreach ($recent_articles as $article): ?>
                             <a href="articles.php?action=edit&id=<?php echo $article['id']; ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h6 class="mb-1"><?php echo $article['title']; ?></h6>
+                                    <h6 class="mb-1"><?php echo htmlspecialchars_decode($article['title']); ?></h6>
                                     <small class="text-muted"><?php echo formatDateTime($article['publish_date'] ?? 'Draft'); ?></small>
                                 </div>
                                 <span class="badge bg-<?php echo $article['status'] == 'published' ? 'success' : 'warning'; ?> rounded-pill">
@@ -240,7 +255,7 @@ $recent_tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php foreach ($recent_projects as $project): ?>
                             <a href="projects.php?action=edit&id=<?php echo $project['id']; ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h6 class="mb-1"><?php echo $project['title']; ?></h6>
+                                    <h6 class="mb-1"><?php echo htmlspecialchars_decode($project['title']); ?></h6>
                                     <small class="text-muted"><?php echo formatDateTime($project['publish_date'] ?? 'Draft'); ?></small>
                                 </div>
                                 <span class="badge bg-<?php echo $project['status'] == 'published' ? 'success' : 'warning'; ?> rounded-pill">
@@ -273,7 +288,7 @@ $recent_tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php foreach ($recent_tools as $tool): ?>
                             <a href="tools.php?action=edit&id=<?php echo $tool['id']; ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h6 class="mb-1"><?php echo $tool['title']; ?></h6>
+                                    <h6 class="mb-1"><?php echo htmlspecialchars_decode($tool['title']); ?></h6>
                                     <small class="text-muted"><?php echo formatDateTime($tool['publish_date'] ?? 'Draft'); ?></small>
                                 </div>
                                 <span class="badge bg-<?php echo $tool['status'] == 'published' ? 'success' : 'warning'; ?> rounded-pill">

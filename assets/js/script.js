@@ -13,7 +13,51 @@ document.addEventListener('DOMContentLoaded', function() {
     initBackToTop();
     initReadingProgress();
     initSocialShare();
-    renderFloatingSocialSidebar(); // Call the new function here
+    // renderFloatingSocialSidebar(); // [DISABLED: error - function not defined, breaks navbar collapse on contact.php. Uncomment if function is restored.]
+
+    var slugTranslations = document.getElementById('slug-translations');
+    var langToggle = document.getElementById('toggle-language');
+    if (slugTranslations && langToggle) {
+        langToggle.addEventListener('change', function() {
+            var lang = langToggle.checked ? 'en' : 'id';
+            var newSlug = slugTranslations.getAttribute('data-' + lang);
+            if (newSlug && newSlug.length > 0) {
+                var path = window.location.pathname;
+                if (path.includes('article.php')) {
+                    window.location.href = 'article.php?slug=' + encodeURIComponent(newSlug);
+                } else if (path.includes('project.php')) {
+                    window.location.href = 'project.php?slug=' + encodeURIComponent(newSlug);
+                } else if (path.includes('tool.php')) {
+                    window.location.href = 'tool.php?slug=' + encodeURIComponent(newSlug);
+                }
+            }
+        });
+    }
+
+    // --- [DISABLED] Manual Bootstrap navbar toggler fix (see troubleshooting 2024-07-13) ---
+    // The following block is commented out to let Bootstrap handle navbar collapse/expand natively.
+    // If you need to restore the manual fix, uncomment this block.
+    /*
+    var navbarToggler = document.querySelector('.navbar-toggler');
+    var mainNavbar = document.getElementById('mainNavbar');
+    if (navbarToggler && mainNavbar) {
+        navbarToggler.addEventListener('click', function(e) {
+            // Let Bootstrap handle the first toggle, but force toggle if stuck open
+            setTimeout(function() {
+                if (mainNavbar.classList.contains('show')) {
+                    // If already open, clicking toggler should close it
+                    navbarToggler.setAttribute('aria-expanded', 'false');
+                    mainNavbar.classList.remove('show');
+                } else {
+                    // If closed, open it
+                    navbarToggler.setAttribute('aria-expanded', 'true');
+                    mainNavbar.classList.add('show');
+                }
+            }, 150); // Wait for Bootstrap's JS to run first
+        });
+    }
+    */
+    // --- [END DISABLED navbar toggler fix] ---
 });
 
 
@@ -71,62 +115,8 @@ function initSocialShare() {
                          (currentPage === 'page.php' && urlParams.has('slug') && !isAboutPage));
     
     if (isContentPage) {
-        addSocialShareButtons();
-    }
-}
-
-function addSocialShareButtons() {
-    // Find the main content area
-    const contentArea = document.querySelector('.main-content .container') || 
-                       document.querySelector('.main-content') ||
-                       document.querySelector('article') ||
-                       document.querySelector('.content');
-    
-    if (!contentArea) return;
-    
-    // Create social share section
-    const socialShareSection = document.createElement('div');
-    socialShareSection.className = 'social-share';
-    socialShareSection.innerHTML = `
-        <h4><i class="fas fa-share-alt me-2"></i>Share this content</h4>
-        <div class="share-buttons">
-            <button class="share-btn facebook" onclick="shareContent('facebook')">
-                <i class="fab fa-facebook-f"></i>
-                <span>Facebook</span>
-            </button>
-            <button class="share-btn twitter" onclick="shareContent('twitter')">
-                <i class="fab fa-twitter"></i>
-                <span>Twitter</span>
-            </button>
-            <button class="share-btn linkedin" onclick="shareContent('linkedin')">
-                <i class="fab fa-linkedin-in"></i>
-                <span>LinkedIn</span>
-            </button>
-            <button class="share-btn whatsapp" onclick="shareContent('whatsapp')">
-                <i class="fab fa-whatsapp"></i>
-                <span>WhatsApp</span>
-            </button>
-            <button class="share-btn telegram" onclick="shareContent('telegram')">
-                <i class="fab fa-telegram-plane"></i>
-                <span>Telegram</span>
-            </button>
-            <button class="share-btn email" onclick="shareContent('email')">
-                <i class="fas fa-envelope"></i>
-                <span>Email</span>
-            </button>
-            <button class="share-btn copy-link" onclick="shareContent('copy')">
-                <i class="fas fa-link"></i>
-                <span>Copy Link</span>
-            </button>
-        </div>
-    `;
-    
-    // Insert after the first h1 or at the beginning of content
-    const firstH1 = contentArea.querySelector('h1');
-    if (firstH1) {
-        firstH1.parentNode.insertBefore(socialShareSection, firstH1.nextSibling);
-    } else {
-        contentArea.insertBefore(socialShareSection, contentArea.firstChild);
+        // The social share buttons are now rendered directly in PHP
+        // This function is no longer needed for adding buttons.
     }
 }
 
@@ -582,3 +572,27 @@ function handleRealtimeUpdate(data) {
 if (window.location.pathname.includes('/admin/')) {
     initWebSocket();
 }
+
+// --- SLIDER PROGRESS BAR LOGIC ---
+function updateSliderProgressBar(activeIndex, totalSlides) {
+  var bar = document.querySelector('.slider-progress-bar');
+  if (bar) {
+    var percent = ((activeIndex + 1) / totalSlides) * 100;
+    bar.style.width = percent + '%';
+  }
+}
+// Patch global goToSlide if exists
+if (typeof goToSlide === 'function') {
+  var _goToSlide = goToSlide;
+  window.goToSlide = function(idx) {
+    _goToSlide(idx);
+    var total = document.querySelectorAll('.slide').length;
+    updateSliderProgressBar(idx, total);
+  }
+}
+// On DOMContentLoaded, set initial progress bar
+window.addEventListener('DOMContentLoaded', function() {
+  var total = document.querySelectorAll('.slide').length;
+  updateSliderProgressBar(0, total);
+});
+// --- END SLIDER PROGRESS BAR LOGIC ---

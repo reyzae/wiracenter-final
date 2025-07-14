@@ -11,12 +11,18 @@ class Database {
         // Load environment variables if not already loaded
         $this->loadEnvironmentVariables();
         
-        // Use environment variables with fallbacks for XAMPP
-        $this->host = $_ENV['DB_HOST'] ?? '127.0.0.1';
-        $this->db_name = $_ENV['DB_NAME'] ?? 'wiracent_db2';
-        $this->username = $_ENV['DB_USER'] ?? 'wiracent_admin';
-        $this->password = $_ENV['DB_PASS'] ?? 'Wiracenter!';
+        // Use environment variables only - no hardcoded fallbacks for security
+        $this->host = $_ENV['DB_HOST'] ?? null;
+        $this->db_name = $_ENV['DB_NAME'] ?? null;
+        $this->username = $_ENV['DB_USER'] ?? null;
+        $this->password = $_ENV['DB_PASS'] ?? null;
         $this->port = $_ENV['DB_PORT'] ?? '3306';
+        
+        // Validate required environment variables
+        if (!$this->host || !$this->db_name || !$this->username || !$this->password) {
+            error_log("Database configuration error: Missing required environment variables");
+            throw new Exception("Database configuration incomplete. Please check your .env file.");
+        }
         
         // Log configuration for debugging (only in debug mode)
         if (isset($_ENV['DEBUG_MODE']) && $_ENV['DEBUG_MODE'] == '1') {
@@ -69,7 +75,7 @@ class Database {
     public function connect() {
         $this->conn = null;
         
-        // Try multiple connection methods for XAMPP
+        // Try multiple connection methods for different environments
         $connection_methods = [
             // Method 1: Direct connection with current host
             function() {

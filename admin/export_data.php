@@ -111,6 +111,12 @@ $custom_query = $_POST['custom_query'] ?? '';
 
 // Export dengan filter, format, atau custom query
 if (isset($_GET['export']) && isset($export_types[$_GET['export']])) {
+    // Jika custom query (POST), validasi CSRF
+    if (!empty($custom_query)) {
+        if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+            die('Invalid CSRF token.');
+        }
+    }
     $type = $_GET['export'];
     $filename = $type . '_export_' . date('Ymd_His') . '.' . $export_format;
     $query = '';
@@ -232,10 +238,10 @@ $users = $userStmt->fetchAll(PDO::FETCH_ASSOC);
             <!--
                 Fitur: Filter export
             -->
-            <form method="GET" class="row g-2 align-items-end mb-3">
+            <form method="GET" class="row g-3 align-items-end mb-4" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                 <div class="col-md-2">
                     <label class="form-label">Type</label>
-                    <select name="export" class="form-select">
+                    <select name="export" class="form-select" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                         <option value="">Select Type</option>
                         <?php foreach ($export_types as $key => $label): ?>
                             <option value="<?php echo $key; ?>" <?php if ($filter_type == $key) echo 'selected'; ?>><?php echo $label; ?></option>
@@ -244,11 +250,18 @@ $users = $userStmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Status</label>
-                    <input type="text" name="status" class="form-control" value="<?php echo htmlspecialchars($filter_status); ?>" placeholder="published/active">
+                    <select name="status" class="form-select" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
+                        <option value="">All Statuses</option>
+                        <option value="published" <?php if ($filter_status == 'published') echo 'selected'; ?>>Published</option>
+                        <option value="draft" <?php if ($filter_status == 'draft') echo 'selected'; ?>>Draft</option>
+                        <option value="archived" <?php if ($filter_status == 'archived') echo 'selected'; ?>>Archived</option>
+                        <option value="active" <?php if ($filter_status == 'active') echo 'selected'; ?>>Active</option>
+                        <option value="inactive" <?php if ($filter_status == 'inactive') echo 'selected'; ?>>Inactive</option>
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">User</label>
-                    <select name="user" class="form-select">
+                    <select name="user" class="form-select" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                         <option value="">All Users</option>
                         <?php foreach ($users as $u): ?>
                             <option value="<?php echo $u['id']; ?>" <?php if ($filter_user == $u['id']) echo 'selected'; ?>><?php echo htmlspecialchars($u['username']); ?></option>
@@ -257,11 +270,11 @@ $users = $userStmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Date Start</label>
-                    <input type="date" name="date_start" class="form-control" value="<?php echo htmlspecialchars($filter_date_start); ?>">
+                    <input type="text" name="date_start" class="form-control" value="<?php echo htmlspecialchars($filter_date_start); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Date End</label>
-                    <input type="date" name="date_end" class="form-control" value="<?php echo htmlspecialchars($filter_date_end); ?>">
+                    <input type="text" name="date_end" class="form-control" value="<?php echo htmlspecialchars($filter_date_end); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Format</label>
@@ -282,10 +295,10 @@ $users = $userStmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="card mt-4">
                 <div class="card-header bg-warning"><b>Advanced: Export Custom Query (Admin Only)</b></div>
                 <div class="card-body">
-                    <form method="GET" class="mb-2">
-                        <input type="hidden" name="export" value="custom">
+                    <form method="POST" class="mb-2" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
+                        <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                         <label class="form-label">SQL Query</label>
-                        <textarea name="custom_query" class="form-control mb-2" rows="2" placeholder="SELECT * FROM ..."></textarea>
+                        <textarea name="custom_query" class="form-control" rows="3" placeholder="SELECT * FROM ..." style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"></textarea>
                         <select name="format" class="form-select mb-2" style="max-width: 200px; display: inline-block;">
                             <option value="csv">CSV</option>
                             <option value="json">JSON</option>

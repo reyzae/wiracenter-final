@@ -10,8 +10,12 @@ if (isLoggedIn()) {
 
 // Handle login form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = sanitize($_POST['username']);
-    $password = $_POST['password'];
+    // CSRF Protection
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+    } else {
+        $username = sanitize($_POST['username']);
+        $password = $_POST['password'];
     
     if (empty($username) || empty($password)) {
         $error_message = 'Please enter both username and password.';
@@ -65,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
     }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -95,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <?php endif; ?>
                         
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Username or Email</label>
                                 <div class="input-group">

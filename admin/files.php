@@ -123,6 +123,7 @@ if (isset($_GET['msg'])) {
             <i class="fas fa-upload me-2"></i>Files Management
         </h1>
         <form method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
             <input type="file" name="files[]" multiple required class="form-control" style="max-width: 250px;">
             <button type="submit" class="btn btn-primary"><i class="fas fa-upload me-1"></i>Upload</button>
         </form>

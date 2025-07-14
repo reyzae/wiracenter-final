@@ -62,16 +62,49 @@ define('MAX_FILE_SIZE', $_ENV['MAX_FILE_SIZE'] ?? 5 * 1024 * 1024); // 5MB
 $timezone = $_ENV['TIMEZONE'] ?? 'Asia/Jakarta';
 date_default_timezone_set($timezone);
 
-// Error reporting
+// Error reporting - Production safe
 $debug_mode = $_ENV['DEBUG_MODE'] ?? getSetting('debug_mode', '0');
-if ($debug_mode == '1') {
+$environment = $_ENV['ENVIRONMENT'] ?? 'production';
+
+if ($debug_mode == '1' || $environment == 'development') {
+    // Development mode - show all errors
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
+    ini_set('log_errors', 1);
+    ini_set('error_log', __DIR__ . '/../php_errors.log');
 } else {
-    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
+    // Production mode - hide errors from users, log them
+    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_WARNING);
     ini_set('display_errors', 0);
     ini_set('log_errors', 1);
     ini_set('error_log', __DIR__ . '/../php_errors.log');
+    
+    // Set custom error handler for production
+    set_error_handler(function($errno, $errstr, $errfile, $errline) {
+        if (!(error_reporting() & $errno)) {
+            return false;
+        }
+        
+        $error_message = date('Y-m-d H:i:s') . " Error [$errno]: $errstr in $errfile on line $errline\n";
+        error_log($error_message);
+        
+        // Don't execute PHP internal error handler
+        return true;
+    });
+}
+
+// Security headers
+if (!headers_sent()) {
+    // Prevent XSS attacks
+    header('X-Content-Type-Options: nosniff');
+    // Prevent clickjacking
+    header('X-Frame-Options: SAMEORIGIN');
+    // Enable XSS protection
+    header('X-XSS-Protection: 1; mode=block');
+    // Strict transport security (HTTPS only)
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+    }
 }
 
 // Helper functions
@@ -87,7 +120,7 @@ function redirect($url) {
 }
 
 function sanitize($data) {
-    return htmlspecialchars(trim($data));
+    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
 }
 
 function generateSlug($text, $table_name = null, $exclude_id = null) {
@@ -202,44 +235,73 @@ function createNotification($user_id, $message, $link = null) {
     }
 }
 
-// Site settings cache
-$site_settings = [];
 function getSetting($key, $default = '') {
-    global $site_settings;
-    
-    if (empty($site_settings)) {
-        try {
-            $db = new Database();
-            $conn = $db->connect();
-            if ($conn) {
-                $stmt = $conn->prepare("SELECT setting_key, setting_value FROM site_settings");
-                $stmt->execute();
-                $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-                $site_settings = $settings;
-            }
-        } catch (Exception $e) {
-            error_log("Error getting settings: " . $e->getMessage());
-            return $default;
-        }
+    global $db;
+    if (!$db) {
+        $db = new Database();
     }
     
-    return isset($site_settings[$key]) ? $site_settings[$key] : $default;
+    try {
+        $conn = $db->connect();
+        if ($conn) {
+            $stmt = $conn->prepare("SELECT value FROM site_settings WHERE setting_key = ?");
+            $stmt->execute([$key]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result ? $result['value'] : $default;
+        }
+    } catch (Exception $e) {
+        error_log("Error getting setting: " . $e->getMessage());
+    }
+    
+    return $default;
 }
 
 function setSetting($key, $value) {
-    try {
+    global $db;
+    if (!$db) {
         $db = new Database();
+    }
+    
+    try {
         $conn = $db->connect();
         if ($conn) {
-            $stmt = $conn->prepare("INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?");
+            $stmt = $conn->prepare("INSERT INTO site_settings (setting_key, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?");
             $stmt->execute([$key, $value, $value]);
-            
-            // Update cache
-            global $site_settings;
-            $site_settings[$key] = $value;
+            return true;
         }
     } catch (Exception $e) {
         error_log("Error setting setting: " . $e->getMessage());
     }
+    
+    return false;
+}
+
+// CSRF Protection
+function generateCSRFToken() {
+    if (!isset($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function validateCSRFToken($token) {
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+// File upload security
+function validateUploadedFile($file, $allowed_types = ['image/jpeg', 'image/png', 'image/gif'], $max_size = 5242880) {
+    if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+        return false;
+    }
+    
+    if ($file['size'] > $max_size) {
+        return false;
+    }
+    
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime_type = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+    
+    return in_array($mime_type, $allowed_types);
 }
 ?>

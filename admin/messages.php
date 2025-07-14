@@ -17,36 +17,44 @@ $success_message = '';
 $error_message = '';
 
 // Handle status update
-if (isset($_GET['action']) && $_GET['action'] == 'status' && isset($_GET['id']) && isset($_GET['new_status'])) {
-    $id = $_GET['id'];
-    $new_status = sanitize($_GET['new_status']);
-    try {
-        $stmt = $conn->prepare("UPDATE contact_messages SET status = ? WHERE id = ?");
-        if ($stmt->execute([$new_status, $id])) {
-            $success_message = 'Message status updated successfully!';
-        } else {
-            $error_message = 'Failed to update message status.';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'status' && isset($_POST['id']) && isset($_POST['new_status'])) {
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+    } else {
+        $id = $_POST['id'];
+        $new_status = sanitize($_POST['new_status']);
+        try {
+            $stmt = $conn->prepare("UPDATE contact_messages SET status = ? WHERE id = ?");
+            if ($stmt->execute([$new_status, $id])) {
+                $success_message = 'Message status updated successfully!';
+            } else {
+                $error_message = 'Failed to update message status.';
+            }
+        } catch (PDOException $e) {
+            $error_message = 'Table contact_messages not found in database.';
         }
-    } catch (PDOException $e) {
-        $error_message = 'Table contact_messages not found in database.';
+        $action = 'list';
     }
-    $action = 'list';
 }
 
 // Handle delete action
-if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
-    $id = $_GET['id'];
-    try {
-        $stmt = $conn->prepare("DELETE FROM contact_messages WHERE id = ?");
-        if ($stmt->execute([$id])) {
-            $success_message = 'Message deleted successfully!';
-        } else {
-            $error_message = 'Failed to delete message.';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+    } else {
+        $id = $_POST['id'];
+        try {
+            $stmt = $conn->prepare("DELETE FROM contact_messages WHERE id = ?");
+            if ($stmt->execute([$id])) {
+                $success_message = 'Message deleted successfully!';
+            } else {
+                $error_message = 'Failed to delete message.';
+            }
+        } catch (PDOException $e) {
+            $error_message = 'Table contact_messages not found in database.';
         }
-    } catch (PDOException $e) {
-        $error_message = 'Table contact_messages not found in database.';
+        $action = 'list';
     }
-    $action = 'list';
 }
 
 // Get message for viewing
@@ -103,7 +111,7 @@ if ($action == 'list') {
     <div class="card mb-4">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -129,8 +137,13 @@ if ($action == 'list') {
                                     <td><?php echo formatDateTime($msg['created_at']); ?></td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="?action=view&id=<?php echo $msg['id']; ?>" class="btn btn-outline-primary">View</a>
-                                            <a href="?action=delete&id=<?php echo $msg['id']; ?>" class="btn btn-outline-danger delete-btn" data-item="message">Delete</a>
+                                            <a href="?action=view&id=<?php echo $msg['id']; ?>" class="btn btn-outline-primary" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">View</a>
+                                            <form method="POST" action="" style="display:inline;">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="id" value="<?php echo $msg['id']; ?>">
+                                                <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+                                                <button type="submit" class="btn btn-outline-danger delete-btn" data-item="message" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">Delete</button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -166,18 +179,39 @@ if ($action == 'list') {
             </p>
             <hr>
             <p><strong>Message:</strong></p>
-            <div class="alert alert-info">
+            <div class="alert alert-info" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                 <?php echo nl2br(htmlspecialchars($message['message'])); ?>
             </div>
             
             <div class="mt-4">
                 <h6>Change Status:</h6>
-                <div class="btn-group">
-                    <a href="?action=status&id=<?php echo $message['id']; ?>&new_status=read" class="btn btn-sm btn-warning <?php echo $message['status'] == 'read' ? 'active' : ''; ?>">Mark as Read</a>
-                    <a href="?action=status&id=<?php echo $message['id']; ?>&new_status=replied" class="btn btn-sm btn-success <?php echo $message['status'] == 'replied' ? 'active' : ''; ?>">Mark as Replied</a>
-                    <a href="?action=status&id=<?php echo $message['id']; ?>&new_status=unread" class="btn btn-sm btn-danger <?php echo $message['status'] == 'unread' ? 'active' : ''; ?>">Mark as Unread</a>
-                </div>
-                <a href="?action=delete&id=<?php echo $message['id']; ?>" class="btn btn-sm btn-outline-danger float-end delete-btn" data-item="message">Delete Message</a>
+                <form method="POST" action="" style="display:inline;">
+                    <input type="hidden" name="action" value="status">
+                    <input type="hidden" name="id" value="<?php echo $message['id']; ?>">
+                    <input type="hidden" name="new_status" value="read">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+                    <button type="submit" class="btn btn-sm btn-warning <?php echo $message['status'] == 'read' ? 'active' : ''; ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">Mark as Read</button>
+                </form>
+                <form method="POST" action="" style="display:inline;">
+                    <input type="hidden" name="action" value="status">
+                    <input type="hidden" name="id" value="<?php echo $message['id']; ?>">
+                    <input type="hidden" name="new_status" value="replied">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+                    <button type="submit" class="btn btn-sm btn-success <?php echo $message['status'] == 'replied' ? 'active' : ''; ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">Mark as Replied</button>
+                </form>
+                <form method="POST" action="" style="display:inline;">
+                    <input type="hidden" name="action" value="status">
+                    <input type="hidden" name="id" value="<?php echo $message['id']; ?>">
+                    <input type="hidden" name="new_status" value="unread">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+                    <button type="submit" class="btn btn-sm btn-danger <?php echo $message['status'] == 'unread' ? 'active' : ''; ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">Mark as Unread</button>
+                </form>
+                <form method="POST" action="" style="display:inline; float:right;">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="id" value="<?php echo $message['id']; ?>">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+                    <button type="submit" class="btn btn-sm btn-outline-danger delete-btn" data-item="message" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">Delete Message</button>
+                </form>
             </div>
         </div>
     </div>

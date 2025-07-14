@@ -29,71 +29,81 @@ $page = null;
 if ($tab === 'pages') {
     // Handle form submissions
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_POST['form_type'] ?? '') === 'page') {
-        $title = sanitize($_POST['title'] ?? '');
-        $slug = generateSlug($_POST['slug'] ?? $title, 'pages', $id);
-        $content = $_POST['content'] ?? '';
-        $status = $_POST['status'] ?? 'draft';
-        $profile_image = $page['profile_image'] ?? '';
-        // Handle profile image upload (only for About page)
-        if ($slug === 'about' && !empty($_POST['cropped_profile_image'])) {
-            $data = $_POST['cropped_profile_image'];
-            if (preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $data, $type)) {
-                $data = substr($data, strpos($data, ',') + 1);
-                $data = base64_decode($data);
-                $ext = $type[1] === 'jpeg' ? 'jpg' : $type[1];
-                $filename = 'about_profile_' . time() . '_' . rand(1000,9999) . '.' . $ext;
-                $filepath = '../uploads/' . $filename;
-                // Remove old image if exists and different
-                if (!empty($profile_image) && file_exists('../uploads/' . $profile_image)) {
-                    @unlink('../uploads/' . $profile_image);
-                }
-                file_put_contents($filepath, $data);
-                $profile_image = $filename;
-            }
-        }
-        // Validation
-        if (empty($title)) $errors[] = 'Title is required.';
-        if (strlen($title) > 255) $errors[] = 'Title cannot exceed 255 characters.';
-        if (empty($content)) $errors[] = 'Content is required.';
-        if (!empty($slug) && !preg_match('/^[a-z0-9-]+$/', $slug)) $errors[] = 'Slug can only contain lowercase letters, numbers, and hyphens.';
-        if (!in_array($status, ['draft', 'published'])) $errors[] = 'Invalid status selected.';
-
-        if (empty($errors)) {
-            if ($action == 'new') {
-                $sql = "INSERT INTO pages (title, slug, content, status, created_by) VALUES (?, ?, ?, ?, ?)";
-                $stmt = $conn->prepare($sql);
-                if ($stmt->execute([$title, $slug, $content, $status, $_SESSION['user_id']])) {
-                    $success_message = 'Page created successfully!';
-                    $action = 'list';
-                    logActivity($_SESSION['user_id'], 'Created page', 'page', $conn->lastInsertId());
-                } else {
-                    $error_message = 'Failed to create page.';
-                }
-            } elseif ($action == 'edit' && $id) {
-                if ($slug === 'about') {
-                    $sql = "UPDATE pages SET title=?, slug=?, content=?, status=?, profile_image=? WHERE id=?";
-                    $stmt = $conn->prepare($sql);
-                    if ($stmt->execute([$title, $slug, $content, $status, $profile_image, $id])) {
-                        $success_message = 'Page updated successfully!';
-                        $action = 'list';
-                        logActivity($_SESSION['user_id'], 'Updated page', 'page', $id);
-                    } else {
-                        $error_message = 'Failed to update page.';
-                    }
-                } else {
-                    $sql = "UPDATE pages SET title=?, slug=?, content=?, status=? WHERE id=?";
-                    $stmt = $conn->prepare($sql);
-                    if ($stmt->execute([$title, $slug, $content, $status, $id])) {
-                        $success_message = 'Page updated successfully!';
-                        $action = 'list';
-                        logActivity($_SESSION['user_id'], 'Updated page', 'page', $id);
-                    } else {
-                        $error_message = 'Failed to update page.';
-                    }
-                }
-            }
+        // CSRF Protection
+        if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+            $error_message = 'Invalid CSRF token. Please try again.';
         } else {
-            $error_message = implode('<br>', $errors);
+            $title = sanitize($_POST['title'] ?? '');
+            $slug = generateSlug($_POST['slug'] ?? $title, 'pages', $id);
+            $content = $_POST['content'] ?? '';
+            $status = $_POST['status'] ?? 'draft';
+            $profile_image = $page['profile_image'] ?? '';
+            // Handle profile image upload (only for About page)
+            if ($slug === 'about' && !empty($_POST['cropped_profile_image'])) {
+                $data = $_POST['cropped_profile_image'];
+                if (preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $data, $type)) {
+                    $base64_data = substr($data, strpos($data, ',') + 1);
+                    // Validate base64 size (max 2MB)
+                    if ((strlen($base64_data) * 3 / 4) > 2 * 1024 * 1024) {
+                        $errors[] = 'Profile image size must be less than 2MB.';
+                    } else {
+                        $data = base64_decode($base64_data);
+                        $ext = $type[1] === 'jpeg' ? 'jpg' : $type[1];
+                        $filename = 'about_profile_' . time() . '_' . rand(1000,9999) . '.' . $ext;
+                        $filepath = '../uploads/' . $filename;
+                        // Remove old image if exists and different
+                        if (!empty($profile_image) && file_exists('../uploads/' . $profile_image)) {
+                            @unlink('../uploads/' . $profile_image);
+                        }
+                        file_put_contents($filepath, $data);
+                        $profile_image = $filename;
+                    }
+                }
+            }
+            // Validation
+            if (empty($title)) $errors[] = 'Title is required.';
+            if (strlen($title) > 255) $errors[] = 'Title cannot exceed 255 characters.';
+            if (empty($content)) $errors[] = 'Content is required.';
+            if (!empty($slug) && !preg_match('/^[a-z0-9-]+$/', $slug)) $errors[] = 'Slug can only contain lowercase letters, numbers, and hyphens.';
+            if (!in_array($status, ['draft', 'published'])) $errors[] = 'Invalid status selected.';
+
+            if (empty($errors)) {
+                if ($action == 'new') {
+                    $sql = "INSERT INTO pages (title, slug, content, status, created_by) VALUES (?, ?, ?, ?, ?)";
+                    $stmt = $conn->prepare($sql);
+                    if ($stmt->execute([$title, $slug, $content, $status, $_SESSION['user_id']])) {
+                        $success_message = 'Page created successfully!';
+                        $action = 'list';
+                        logActivity($_SESSION['user_id'], 'Created page', 'page', $conn->lastInsertId());
+                    } else {
+                        $error_message = 'Failed to create page.';
+                    }
+                } elseif ($action == 'edit' && $id) {
+                    if ($slug === 'about') {
+                        $sql = "UPDATE pages SET title=?, slug=?, content=?, status=?, profile_image=? WHERE id=?";
+                        $stmt = $conn->prepare($sql);
+                        if ($stmt->execute([$title, $slug, $content, $status, $profile_image, $id])) {
+                            $success_message = 'Page updated successfully!';
+                            $action = 'list';
+                            logActivity($_SESSION['user_id'], 'Updated page', 'page', $id);
+                        } else {
+                            $error_message = 'Failed to update page.';
+                        }
+                    } else {
+                        $sql = "UPDATE pages SET title=?, slug=?, content=?, status=? WHERE id=?";
+                        $stmt = $conn->prepare($sql);
+                        if ($stmt->execute([$title, $slug, $content, $status, $id])) {
+                            $success_message = 'Page updated successfully!';
+                            $action = 'list';
+                            logActivity($_SESSION['user_id'], 'Updated page', 'page', $id);
+                        } else {
+                            $error_message = 'Failed to update page.';
+                        }
+                    }
+                }
+            } else {
+                $error_message = implode('<br>', $errors);
+            }
         }
     }
     // Handle delete action
@@ -106,6 +116,11 @@ if ($tab === 'pages') {
             $error_message = 'Failed to delete page.';
         }
         $action = 'list';
+        if (!headers_sent()) {
+            header('Location: pages.php?tab=pages&action=list&msg=' . urlencode($success_message ?: $error_message));
+            ob_end_clean();
+            exit();
+        }
     }
     // Get page for editing
     if ($action == 'edit' && $id) {
@@ -141,39 +156,44 @@ $navigation_item = null;
 if ($tab === 'navigation') {
     // Handle form submissions
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_POST['form_type'] ?? '') === 'navigation') {
-        $name = sanitize($_POST['name'] ?? '');
-        $url = sanitize($_POST['url'] ?? '');
-        $display_order = (int)($_POST['display_order'] ?? 0);
-        $status = $_POST['status'] ?? 'active';
-        $errors = [];
-        if (empty($name)) $errors[] = 'Name is required.';
-        if (empty($url)) $errors[] = 'URL is required.';
-        if (!filter_var($url, FILTER_VALIDATE_URL) && !preg_match('/^[a-zA-Z0-9_\-]+\.php(\?.*)?$/', $url) && !preg_match('/^page\.php\?slug=[a-zA-Z0-9_\-]+$/', $url)) $errors[] = 'Invalid URL format. Must be a valid URL or a relative path to a .php file (e.g., index.php, page.php?slug=about).';
-        if (!in_array($status, ['active', 'inactive'])) $errors[] = 'Invalid status selected.';
-        if (empty($errors)) {
-            if ($action == 'new') {
-                $sql = "INSERT INTO navigation_items (name, url, display_order, status) VALUES (?, ?, ?, ?)";
-                $stmt = $conn->prepare($sql);
-                if ($stmt->execute([$name, $url, $display_order, $status])) {
-                    $success_message = 'Navigation item created successfully!';
-                    $action = 'list';
-                    logActivity($_SESSION['user_id'], 'Created navigation item', 'navigation_item', $conn->lastInsertId());
-                } else {
-                    $error_message = 'Failed to create navigation item.';
-                }
-            } elseif ($action == 'edit' && $id) {
-                $sql = "UPDATE navigation_items SET name=?, url=?, display_order=?, status=? WHERE id=?";
-                $stmt = $conn->prepare($sql);
-                if ($stmt->execute([$name, $url, $display_order, $status, $id])) {
-                    $success_message = 'Navigation item updated successfully!';
-                    $action = 'list';
-                    logActivity($_SESSION['user_id'], 'Updated navigation item', 'navigation_item', $id);
-                } else {
-                    $error_message = 'Failed to update navigation item.';
-                }
-            }
+        // CSRF Protection
+        if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+            $error_message = 'Invalid CSRF token. Please try again.';
         } else {
-            $error_message = implode('<br>', $errors);
+            $name = sanitize($_POST['name'] ?? '');
+            $url = sanitize($_POST['url'] ?? '');
+            $display_order = (int)($_POST['display_order'] ?? 0);
+            $status = $_POST['status'] ?? 'active';
+            $errors = [];
+            if (empty($name)) $errors[] = 'Name is required.';
+            if (empty($url)) $errors[] = 'URL is required.';
+            if (!filter_var($url, FILTER_VALIDATE_URL) && !preg_match('/^[a-zA-Z0-9_\-]+\.php(\?.*)?$/', $url) && !preg_match('/^page\.php\?slug=[a-zA-Z0-9_\-]+$/', $url)) $errors[] = 'Invalid URL format. Must be a valid URL or a relative path to a .php file (e.g., index.php, page.php?slug=about).';
+            if (!in_array($status, ['active', 'inactive'])) $errors[] = 'Invalid status selected.';
+            if (empty($errors)) {
+                if ($action == 'new') {
+                    $sql = "INSERT INTO navigation_items (name, url, display_order, status) VALUES (?, ?, ?, ?)";
+                    $stmt = $conn->prepare($sql);
+                    if ($stmt->execute([$name, $url, $display_order, $status])) {
+                        $success_message = 'Navigation item created successfully!';
+                        $action = 'list';
+                        logActivity($_SESSION['user_id'], 'Created navigation item', 'navigation_item', $conn->lastInsertId());
+                    } else {
+                        $error_message = 'Failed to create navigation item.';
+                    }
+                } elseif ($action == 'edit' && $id) {
+                    $sql = "UPDATE navigation_items SET name=?, url=?, display_order=?, status=? WHERE id=?";
+                    $stmt = $conn->prepare($sql);
+                    if ($stmt->execute([$name, $url, $display_order, $status, $id])) {
+                        $success_message = 'Navigation item updated successfully!';
+                        $action = 'list';
+                        logActivity($_SESSION['user_id'], 'Updated navigation item', 'navigation_item', $id);
+                    } else {
+                        $error_message = 'Failed to update navigation item.';
+                    }
+                }
+            } else {
+                $error_message = implode('<br>', $errors);
+            }
         }
     }
     // Handle delete action
@@ -186,6 +206,11 @@ if ($tab === 'navigation') {
             $error_message = 'Failed to delete navigation item.';
         }
         $action = 'list';
+        if (!headers_sent()) {
+            header('Location: pages.php?tab=navigation&action=list&msg=' . urlencode($success_message ?: $error_message));
+            ob_end_clean();
+            exit();
+        }
     }
     // Get navigation item for editing
     if ($action == 'edit' && $id) {
@@ -280,7 +305,7 @@ if ($tab === 'navigation') {
                                 <?php if ($pages): ?>
                                     <?php foreach ($pages as $item): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($item['title']); ?></td>
+                                            <td><?php echo htmlspecialchars_decode($item['title']); ?></td>
                                             <td><?php echo htmlspecialchars($item['slug']); ?></td>
                                             <td><span class="badge bg-<?php echo $item['status'] == 'published' ? 'success' : 'secondary'; ?>"><?php echo ucfirst($item['status']); ?></span></td>
                                             <td>
@@ -309,16 +334,17 @@ if ($tab === 'navigation') {
                 </a>
             </div>
             <form method="POST" enctype="multipart/form-data" id="editPageForm">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                 <input type="hidden" name="form_type" value="page">
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="title" class="form-label">Title *</label>
-                            <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($page['title'] ?? ''); ?>" required>
+                            <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($page['title'] ?? ''); ?>" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                         </div>
                         <div class="mb-3">
                             <label for="slug" class="form-label">Slug *</label>
-                            <input type="text" class="form-control" id="slug" name="slug" value="<?php echo htmlspecialchars($page['slug'] ?? ''); ?>" required>
+                            <input type="text" class="form-control" id="slug" name="slug" value="<?php echo htmlspecialchars($page['slug'] ?? ''); ?>" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                             <small class="form-text text-muted">e.g., about, contact, faq</small>
                         </div>
                         <?php if (($page['slug'] ?? '') === 'about'): ?>
@@ -342,7 +368,7 @@ if ($tab === 'navigation') {
                         <?php endif; ?>
                         <div class="mb-3">
                             <label for="content" class="form-label">Content *</label>
-                            <textarea class="form-control tinymce" id="content" name="content" rows="10" required><?php echo htmlspecialchars($page['content'] ?? ''); ?></textarea>
+                            <textarea name="content" id="content" class="form-control tinymce" rows="12" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo isset($page['content']) ? htmlspecialchars_decode($page['content']) : ''; ?></textarea>
                         </div>
                         <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
@@ -478,20 +504,21 @@ if ($tab === 'navigation') {
             </div>
             <form method="POST">
                 <input type="hidden" name="form_type" value="navigation">
+                <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="name" class="form-label">Name *</label>
-                            <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($navigation_item['name'] ?? ''); ?>" required>
+                            <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($navigation_item['name'] ?? ''); ?>" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                         </div>
                         <div class="mb-3">
                             <label for="url" class="form-label">URL *</label>
-                            <input type="text" class="form-control" id="url" name="url" value="<?php echo htmlspecialchars($navigation_item['url'] ?? ''); ?>" required>
+                            <input type="text" class="form-control" id="url" name="url" value="<?php echo htmlspecialchars($navigation_item['url'] ?? ''); ?>" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                             <small class="form-text text-muted">e.g., index.php, page.php?slug=about, https://external.com</small>
                         </div>
                         <div class="mb-3">
                             <label for="display_order" class="form-label">Display Order</label>
-                            <input type="number" class="form-control" id="display_order" name="display_order" value="<?php echo (int)($navigation_item['display_order'] ?? 0); ?>">
+                            <input type="number" class="form-control" id="display_order" name="display_order" value="<?php echo (int)($navigation_item['display_order'] ?? 0); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                             <small class="form-text text-muted">Lower numbers appear first.</small>
                         </div>
                         <div class="mb-3">
@@ -518,8 +545,28 @@ if ($tab === 'navigation') {
         plugins: 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
         toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
         height: 400,
-        menubar: false
+        menubar: false,
+        content_style: "body { font-family: 'Fira Sans', Arial, Helvetica, sans-serif; font-size: 14px; }"
     });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('editPageForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (typeof tinymce !== 'undefined') {
+                tinymce.triggerSave();
+                var content = tinymce.get('content').getContent({ format: 'text' }).trim();
+                if (!content) {
+                    alert('Content is required.');
+                    tinymce.get('content').focus();
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    }
+});
 </script>
 <?php include 'includes/footer.php'; ?>
 <?php ob_end_flush(); ?>

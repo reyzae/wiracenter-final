@@ -33,6 +33,16 @@ $conn = $db->connect();
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // CSRF Protection
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+        if (!headers_sent()) {
+            header('Location: tools.php?error=' . urlencode($error_message));
+            exit();
+        }
+    }
+    
+
     $title = sanitize($_POST['title'] ?? '');
     $slug = generateSlug($_POST['slug'] ?? $title, 'tools', $id);
     $description = sanitize($_POST['description'] ?? '');
@@ -76,10 +86,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
-            $imageName = uniqid() . '_' . $_FILES['featured_image']['name'];
-            $imagePath = $uploadDir . $imageName;
-            if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
-                $featured_image = $imageName;
+            $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $max_size = 2 * 1024 * 1024; // 2MB
+            $file_type = mime_content_type($_FILES['featured_image']['tmp_name']);
+            $file_size = $_FILES['featured_image']['size'];
+            if (!in_array($file_type, $allowed_types)) {
+                $errors[] = 'Invalid image type. Only JPG, PNG, GIF, WEBP allowed.';
+            } elseif ($file_size > $max_size) {
+                $errors[] = 'Image size must be less than 2MB.';
+            } else {
+                $imageName = uniqid() . '_' . basename($_FILES['featured_image']['name']);
+                $imagePath = $uploadDir . $imageName;
+                if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
+                    $featured_image = $imageName;
+                } else {
+                    $errors[] = 'Failed to upload image.';
+                }
             }
         }
 
@@ -315,6 +337,7 @@ if (isset($_GET['msg'])) {
             </div>
             <div class="card-body">
                 <form method="POST" id="bulkForm">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" id="toolsTable" width="100%" cellspacing="0">
                             <thead class="table-primary">
@@ -323,6 +346,7 @@ if (isset($_GET['msg'])) {
                                         <input type="checkbox" id="selectAll">
                                     </th>
                                     <th>Title</th>
+                                    <th>Description</th>
                                     <th>Category</th>
                                     <th>Status</th>
                                     <th>Tool URL</th>
@@ -334,7 +358,7 @@ if (isset($_GET['msg'])) {
                             <tbody>
                                 <?php if (empty($tools)): ?>
                                     <tr>
-                                        <td colspan="8" class="text-center py-4">
+                                        <td colspan="9" class="text-center py-4">
                                             <i class="fas fa-tools fa-3x text-muted mb-3"></i>
                                             <p class="text-muted">No tools found.</p>
                                             <a href="?action=new" class="btn btn-primary">Create Your First Tool</a>
@@ -352,12 +376,18 @@ if (isset($_GET['msg'])) {
                                                         <img src="../<?php echo UPLOAD_PATH . $tool_item['featured_image']; ?>" alt="<?php echo htmlspecialchars($tool_item['title']); ?>" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
                                                     <?php endif; ?>
                                                     <div>
-                                                        <strong><?php echo htmlspecialchars($tool_item['title']); ?></strong>
-                                                        <?php if ($tool_item['description']): ?>
-                                                            <br><small class="text-muted"><?php echo htmlspecialchars(substr($tool_item['description'], 0, 100)); ?><?php echo strlen($tool_item['description']) > 100 ? '...' : ''; ?></small>
-                                                        <?php endif; ?>
+                                                        <strong><?php echo htmlspecialchars_decode($tool_item['title']); ?></strong>
                                                     </div>
                                                 </div>
+                                            </td>
+                                            <td>
+                                                <?php
+                                                $desc_clean = str_replace('\xC2\xA0', ' ', html_entity_decode($tool_item['description']));
+                                                $desc_clean = str_replace('&nbsp;', ' ', $desc_clean);
+                                                $desc_clean = strip_tags($desc_clean);
+                                                echo htmlspecialchars_decode(substr($desc_clean, 0, 100));
+                                                echo strlen($desc_clean) > 100 ? '...' : '';
+                                                ?>
                                             </td>
                                             <td>
                                                 <?php if ($tool_item['category']): ?>
@@ -366,18 +396,19 @@ if (isset($_GET['msg'])) {
                                                     <span class="text-muted">-</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td>
-                                                <?php
-                                                $status_badges = [
-                                                    'draft' => 'bg-secondary',
-                                                    'published' => 'bg-success',
-                                                    'scheduled' => 'bg-warning',
-                                                    'archived' => 'bg-dark'
-                                                ];
-                                                $status_class = $status_badges[$tool_item['status']] ?? 'bg-secondary';
-                                                ?>
-                                                <span class="badge <?php echo $status_class; ?>"><?php echo ucfirst($tool_item['status']); ?></span>
-                                            </td>
+                                            <td class="text-center text-nowrap">
+    <span class="badge" style="border-radius:0.35rem;padding:0.5em 1em;display:inline-block;font-size:1em;background-color:<?php
+        switch($tool_item['status']) {
+            case 'published': echo '#198754'; break;
+            case 'draft': echo '#6c757d'; break;
+            case 'scheduled': echo '#ffc107'; break;
+            case 'archived': echo '#343a40'; break;
+            default: echo '#6c757d';
+        }
+    ?>;color:#fff;">
+        <?php echo ucfirst($tool_item['status']); ?>
+    </span>
+</td>
                                             <td>
                                                 <?php if ($tool_item['tool_url']): ?>
                                                     <a href="<?php echo htmlspecialchars($tool_item['tool_url']); ?>" target="_blank" class="text-decoration-none">
@@ -388,7 +419,13 @@ if (isset($_GET['msg'])) {
                                                 <?php endif; ?>
                                             </td>
                                             <td><?php echo htmlspecialchars($tool_item['username'] ?? 'Unknown'); ?></td>
-                                            <td><?php echo formatDateTime($tool_item['created_at']); ?></td>
+                                            <td class="text-center text-nowrap">
+    <?php if ($tool_item['status'] == 'published' && !empty($tool_item['publish_date'])): ?>
+        Published on <?php echo formatDate($tool_item['publish_date']); ?>
+    <?php else: ?>
+        <?php echo ucfirst($tool_item['status']); ?> on <?php echo formatDate($tool_item['created_at']); ?>
+    <?php endif; ?>
+</td>
                                             <td>
                                                 <div class="btn-group" role="group">
                                                     <a href="?action=edit&id=<?php echo $tool_item['id']; ?>" class="btn btn-sm btn-outline-primary" title="Edit">
@@ -446,23 +483,28 @@ if (isset($_GET['msg'])) {
                         <div class="col-md-8">
                             <div class="mb-3">
                                 <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($tool['title'] ?? ''); ?>" required>
+                                <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($tool['title'] ?? ''); ?>" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                             </div>
 
                             <div class="mb-3">
                                 <label for="slug" class="form-label">Slug</label>
-                                <input type="text" class="form-control" id="slug" name="slug" value="<?php echo htmlspecialchars($tool['slug'] ?? ''); ?>" placeholder="auto-generated">
+                                <input type="text" class="form-control" id="slug" name="slug" value="<?php echo htmlspecialchars($tool['slug'] ?? ''); ?>" placeholder="auto-generated" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                 <small class="form-text text-muted">Leave empty to auto-generate from title</small>
                             </div>
 
                             <div class="mb-3">
                                 <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="description" name="description" rows="3" required><?php echo htmlspecialchars($tool['description'] ?? ''); ?></textarea>
+                                <textarea class="form-control" id="description" name="description" rows="3" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo htmlspecialchars($tool['description'] ?? ''); ?></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="excerpt" class="form-label">Excerpt</label>
+                                <textarea class="form-control" id="excerpt" name="excerpt" rows="3" placeholder="Brief summary of the tool..." style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo isset($tool['excerpt']) ? htmlspecialchars_decode($tool['excerpt']) : ''; ?></textarea>
                             </div>
 
                             <div class="mb-3">
                                 <label for="content" class="form-label">Content <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="content" name="content" rows="15"><?php echo htmlspecialchars($tool['content'] ?? ''); ?></textarea>
+                                <textarea name="content" id="content" class="form-control tinymce" rows="12" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo isset($tool['content']) ? htmlspecialchars_decode($tool['content']) : ''; ?></textarea>
                             </div>
                         </div>
 
@@ -489,12 +531,12 @@ if (isset($_GET['msg'])) {
 
                                     <div class="mb-3">
                                         <label for="category" class="form-label">Category</label>
-                                        <input type="text" class="form-control" id="category" name="category" value="<?php echo htmlspecialchars($tool['category'] ?? ''); ?>" placeholder="e.g., Development, Design, Utility">
+                                        <input type="text" class="form-control" id="category" name="category" value="<?php echo htmlspecialchars($tool['category'] ?? ''); ?>" placeholder="e.g., Development, Design, Utility" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                     </div>
 
                                     <div class="mb-3">
                                         <label for="tool_url" class="form-label">Tool URL</label>
-                                        <input type="url" class="form-control" id="tool_url" name="tool_url" value="<?php echo htmlspecialchars($tool['tool_url'] ?? ''); ?>" placeholder="https://example.com/tool">
+                                        <input type="url" class="form-control" id="tool_url" name="tool_url" value="<?php echo htmlspecialchars($tool['tool_url'] ?? ''); ?>" placeholder="https://example.com/tool" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                     </div>
 
                                     <div class="mb-3">
@@ -565,7 +607,7 @@ if (typeof tinymce !== 'undefined') {
             'insertdatetime', 'media', 'table', 'help', 'wordcount'
         ],
         toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; }',
+        content_style: 'body { font-family: \'Fira Sans\', Arial, Helvetica, sans-serif; font-size: 14px; }',
         setup: function(editor) {
             // Auto-save functionality
             editor.on('change', function() {
@@ -589,6 +631,26 @@ if (typeof tinymce !== 'undefined') {
         }
     });
 }
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('toolForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (typeof tinymce !== 'undefined') {
+                tinymce.triggerSave();
+                var content = tinymce.get('content').getContent({ format: 'text' }).trim();
+                if (!content) {
+                    alert('Content is required.');
+                    tinymce.get('content').focus();
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    }
+});
 </script>
 
 <?php include 'includes/footer.php'; ?>

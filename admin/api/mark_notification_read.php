@@ -5,6 +5,16 @@ requireLogin();
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // CSRF Protection
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+        if (!headers_sent()) {
+            header('Location: mark_notification_read.php?error=' . urlencode($error_message));
+            exit();
+        }
+    }
+    
+
     $db = new Database();
     $conn = $db->connect();
 

@@ -1,131 +1,111 @@
-# Wiracenter Portfolio - Personal Portfolio Website with CMS
+# Wiracenter Portfolio & CMS
 
-A complete personal portfolio website with a powerful Content Management System (CMS) built using PHP and MySQL.
+A modern personal portfolio and content management system (CMS) built with PHP & MySQL, featuring a robust admin dashboard, bilingual content, dark mode, and advanced security.
 
-## 🌟 Features
+---
 
-### Frontend Portfolio Website
-- **Modern Design**: Responsive design with Bootstrap 5
-- **Home Page**: Hero section with featured projects and articles
-- **About Page**: Professional profile with skills, experience, and education
-- **My Spaces**: Showcase of projects, articles, and tools with filtering
-- **Contact Page**: Contact form with FAQ section
+## 🌟 Fitur Utama
 
-### Admin Dashboard CMS
-- **Real-time Dashboard**: Live statistics and quick actions
-- **Articles Management**: Full CRUD operations with TinyMCE editor
-- **Projects Management**: Project portfolio with technologies and links
-- **Tools Management**: Tools showcase with categories
-- **Pages Management**: Custom pages with rich content
-- **Content Blocks**: Reusable content sections
-- **FAQs Management**: Manage frequently asked questions
-- **File Management**: Upload and manage media files
-- **Site Settings**: Dynamic site configuration
-- **User Management**: Role-based access control (Admin/Editor/Viewer)
-- **Contact Messages**: View and manage contact form submissions
-- **Notifications**: In-app notification system with history
-- **Activity Logs**: Track all admin actions
-- **Trash**: Soft delete and restore content
+### Website Portfolio (Frontend)
+- **Desain Modern & Responsif**: Menggunakan Bootstrap 5, mendukung dark mode & font 'Fira Sans'.
+- **Home**: Hero slider, highlight artikel/proyek/tools terbaru.
+- **About**: Profil profesional, skills, pengalaman, dan edukasi.
+- **My Spaces**: Filter & pencarian lintas artikel, proyek, tools.
+- **Contact**: Form kontak dengan validasi & FAQ.
+- **Bilingual**: Toggle bahasa (ID/EN) untuk konten utama (artikel, proyek, tools, pages).
+- **Dark Mode**: Toggle tema terang/gelap, otomatis simpan preferensi.
 
-## 🚀 Technologies Used
+### Admin Dashboard (CMS)
+- **Dashboard Real-time**: Statistik, notifikasi, quick actions.
+- **Manajemen Artikel**: CRUD, TinyMCE, autosave draft, SEO, featured image, bilingual.
+- **Manajemen Proyek**: CRUD, deskripsi, konten, tech tags (JSON), URL, bilingual.
+- **Manajemen Tools**: CRUD, deskripsi, konten, kategori, URL, bilingual.
+- **Pages**: CRUD, konten custom, bilingual.
+- **Content Blocks**: CRUD, reusable section, tipe dinamis.
+- **FAQs**: CRUD, urutan tampil, status.
+- **File Management**: Upload, hapus, kelola media.
+- **Navigation**: Menu dinamis, urutan & status.
+- **User Management**: Role-based (admin/editor/viewer), soft delete, suspend, reset password, audit log.
+- **Settings**: Konfigurasi dinamis (site, theme, maintenance, dsb).
+- **Contact Messages**: Lihat, kelola pesan kontak.
+- **Notifications**: In-app, mark as read/delete, riwayat.
+- **Activity Logs**: Semua aksi penting dicatat.
+- **Trash**: Soft delete & restore konten.
+- **Backup/Export**: Backup DB, export data.
+- **Profile**: Update profil & password.
+- **Help**: Dokumentasi & support.
 
+---
+
+## 🚀 Teknologi
 - **Backend**: PHP 7.4+
 - **Database**: MySQL 5.7+
-- **Frontend**: HTML5, CSS3, JavaScript (ES6)
-- **Framework**: Bootstrap 5
+- **Frontend**: HTML5, CSS3, JS (ES6), Bootstrap 5
 - **Icons**: Font Awesome 6
-- **Editor**: TinyMCE 6
-- **Session Management**: PHP Sessions
-- **Security**: Password hashing, SQL injection prevention
+- **Editor**: TinyMCE 6 (autosave, image upload)
+- **Session**: PHP Sessions
+- **Security**: Password hashing, SQL injection prevention, XSS protection, CSRF, security headers
 
-## 📦 Installation
+---
 
-### Prerequisites
-- PHP 7.4 or higher
-- MySQL 5.7 or higher
-- Apache or Nginx web server
-- mod_rewrite enabled (for Apache)
+## 📦 Instalasi
 
-### Step 1: Clone the Repository
+### Prasyarat
+- PHP 7.4+
+- MySQL 5.7+
+- Apache/Nginx (mod_rewrite aktif untuk Apache)
+
+### 1. Clone Repo
 ```bash
 git clone https://github.com/yourusername/wiracenter-final.git
 cd wiracenter-final
 ```
 
-### Step 2: Database Setup
-1. Create a MySQL database named `wiracenter_db2`
-2. Import the database schema:
+### 2. Setup Database
+1. Buat database MySQL: `wiracenter_db2`
+2. Import schema:
 ```bash
 mysql -u username -p wiracenter_db2 < database/schema.sql
 ```
 
-### Step 3: Configuration
-1. Update database credentials in `config/database.php`:
-```php
-private $host = 'localhost';
-private $db_name = 'wiracenter_db2';
-private $username = 'your_db_username';
-private $password = 'your_db_password';
-```
+### 3. Konfigurasi
+- Edit `config/database.php` untuk kredensial DB
+- Edit `config/config.php` untuk SITE_URL, dsb
 
-2. Update site URL in `config/config.php`:
-```php
-define('SITE_URL', 'http://your-domain.com');
-```
-
-### Step 4: File Permissions
-Make sure the uploads directory is writable:
+### 4. Permission
 ```bash
 chmod 755 uploads/
 ```
 
-### Step 5: Access the Website
+### 5. Akses Website
 - **Frontend**: `http://your-domain.com/`
-- **Admin Dashboard**: `http://your-domain.com/admin/`
+- **Admin**: `http://your-domain.com/admin/`
 
-## 🔐 Default Login Credentials
+---
 
+## 🔐 Default Login
 - **Username**: admin
 - **Password**: wiracenter!
+> Ganti password default setelah login!
 
-> **Important**: Change the default password immediately after first login!
+---
 
-## 📁 Project Structure (2025)
+## 📁 Struktur Project (2025)
 
 ```
 wiracenter-v1-main/
 ├── admin/
-│   ├── api/                  # API endpoints (upload, notifications, stats, etc)
+│   ├── api/                  # API endpoints (upload, notifications, stats, dsb)
 │   ├── assets/
-│   │   ├── css/              # Admin styles (admin-style.css)
-│   │   └── js/               # Admin scripts (tinymce-init.js, admin-script.js)
+│   │   ├── css/              # admin-style.css
+│   │   └── js/               # tinymce-init.js, admin-script.js
 │   ├── includes/             # Header, footer, sidebar
-│   ├── activity_logs.php     # Activity log
-│   ├── articles.php          # Articles management
-│   ├── content_blocks.php    # Content blocks management
-│   ├── dashboard.php         # Admin dashboard
-│   ├── export_data.php       # Export data
-│   ├── faqs.php              # FAQs management
-│   ├── files.php             # File management
-│   ├── help.php              # Help & docs
-│   ├── login.php             # Admin login
-│   ├── logout.php            # Logout
-│   ├── messages.php          # Contact messages
-│   ├── navigation.php        # Navigation management
-│   ├── notifications.php     # Notification history
-│   ├── pages.php             # Pages management
-│   ├── profile.php           # User profile
-│   ├── projects.php          # Projects management
-│   ├── settings.php          # Site settings
-│   ├── tools.php             # Tools management
-│   ├── trash.php             # Trash bin
-│   ├── users.php             # User management
-│   └── backup.php            # Backup & restore
+│   ├── ...                   # Halaman admin (articles, projects, tools, pages, users, dsb)
 ├── api/
 │   └── contact.php           # Public contact API
 ├── assets/
-│   ├── css/                  # Frontend styles (style.css)
-│   └── js/                   # Frontend scripts (script.js)
+│   ├── css/                  # style.css, page-styles.css, dsb
+│   └── js/                   # script.js, my-spaces.js, contact.js
 ├── config/
 │   ├── config.php            # Main config
 │   └── database.php          # DB connection
@@ -136,84 +116,85 @@ wiracenter-v1-main/
 │   ├── header.php
 │   └── sidebar.php
 ├── uploads/                  # Uploaded files
-├── index.php                 # Homepage
-├── about.php                 # About page
-├── my-spaces.php             # Projects/Articles/Tools
-├── contact.php               # Contact page
-├── project.php               # Project detail
-├── article.php               # Article detail
-├── tool.php                  # Tool detail
-├── maintenance.php           # Maintenance page
-├── README.md                 # This file
-├── change_log.md             # Changelog (auto updated)
-└── ...
+├── ...                       # index.php, about.php, my-spaces.php, contact.php, project.php, article.php, tool.php, maintenance.php
+├── change_log.md             # Changelog & troubleshooting log
+└── README.md                 # This file
 ```
 
-## 🗂️ Admin Modules & Features
+---
 
-- **Articles**: CRUD, TinyMCE, featured image, excerpt, SEO, status, schedule
-- **Projects**: CRUD, description, content, tech tags, URLs, featured image, status
-- **Tools**: CRUD, description, content, URLs, featured image, status
-- **Pages**: CRUD, custom content, status
-- **Content Blocks**: CRUD, reusable sections
-- **FAQs**: CRUD, question/answer
-- **Files**: Upload, manage, delete
-- **Navigation**: Menu management
-- **Users**: Role-based management
-- **Settings**: Site-wide config
-- **Notifications**: In-app, mark as read/delete, history
-- **Activity Logs**: Track admin actions
+## 🗂️ Modul & Fitur Admin
+- **Articles/Projects/Tools/Pages**: CRUD, bilingual, autosave draft, featured image, SEO, status, schedule
+- **Content Blocks**: CRUD, tipe dinamis, reusable
+- **FAQs**: CRUD, urutan, status
+- **Files**: Upload, kelola, hapus
+- **Navigation**: Menu dinamis
+- **Users**: Role-based, soft delete, suspend, reset password, audit log, filter/search/pagination
+- **Settings**: Konfigurasi site/theme/maintenance
+- **Notifications**: In-app, mark as read/delete, riwayat
+- **Activity Logs**: Semua aksi penting dicatat
 - **Trash**: Soft delete/restore
-- **Backup/Export**: DB backup, export data
-- **Profile**: Update user info
-- **Help**: Docs & support
+- **Backup/Export**: Backup DB, export data
+- **Profile**: Update profil & password
+- **Help**: Dokumentasi & support
+
+---
 
 ## 🛠️ API Endpoints (Admin)
-
-- `admin/api/upload_image.php` — Upload image for editor
-- `admin/api/save_draft.php` — Autosave draft content
+- `admin/api/upload_image.php` — Upload image untuk editor
+- `admin/api/save_draft.php` — Autosave draft konten
 - `admin/api/notification_actions.php` — Mark/delete notifications
 - `admin/api/mark_notification_read.php` — Mark all as read
 - `admin/api/insert_notification.php` — Insert notification (test/dev)
 - `admin/api/stats.php` — Dashboard stats
 - `admin/api/upload.php` — General file upload
 
-## 🧩 Custom Scripts & Styles
+---
 
+## 🧩 Custom Scripts & Styles
 - **Admin JS**: `admin/assets/js/tinymce-init.js`, `admin/assets/js/admin-script.js`
 - **Admin CSS**: `admin/assets/css/admin-style.css`
-- **Frontend JS**: `assets/js/script.js`
-- **Frontend CSS**: `assets/css/style.css`
-
-## 🛡️ Security Features
-
-- Password hashing with PHP's `password_hash()`
-- SQL injection prevention with prepared statements
-- XSS protection with `htmlspecialchars()`
-- Session-based authentication
-- Role-based access control
-- File upload validation
-
-## 📱 Responsive Design
-
-- Fully responsive (Bootstrap 5)
-- Desktop, tablet, mobile support
-
-## 🎯 SEO Optimized
-
-- Clean URL structure
-- Meta tags and descriptions
-- Semantic HTML
-- Fast loading
-- Mobile-friendly
-
-## 📝 Changelog
-
-See `change_log.md` for detailed update history and troubleshooting log.
+- **Frontend JS**: `assets/js/script.js`, `assets/js/my-spaces.js`, `assets/js/contact.js`
+- **Frontend CSS**: `assets/css/style.css`, `assets/css/page-styles.css`, dsb
 
 ---
 
-## ⚠️ Notes, Plans & Unsolved Troubleshoots
+## 🛡️ Security & Best Practices
+- Password hashing (`password_hash()`)
+- SQL injection prevention (prepared statements)
+- XSS protection (`htmlspecialchars()`, HTMLPurifier)
+- CSRF protection (token di semua form penting)
+- Session-based authentication
+- Role-based access control
+- File upload validation
+- Security headers (.htaccess & PHP)
+- Error log terpisah (php_errors.log)
+
+---
+
+## 🌐 Bilingual & Auto-Translate
+- Semua konten utama (artikel, proyek, tools, pages) mendukung field bilingual (ID/EN)
+- Toggle bahasa di frontend (slug, judul, konten, dsb)
+- Script auto-translate (`translate_articles_deepl.php`) siap pakai (butuh API key valid)
+- Toggle slug otomatis (`assets/js/script.js`)
+
+---
+
+## 🌙 Dark Mode & Theme
+- Toggle dark/light mode di frontend & admin
+- Preferensi user disimpan (localStorage/cookie)
+- CSS variabel untuk theme (`[data-theme="dark"]` di style.css)
+- Admin: class `theme-dark` pada body, frontend: `[data-theme]` pada html
+
+---
+
+## 📝 Changelog & Troubleshooting
+- Semua troubleshooting & patch dicatat di `change_log.md`
+- Error JSON kolom: lihat instruksi di `change_log.md` (SQL & PHP handling)
+
+---
+
+## ⚠️ Notes, Rencana & Troubleshoot Belum Selesai
 
 1. **Pengembangan Live Preview**
    - Rencana: Opsi posisi panel preview (kanan, bawah, tab, dsb) dan style lebih fleksibel.
@@ -276,3 +257,12 @@ See `change_log.md` for detailed update history and troubleshooting log.
 ---
 
 **Seluruh fitur di atas sudah terintegrasi dan siap digunakan.**
+
+## Catatan Integrasi Auto-Translate Konten
+- Fitur auto-translate konten bilingual (EN/ID) via API (DeepL/LibreTranslate) sudah disiapkan di skrip `translate_articles_deepl.php`.
+- Saat ini belum aktif karena kendala API key/akses (HTTP 403 Forbidden dari DeepL).
+- Untuk mengaktifkan kembali:
+  1. Pastikan API key valid dan akun DeepL sudah aktif.
+  2. Jalankan skrip `php translate_articles_deepl.php` untuk mengisi kolom EN di database.
+  3. Cek hasil di frontend dengan toggle bahasa.
+- Jika ingin pakai API lain (misal LibreTranslate), tinggal ganti endpoint dan parameter di skrip.

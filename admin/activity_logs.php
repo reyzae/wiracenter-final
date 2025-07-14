@@ -61,10 +61,10 @@ $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <div class="container-fluid">
     <h1 class="h2 mb-4"><i class="fas fa-history me-2"></i>Activity Logs</h1>
-    <form method="GET" class="row g-3 align-items-end mb-3">
+    <form method="GET" class="row g-3 align-items-end mb-3" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
         <div class="col-md-3">
             <label class="form-label">User</label>
-            <select name="user" class="form-select">
+            <select name="user" class="form-select" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                 <option value="">All Users</option>
                 <?php foreach ($users as $u): ?>
                     <option value="<?php echo $u['id']; ?>" <?php if ($user_filter == $u['id']) echo 'selected'; ?>><?php echo htmlspecialchars($u['username']); ?></option>
@@ -73,15 +73,15 @@ $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
         <div class="col-md-2">
             <label class="form-label">Date Start</label>
-            <input type="date" name="date_start" class="form-control" value="<?php echo htmlspecialchars($date_start); ?>">
+            <input type="date" name="date_start" class="form-control" value="<?php echo htmlspecialchars($date_start); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
         </div>
         <div class="col-md-2">
             <label class="form-label">Date End</label>
-            <input type="date" name="date_end" class="form-control" value="<?php echo htmlspecialchars($date_end); ?>">
+            <input type="date" name="date_end" class="form-control" value="<?php echo htmlspecialchars($date_end); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
         </div>
         <div class="col-md-3">
             <label class="form-label">Search</label>
-            <input type="text" name="search" class="form-control" placeholder="Action, item, IP, user..." value="<?php echo htmlspecialchars($search); ?>">
+            <input type="text" name="search" class="form-control" placeholder="Action, item, IP, user..." value="<?php echo htmlspecialchars($search); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
         </div>
         <div class="col-md-auto">
             <button type="submit" class="btn btn-primary">Filter</button>
@@ -90,7 +90,7 @@ $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                     <thead class="table-secondary">
                         <tr>
                             <th>User</th>

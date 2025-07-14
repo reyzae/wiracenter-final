@@ -1,24 +1,39 @@
 <?php
 require_once 'config/config.php';
 
+// Sanitize and validate input
+$slug = trim($_GET['slug'] ?? '');
+$slug = preg_replace('/[^a-zA-Z0-9_-]/', '', $slug);
+if (empty($slug)) {
+    header("Location: index.php");
+    exit();
+}
+
 $db = new Database();
 try {
     $conn = $db->connect();
 } catch (PDOException $e) {
-    die('Database connection failed: ' . $e->getMessage());
+    error_log("Database connection failed in page.php: " . $e->getMessage());
+    header("HTTP/1.0 500 Internal Server Error");
+    $page_title = "Server Error";
+    include 'includes/header.php';
+    echo "<div class='container text-center py-5'><h1 class='display-4'>500</h1><p class='lead'>Sorry, something went wrong. Please try again later.</p><a href='index.php' class='btn btn-primary'>Back to Home</a></div>";
+    include 'includes/footer.php';
+    exit();
 }
 
-$slug = $_GET['slug'] ?? '';
 $page = null;
+$error_message = '';
 
 if (!empty($slug)) {
     try {
-        $stmt = $conn->prepare("SELECT * FROM pages WHERE slug = ? AND status = 'published'");
+        $stmt = $conn->prepare("SELECT * FROM pages WHERE slug = ? AND status = 'published' AND deleted_at IS NULL");
         $stmt->execute([$slug]);
         $page = $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
+        error_log("Database query failed in page.php: " . $e->getMessage());
         $page = null;
-        $error_message = 'Table pages not found in database.';
+        $error_message = 'Page not found.';
     }
 }
 
@@ -34,8 +49,14 @@ if (!$page) {
     exit();
 }
 
-$page_title = $page['title'];
-$page_description = $page['excerpt'] ?? $page['content'] ?? '';
+// Set bilingual variables
+$lang = $_COOKIE['lang'] ?? 'id';
+$title = ($lang === 'en' && !empty($page['title_en'])) ? $page['title_en'] : $page['title'];
+$content = ($lang === 'en' && !empty($page['content_en'])) ? $page['content_en'] : $page['content'];
+$excerpt = ($lang === 'en' && !empty($page['excerpt_en'])) ? $page['excerpt_en'] : ($page['excerpt'] ?? '');
+
+$page_title = $title;
+$page_description = $excerpt ?: substr(strip_tags($content), 0, 160);
 ?>
 
 <?php include 'includes/header.php'; ?>
@@ -49,9 +70,16 @@ $page_description = $page['excerpt'] ?? $page['content'] ?? '';
                     <div class="row align-items-center">
                         <div class="col-md-3 text-center mb-4 mb-md-0">
                             <?php if (!empty($page['profile_image'])): ?>
-                                <img src="uploads/<?php echo htmlspecialchars($page['profile_image']); ?>" alt="Digital Enthusiast" class="about-profile-img" style="width:140px;height:140px;object-fit:cover;border-radius:50%;box-shadow:0 4px 15px rgba(0,0,0,0.10);">
+                                <img src="uploads/<?php echo htmlspecialchars($page['profile_image']); ?>" 
+                                     alt="Digital Enthusiast" 
+                                     class="about-profile-img" 
+                                     loading="lazy"
+                                     onerror="this.src='assets/images/support-profile.jpg'">
                             <?php else: ?>
-                                <img src="assets/images/support-profile.jpg" alt="Digital Enthusiast" class="about-profile-img" style="width:140px;height:140px;object-fit:cover;border-radius:50%;box-shadow:0 4px 15px rgba(0,0,0,0.10);">
+                                <img src="assets/images/support-profile.jpg" 
+                                     alt="Digital Enthusiast" 
+                                     class="about-profile-img"
+                                     loading="lazy">
                             <?php endif; ?>
                         </div>
                         <div class="col-md-9">
@@ -146,109 +174,29 @@ Whether it's networking, cybersecurity, or programming, I enjoy exploring differ
                             </ul>
                         </div>
                     </div>
-                    <!-- Hapus seluruh box share content di About section (div share, tombol, dsb) -->
                 </div>
             <?php else: ?>
                 <!-- Standard page layout -->
                 <div class="page-header text-center mb-5">
-                    <h1 class="display-4 fw-bold mb-3" style="color: #1a1a2e;"><?php echo $page['title']; ?></h1>
+                    <h1 class="display-4 fw-bold mb-3" style="color: #1a1a2e;"><?php echo htmlspecialchars_decode($title); ?></h1>
                     <?php if (!empty($page['profile_image'])): ?>
-                <div class="text-center mb-4">
-                            <img src="uploads/<?php echo htmlspecialchars($page['profile_image']); ?>" alt="Profile Photo" class="profile-image" style="width:160px;height:160px;object-fit:cover;border-radius:50%;box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+                        <div class="text-center mb-4">
+                            <img src="uploads/<?php echo htmlspecialchars($page['profile_image']); ?>" 
+                                 alt="Profile Photo" 
+                                 class="profile-image" 
+                                 loading="lazy"
+                                 onerror="this.style.display='none'">
                         </div>
                     <?php endif; ?>
                 </div>
                 <div class="page-content">
-                    <?php echo $page['content']; ?>
+                    <?php echo $content; ?>
                 </div>
             <?php endif; ?>
         </div>
     </section>
 </div>
 
-<style>
-.about-hero-section {
-    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
-    border-radius: 18px;
-    padding: 2.5rem 2rem 2rem 2rem;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.07);
-}
-.about-profile-img {
-    width: 200px !important;
-    height: 200px !important;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 6px solid #fff;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
-    margin-bottom: 0.5rem;
-    background: #f5f5f5;
-    display: inline-block;
-}
-.about-hero-title {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #00695c;
-}
-.about-hero-desc {
-    font-size: 1.15rem;
-    color: #333;
-}
-.about-hero-meta {
-    font-size: 1rem;
-    color: #888;
-}
-.about-card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    padding: 2rem 1.5rem 1.5rem 1.5rem;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(0,0,0,0.05);
-}
-.about-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-}
-.about-card-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #00695c;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-}
-.about-card-title i {
-    color: #00bcd4;
-    margin-right: 0.5rem;
-}
-.about-tech-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-}
-.about-tech-list .badge {
-    font-size: 0.75rem;
-    padding: 0.4rem 0.6rem;
-    border-radius: 12px;
-    font-weight: 500;
-}
-.page-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 3rem 0;
-    border-radius: 15px;
-    margin-bottom: 2rem;
-}
-.page-content {
-    background: #fff;
-    padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    line-height: 1.8;
-}
-.profile-image {
-    border: 4px solid #fff;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-</style>
+<link rel="stylesheet" href="assets/css/page-styles.css">
 
 <?php include 'includes/footer.php'; ?>

@@ -7,20 +7,42 @@ ini_set('display_errors', 1);
 $page_title = 'Articles';
 include 'includes/header.php';
 
+// Add Fira Sans font for admin articles page
+?>
+<style>
+body, .card, .btn, .form-control, .table, .list-group-item, .modal-content, .nav-link, .dropdown-item {
+    font-family: 'Fira Sans', Arial, Helvetica, sans-serif !important;
+}
+</style>
+<?php
 // Initialize variables to prevent undefined variable errors
-$action = $_GET['action'] ?? 'list';
-$id = $_GET['id'] ?? null;
+$action = isset($_GET['action']) ? preg_replace('/[^a-z_]/', '', $_GET['action']) : 'list';
+$id = isset($_GET['id']) ? intval($_GET['id']) : null;
 $articles = [];
 $article = null;
 $success_message = '';
 $error_message = '';
 $errors = [];
-$tab = $_GET['tab'] ?? 'active';
+$tab = isset($_GET['tab']) ? preg_replace('/[^a-z_]/', '', $_GET['tab']) : 'active';
 
 // Ensure HTMLPurifier is available
 if (!class_exists('HTMLPurifier_Config')) {
     if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
         require_once __DIR__ . '/../vendor/autoload.php';
+    }
+    // If HTMLPurifier is still not available, create a simple fallback
+    if (!class_exists('HTMLPurifier_Config')) {
+        class HTMLPurifier_Config {
+            public static function createDefault() {
+                return new self();
+            }
+        }
+        class HTMLPurifier {
+            public static function purify($html, $config = null) {
+                // Simple HTML sanitization fallback
+                return strip_tags($html, '<p><br><strong><em><u><h1><h2><h3><h4><h5><h6><ul><ol><li><a><img><blockquote><code><pre>');
+            }
+        }
     }
 }
 
@@ -33,6 +55,17 @@ $conn = $db->connect();
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // CSRF Protection
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+        $action = 'list';
+        if (!headers_sent()) {
+            header('Location: articles.php?action=list&tab=active&error=' . urlencode($error_message));
+            ob_end_clean();
+            exit();
+        }
+    }
+    
     $title = sanitize($_POST['title'] ?? '');
     $slug = generateSlug($_POST['slug'] ?? $title, 'articles', $id);
     $content = $_POST['content'] ?? ''; // TinyMCE content, handle carefully
@@ -68,10 +101,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
-            $imageName = uniqid() . '_' . $_FILES['featured_image']['name'];
-            $imagePath = $uploadDir . $imageName;
-            if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
-                $featured_image = $imageName;
+            
+            // Validate file type
+            $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $file_type = $_FILES['featured_image']['type'];
+            $file_size = $_FILES['featured_image']['size'];
+            if (!in_array($file_type, $allowed_types)) {
+                $errors[] = 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.';
+            } elseif ($file_size > 2 * 1024 * 1024) { // 2MB max
+                $errors[] = 'Image file size must be less than 2MB.';
+            } else {
+                $imageName = uniqid() . '_' . time() . '_' . basename($_FILES['featured_image']['name']);
+                $imagePath = $uploadDir . $imageName;
+                if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
+                    $featured_image = $imageName;
+                } else {
+                    $errors[] = 'Failed to upload image.';
+                }
             }
         }
 
@@ -163,8 +209,8 @@ if ($action == 'edit' && $id) {
 
 // Get all articles for listing
 if ($action == 'list') {
-    $search_query = $_GET['search'] ?? '';
-    $status_filter = $_GET['status_filter'] ?? '';
+    $search_query = sanitize($_GET['search'] ?? '');
+    $status_filter = sanitize($_GET['status_filter'] ?? '');
     $sql = "SELECT a.*, u.username FROM articles a LEFT JOIN users u ON a.created_by = u.id WHERE a.deleted_at IS NULL";
     $params = [];
     if (!empty($search_query)) {
@@ -185,7 +231,17 @@ if ($action == 'list') {
 
 // Handle bulk actions
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['bulk_action'])) {
-    $bulk_action = $_POST['bulk_action'];
+    // CSRF Protection for bulk actions
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+        if (!headers_sent()) {
+            header('Location: articles.php?action=list&tab=active&error=' . urlencode($error_message));
+            ob_end_clean();
+            exit();
+        }
+    }
+    
+    $bulk_action = sanitize($_POST['bulk_action']);
     $selected_articles = $_POST['selected_articles'] ?? [];
     if (!empty($selected_articles)) {
         $placeholders = implode(',', array_fill(0, count($selected_articles), '?'));
@@ -274,16 +330,16 @@ if (isset($_GET['msg'])) {
                             <input type="hidden" name="action" value="list">
                             <div class="mb-3">
                                 <label class="form-label">Search</label>
-                                <input type="text" class="form-control" name="search" value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>" placeholder="Search articles...">
+                                <input type="text" class="form-control" name="search" value="<?php echo htmlspecialchars($search_query); ?>" placeholder="Search articles...">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Status</label>
                                 <select class="form-select" name="status_filter">
                                     <option value="">All Status</option>
-                                    <option value="draft" <?php echo ($_GET['status_filter'] ?? '') == 'draft' ? 'selected' : ''; ?>>Draft</option>
-                                    <option value="published" <?php echo ($_GET['status_filter'] ?? '') == 'published' ? 'selected' : ''; ?>>Published</option>
-                                    <option value="scheduled" <?php echo ($_GET['status_filter'] ?? '') == 'scheduled' ? 'selected' : ''; ?>>Scheduled</option>
-                                    <option value="archived" <?php echo ($_GET['status_filter'] ?? '') == 'archived' ? 'selected' : ''; ?>>Archived</option>
+                                    <option value="draft" <?php echo ($status_filter == 'draft') ? 'selected' : ''; ?>>Draft</option>
+                                    <option value="published" <?php echo ($status_filter == 'published') ? 'selected' : ''; ?>>Published</option>
+                                    <option value="scheduled" <?php echo ($status_filter == 'scheduled') ? 'selected' : ''; ?>>Scheduled</option>
+                                    <option value="archived" <?php echo ($status_filter == 'archived') ? 'selected' : ''; ?>>Archived</option>
                                 </select>
                             </div>
                             <div class="d-flex gap-2">
@@ -296,6 +352,7 @@ if (isset($_GET['msg'])) {
             </div>
             <div class="card-body">
                 <form method="POST" id="bulkForm">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" id="articlesTable" width="100%" cellspacing="0">
                             <thead class="table-primary">
@@ -333,7 +390,7 @@ if (isset($_GET['msg'])) {
                                                         <img src="../<?php echo UPLOAD_PATH . $article_item['featured_image']; ?>" alt="<?php echo htmlspecialchars($article_item['title']); ?>" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
                                                     <?php endif; ?>
                                                     <div>
-                                                        <strong><?php echo htmlspecialchars($article_item['title']); ?></strong>
+                                                        <strong><?php echo htmlspecialchars_decode($article_item['title']); ?></strong>
                                                         <br><small class="text-muted"><?php echo htmlspecialchars($article_item['slug']); ?></small>
                                                     </div>
                                                 </div>
@@ -343,32 +400,33 @@ if (isset($_GET['msg'])) {
                                                     <?php
                                                     $excerpt_clean = str_replace('\xC2\xA0', ' ', html_entity_decode($article_item['excerpt']));
                                                     $excerpt_clean = str_replace('&nbsp;', ' ', $excerpt_clean);
-                                                    echo htmlspecialchars(substr($excerpt_clean, 0, 100));
+                                                    echo htmlspecialchars_decode(substr($excerpt_clean, 0, 100));
                                                     echo strlen($excerpt_clean) > 100 ? '...' : '';
                                                     ?>
                                                 <?php else: ?>
                                                     <span class="text-muted">No excerpt</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td>
-                                                <?php
-                                                $status_badges = [
-                                                    'draft' => 'bg-secondary',
-                                                    'published' => 'bg-success',
-                                                    'scheduled' => 'bg-warning',
-                                                    'archived' => 'bg-dark'
-                                                ];
-                                                $status_class = $status_badges[$article_item['status']] ?? 'bg-secondary';
-                                                ?>
-                                                <span class="badge <?php echo $status_class; ?>"><?php echo ucfirst($article_item['status']); ?></span>
-                                            </td>
-                                            <td>
-                                                <?php if ($article_item['publish_date']): ?>
-                                                    <?php echo formatDateTime($article_item['publish_date']); ?>
-                                                <?php else: ?>
-                                                    <span class="text-muted">-</span>
-                                                <?php endif; ?>
-                                            </td>
+                                            <td class="text-center text-nowrap">
+    <span class="badge" style="border-radius:0.35rem;padding:0.5em 1em;display:inline-block;font-size:1em;background-color:<?php
+        switch($article_item['status']) {
+            case 'published': echo '#198754'; break;
+            case 'draft': echo '#6c757d'; break;
+            case 'scheduled': echo '#ffc107'; break;
+            case 'archived': echo '#343a40'; break;
+            default: echo '#6c757d';
+        }
+    ?>;color:#fff;">
+        <?php echo ucfirst($article_item['status']); ?>
+    </span>
+</td>
+                                            <td class="text-center text-nowrap">
+    <?php if ($article_item['status'] == 'published' && !empty($article_item['publish_date'])): ?>
+        Published on <?php echo formatDate($article_item['publish_date']); ?>
+    <?php else: ?>
+        <?php echo ucfirst($article_item['status']); ?> on <?php echo formatDate($article_item['created_at']); ?>
+    <?php endif; ?>
+</td>
                                             <td><?php echo htmlspecialchars($article_item['username'] ?? 'Unknown'); ?></td>
                                             <td><?php echo formatDateTime($article_item['created_at']); ?></td>
                                             <td>
@@ -376,7 +434,7 @@ if (isset($_GET['msg'])) {
                                                     <a href="?action=edit&id=<?php echo $article_item['id']; ?>" class="btn btn-sm btn-outline-primary" title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <a href="../article.php?slug=<?php echo $article_item['slug']; ?>" target="_blank" class="btn btn-sm btn-outline-info" title="View">
+                                                    <a href="../article/<?php echo $article_item['slug']; ?>" target="_blank" class="btn btn-sm btn-outline-info" title="View">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(<?php echo $article_item['id']; ?>, '<?php echo htmlspecialchars($article_item['title']); ?>')" title="Delete">
@@ -424,28 +482,29 @@ if (isset($_GET['msg'])) {
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data" id="articleForm">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                     <div class="row">
                         <div class="col-md-8">
                             <div class="mb-3">
                                 <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($article['title'] ?? ''); ?>" required>
+                                <input type="text" class="form-control" id="title" name="title" value="<?php echo isset($article['title']) ? htmlspecialchars($article['title']) : ''; ?>" required>
                             </div>
 
                             <div class="mb-3">
                                 <label for="slug" class="form-label">Slug</label>
-                                <input type="text" class="form-control" id="slug" name="slug" value="<?php echo htmlspecialchars($article['slug'] ?? ''); ?>" placeholder="auto-generated">
+                                <input type="text" class="form-control" id="slug" name="slug" value="<?php echo isset($article['slug']) ? htmlspecialchars($article['slug']) : ''; ?>" placeholder="auto-generated">
                                 <small class="form-text text-muted">Leave empty to auto-generate from title</small>
                             </div>
 
                             <div class="mb-3">
                                 <label for="excerpt" class="form-label">Excerpt</label>
-                                <textarea class="form-control" id="excerpt" name="excerpt" rows="3" placeholder="Brief summary of the article..."><?php echo htmlspecialchars($article['excerpt'] ?? ''); ?></textarea>
+                                <textarea class="form-control" id="excerpt" name="excerpt" rows="3" placeholder="Brief summary of the article..."><?php echo isset($article['excerpt']) ? htmlspecialchars_decode($article['excerpt']) : ''; ?></textarea>
                                 <small class="form-text text-muted">Leave empty to auto-generate from content</small>
                             </div>
 
                             <div class="mb-3">
                                 <label for="content" class="form-label">Content <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="content" name="content" rows="15"><?php echo htmlspecialchars($article['content'] ?? ''); ?></textarea>
+                                <textarea name="content" id="content" class="form-control tinymce" rows="12"><?php echo isset($article['content']) ? htmlspecialchars_decode($article['content']) : ''; ?></textarea>
                             </div>
                         </div>
 
@@ -458,16 +517,16 @@ if (isset($_GET['msg'])) {
                                     <div class="mb-3">
                                         <label for="status" class="form-label">Status</label>
                                         <select class="form-select" id="status" name="status">
-                                            <option value="draft" <?php echo ($article['status'] ?? '') == 'draft' ? 'selected' : ''; ?>>Draft</option>
-                                            <option value="published" <?php echo ($article['status'] ?? '') == 'published' ? 'selected' : ''; ?>>Published</option>
-                                            <option value="scheduled" <?php echo ($article['status'] ?? '') == 'scheduled' ? 'selected' : ''; ?>>Scheduled</option>
-                                            <option value="archived" <?php echo ($article['status'] ?? '') == 'archived' ? 'selected' : ''; ?>>Archived</option>
+                                            <option value="draft" <?php echo (isset($article['status']) && $article['status'] == 'draft') ? 'selected' : ''; ?>>Draft</option>
+                                            <option value="published" <?php echo (isset($article['status']) && $article['status'] == 'published') ? 'selected' : ''; ?>>Published</option>
+                                            <option value="scheduled" <?php echo (isset($article['status']) && $article['status'] == 'scheduled') ? 'selected' : ''; ?>>Scheduled</option>
+                                            <option value="archived" <?php echo (isset($article['status']) && $article['status'] == 'archived') ? 'selected' : ''; ?>>Archived</option>
                                         </select>
                                     </div>
 
                                     <div class="mb-3">
                                         <label for="publish_date" class="form-label">Publish Date</label>
-                                        <input type="datetime-local" class="form-control" id="publish_date" name="publish_date" value="<?php echo $article['publish_date'] ? date('Y-m-d\TH:i', strtotime($article['publish_date'])) : ''; ?>">
+                                        <input type="datetime-local" class="form-control" id="publish_date" name="publish_date" value="<?php echo isset($article['publish_date']) && $article['publish_date'] ? date('Y-m-d\TH:i', strtotime($article['publish_date'])) : ''; ?>">
                                     </div>
 
                                     <div class="mb-3">
@@ -562,6 +621,26 @@ if (typeof tinymce !== 'undefined') {
         }
     });
 }
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('articleForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (typeof tinymce !== 'undefined') {
+                tinymce.triggerSave();
+                var content = tinymce.get('content').getContent({ format: 'text' }).trim();
+                if (!content) {
+                    alert('Content is required.');
+                    tinymce.get('content').focus();
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    }
+});
 </script>
 
 <?php include 'includes/footer.php'; ?>

@@ -29,13 +29,39 @@ $db = new Database();
 $conn = $db->connect();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // CSRF Protection
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+        if (!headers_sent()) {
+            header('Location: projects.php?error=' . urlencode($error_message));
+            exit();
+        }
+    }
+    
+
     $title = sanitize($_POST['title'] ?? '');
     $slug = generateSlug($_POST['slug'] ?? $title, 'projects', $id);
     $description = sanitize($_POST['description'] ?? '');
     $content = $_POST['content'] ?? '';
     $project_url = sanitize($_POST['project_url'] ?? '');
     $github_url = sanitize($_POST['github_url'] ?? '');
-    $technologies = sanitize($_POST['technologies'] ?? '');
+    $technologies = $_POST['technologies'] ?? [];
+    if (!is_array($technologies)) {
+        // Jika input dari form adalah string (misal dari textarea), coba decode, jika gagal, fallback ke array kosong
+        $decoded = json_decode($technologies, true);
+        $technologies = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : [];
+    }
+    // Technologies: ensure array
+    if (!is_array($technologies)) {
+        // Try to decode JSON, if not, split by comma
+        $decoded = json_decode($technologies, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $technologies = $decoded;
+        } else {
+            $technologies = array_map('trim', explode(',', $technologies));
+        }
+    }
+    $technologies_json = json_encode($technologies);
     $status = $_POST['status'] ?? 'draft';
     $publish_date = $_POST['publish_date'] ?? null;
 
@@ -55,10 +81,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
-        $imageName = uniqid() . '_' . $_FILES['featured_image']['name'];
-        $imagePath = $uploadDir . $imageName;
-        if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
-            $featured_image = $imageName;
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $max_size = 2 * 1024 * 1024; // 2MB
+        $file_type = mime_content_type($_FILES['featured_image']['tmp_name']);
+        $file_size = $_FILES['featured_image']['size'];
+        if (!in_array($file_type, $allowed_types)) {
+            $errors[] = 'Invalid image type. Only JPG, PNG, GIF, WEBP allowed.';
+        } elseif ($file_size > $max_size) {
+            $errors[] = 'Image size must be less than 2MB.';
+        } else {
+            $imageName = uniqid() . '_' . basename($_FILES['featured_image']['name']);
+            $imagePath = $uploadDir . $imageName;
+            if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $imagePath)) {
+                $featured_image = $imageName;
+            } else {
+                $errors[] = 'Failed to upload image.';
+            }
         }
     }
 
@@ -70,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($action == 'new') {
             $sql = "INSERT INTO projects (title, slug, description, content, featured_image, project_url, github_url, technologies, status, publish_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            if ($stmt->execute([$title, $slug, $description, $content, $featured_image, $project_url, $github_url, $technologies, $status, $publish_date, $_SESSION['user_id']])) {
+            if ($stmt->execute([$title, $slug, $description, $content, $featured_image, $project_url, $github_url, $technologies_json, $status, $publish_date, $_SESSION['user_id']])) {
                 $success_message = 'Project created successfully!';
                 $action = 'list';
                 logActivity($_SESSION['user_id'], 'Created project', 'project', $conn->lastInsertId());
@@ -86,11 +124,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if ($featured_image) {
                 $sql = "UPDATE projects SET title=?, slug=?, description=?, content=?, featured_image=?, project_url=?, github_url=?, technologies=?, status=?, publish_date=? WHERE id=?";
                 $stmt = $conn->prepare($sql);
-                $result = $stmt->execute([$title, $slug, $description, $content, $featured_image, $project_url, $github_url, $technologies, $status, $publish_date, $id]);
+                $result = $stmt->execute([$title, $slug, $description, $content, $featured_image, $project_url, $github_url, $technologies_json, $status, $publish_date, $id]);
             } else {
                 $sql = "UPDATE projects SET title=?, slug=?, description=?, content=?, project_url=?, github_url=?, technologies=?, status=?, publish_date=? WHERE id=?";
                 $stmt = $conn->prepare($sql);
-                $result = $stmt->execute([$title, $slug, $description, $content, $project_url, $github_url, $technologies, $status, $publish_date, $id]);
+                $result = $stmt->execute([$title, $slug, $description, $content, $project_url, $github_url, $technologies_json, $status, $publish_date, $id]);
             }
             if ($result) {
                 $success_message = 'Project updated successfully!';
@@ -264,6 +302,7 @@ if (isset($_GET['msg'])) {
             </div>
             <div class="card-body">
                 <form method="POST" id="bulkForm">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" id="projectsTable" width="100%" cellspacing="0">
                             <thead class="table-primary">
@@ -301,7 +340,7 @@ if (isset($_GET['msg'])) {
                                                         <img src="../<?php echo UPLOAD_PATH . $project_item['featured_image']; ?>" alt="<?php echo htmlspecialchars($project_item['title']); ?>" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
                                                     <?php endif; ?>
                                                     <div>
-                                                        <strong><?php echo htmlspecialchars($project_item['title']); ?></strong>
+                                                        <strong><?php echo htmlspecialchars_decode($project_item['title']); ?></strong>
                                                         <br><small class="text-muted"><?php echo htmlspecialchars($project_item['slug']); ?></small>
                                                     </div>
                                                 </div>
@@ -310,27 +349,28 @@ if (isset($_GET['msg'])) {
                                                 <?php
                                                 $desc_clean = str_replace('\xC2\xA0', ' ', html_entity_decode($project_item['description']));
                                                 $desc_clean = str_replace('&nbsp;', ' ', $desc_clean);
-                                                echo htmlspecialchars(substr($desc_clean, 0, 100));
+                                                echo htmlspecialchars_decode(substr($desc_clean, 0, 100));
                                                 echo strlen($desc_clean) > 100 ? '...' : '';
                                                 ?>
                                             </td>
-                                            <td class="text-center">
-                                                <?php
-                                                $status_badges = [
-                                                    'draft' => 'bg-secondary',
-                                                    'published' => 'bg-success',
-                                                    'scheduled' => 'bg-warning',
-                                                    'archived' => 'bg-dark'
-                                                ];
-                                                $status_class = $status_badges[$project_item['status']] ?? 'bg-secondary';
-                                                ?>
-                                                <span class="badge <?php echo $status_class; ?>"><?php echo ucfirst($project_item['status']); ?></span>
+                                            <td class="text-center text-nowrap">
+                                                <span class="badge" style="border-radius:0.35rem;padding:0.5em 1em;display:inline-block;font-size:1em;background-color:<?php
+                                                    switch($project_item['status']) {
+                                                        case 'published': echo '#198754'; break;
+                                                        case 'draft': echo '#6c757d'; break;
+                                                        case 'scheduled': echo '#ffc107'; break;
+                                                        case 'archived': echo '#343a40'; break;
+                                                        default: echo '#6c757d';
+                                                    }
+                                                ?>;color:#fff;">
+                                                    <?php echo ucfirst($project_item['status']); ?>
+                                                </span>
                                             </td>
-                                            <td class="text-center">
-                                                <?php if ($project_item['publish_date']): ?>
-                                                    <?php echo formatDateTime($project_item['publish_date']); ?>
+                                            <td class="text-center text-nowrap">
+                                                <?php if ($project_item['status'] == 'published' && !empty($project_item['publish_date'])): ?>
+                                                    Published on <?php echo formatDate($project_item['publish_date']); ?>
                                                 <?php else: ?>
-                                                    <span class="text-muted">-</span>
+                                                    <?php echo ucfirst($project_item['status']); ?> on <?php echo formatDate($project_item['created_at']); ?>
                                                 <?php endif; ?>
                                             </td>
                                             <td class="text-center"><?php echo htmlspecialchars($project_item['username'] ?? 'Unknown'); ?></td>
@@ -392,23 +432,28 @@ if (isset($_GET['msg'])) {
                         <div class="col-md-8">
                             <div class="mb-3">
                                 <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($project['title'] ?? ''); ?>" required>
+                                <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($project['title'] ?? ''); ?>" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                             </div>
 
                             <div class="mb-3">
                                 <label for="slug" class="form-label">Slug</label>
-                                <input type="text" class="form-control" id="slug" name="slug" value="<?php echo htmlspecialchars($project['slug'] ?? ''); ?>" placeholder="auto-generated">
+                                <input type="text" class="form-control" id="slug" name="slug" value="<?php echo htmlspecialchars($project['slug'] ?? ''); ?>" placeholder="auto-generated" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                 <small class="form-text text-muted">Leave empty to auto-generate from title</small>
                             </div>
 
                             <div class="mb-3">
                                 <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="description" name="description" rows="3" required><?php echo htmlspecialchars($project['description'] ?? ''); ?></textarea>
+                                <textarea class="form-control" id="description" name="description" rows="3" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo htmlspecialchars($project['description'] ?? ''); ?></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="excerpt" class="form-label">Excerpt</label>
+                                <textarea class="form-control" id="excerpt" name="excerpt" rows="3" placeholder="Brief summary of the project..." style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo isset($project['excerpt']) ? htmlspecialchars_decode($project['excerpt']) : ''; ?></textarea>
                             </div>
 
                             <div class="mb-3">
                                 <label for="content" class="form-label">Content <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="content" name="content" rows="15"><?php echo htmlspecialchars($project['content'] ?? ''); ?></textarea>
+                                <textarea name="content" id="content" class="form-control tinymce" rows="12" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo isset($project['content']) ? htmlspecialchars_decode($project['content']) : ''; ?></textarea>
                             </div>
                         </div>
 
@@ -445,7 +490,7 @@ if (isset($_GET['msg'])) {
 
                                     <div class="mb-3">
                                         <label for="technologies" class="form-label">Technologies</label>
-                                        <input type="text" class="form-control" id="technologies" name="technologies" value="<?php echo htmlspecialchars($project['technologies'] ?? ''); ?>" placeholder="e.g., PHP, MySQL, Bootstrap">
+                                        <input type="text" class="form-control" id="technologies" name="technologies" value="<?php echo htmlspecialchars(json_encode($project['technologies'] ?? [])); ?>" placeholder="e.g., PHP, MySQL, Bootstrap">
                                         <small class="form-text text-muted">Comma separated</small>
                                     </div>
 
@@ -480,6 +525,24 @@ if (isset($_GET['msg'])) {
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('projectForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (typeof tinymce !== 'undefined') {
+                tinymce.triggerSave();
+                var content = tinymce.get('content').getContent({ format: 'text' }).trim();
+                if (!content) {
+                    alert('Content is required.');
+                    tinymce.get('content').focus();
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    }
+});
+
 document.getElementById('title').addEventListener('input', function() {
     const title = this.value;
     const slug = title.toLowerCase()
@@ -513,7 +576,7 @@ if (typeof tinymce !== 'undefined') {
             'insertdatetime', 'media', 'table', 'help', 'wordcount'
         ],
         toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; }',
+        content_style: 'body { font-family: \'Fira Sans\', Arial, Helvetica, sans-serif; font-size: 14px; }',
         setup: function(editor) {
             editor.on('change', function() {
                 const content = editor.getContent();

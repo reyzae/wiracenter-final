@@ -15,18 +15,35 @@ $type = $_GET['type'] ?? 'articles';
 $allowed_types = ['articles', 'projects', 'tools', 'files', 'pages'];
 if (!in_array($type, $allowed_types)) $type = 'articles';
 
+// Check if deleted_at column exists in tables
+function tableHasDeletedAtColumn($conn, $table) {
+    try {
+        $stmt = $conn->prepare("SHOW COLUMNS FROM $table LIKE 'deleted_at'");
+        $stmt->execute();
+        return $stmt->rowCount() > 0;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
 // Handle restore
 if (isset($_GET['action'], $_GET['id'], $_GET['type']) && $_GET['action'] === 'restore' && in_array($_GET['type'], $allowed_types)) {
     $id = (int)$_GET['id'];
     $table = $_GET['type'];
-    $stmt = $conn->prepare("UPDATE $table SET deleted_at = NULL WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        $success_message = ucfirst($table) . ' restored successfully!';
-        logActivity($_SESSION['user_id'], 'Restored item from trash', $table, $id);
+    
+    if (tableHasDeletedAtColumn($conn, $table)) {
+        $stmt = $conn->prepare("UPDATE $table SET deleted_at = NULL WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            $success_message = ucfirst($table) . ' restored successfully!';
+            logActivity($_SESSION['user_id'], 'Restored item from trash', $table, $id);
+        } else {
+            $error_message = 'Failed to restore item.';
+        }
     } else {
-        $error_message = 'Failed to restore item.';
+        $error_message = 'Soft delete not supported for this table.';
     }
 }
+
 // Handle permanent delete
 if (isset($_GET['action'], $_GET['id'], $_GET['type']) && $_GET['action'] === 'delete' && in_array($_GET['type'], $allowed_types)) {
     $id = (int)$_GET['id'];
@@ -43,10 +60,20 @@ if (isset($_GET['action'], $_GET['id'], $_GET['type']) && $_GET['action'] === 'd
 // Fetch trashed items
 $trashed = [];
 foreach ($allowed_types as $t) {
-    $sql = "SELECT * FROM $t WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute();
-    $trashed[$t] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    try {
+        if (tableHasDeletedAtColumn($conn, $t)) {
+            $sql = "SELECT * FROM $t WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            $trashed[$t] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            // If table doesn't have deleted_at column, show empty
+            $trashed[$t] = [];
+        }
+    } catch (Exception $e) {
+        error_log("Error fetching trashed items from $t: " . $e->getMessage());
+        $trashed[$t] = [];
+    }
 }
 
 function getTitle($item, $type) {
@@ -104,7 +131,9 @@ function getTitle($item, $type) {
                                     <td><?php echo formatDateTime($item['deleted_at']); ?></td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="?action=restore&id=<?php echo $item['id']; ?>&type=<?php echo $type; ?>" class="btn btn-sm btn-outline-success" onclick="return confirm('Restore this item?')"><i class="fas fa-undo"></i> Restore</a>
+                                            <?php if (tableHasDeletedAtColumn($conn, $type)): ?>
+                                                <a href="?action=restore&id=<?php echo $item['id']; ?>&type=<?php echo $type; ?>" class="btn btn-sm btn-outline-success" onclick="return confirm('Restore this item?')"><i class="fas fa-undo"></i> Restore</a>
+                                            <?php endif; ?>
                                             <a href="?action=delete&id=<?php echo $item['id']; ?>&type=<?php echo $type; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete permanently?')"><i class="fas fa-trash"></i> Delete</a>
                                         </div>
                                     </td>

@@ -240,6 +240,7 @@ include 'includes/header.php';
     <div class="card-header"><b>Create User</b></div>
     <div class="card-body">
         <form method="POST">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Username</label>

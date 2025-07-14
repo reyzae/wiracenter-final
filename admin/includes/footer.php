@@ -1,15 +1,28 @@
 <?php
-// Ensure $id variable is always defined to prevent errors when included
+// Ensure all common variables are always defined to prevent errors when included
 if (!isset($id)) {
     $id = null;
 }
 
-// Ensure other common variables are defined
 if (!isset($pageContentType)) {
     $pageContentType = 'default';
 }
+
 if (!isset($pageContentId)) {
     $pageContentId = 'null';
+}
+
+// Ensure other common variables are defined
+if (!isset($success_message)) {
+    $success_message = '';
+}
+
+if (!isset($error_message)) {
+    $error_message = '';
+}
+
+if (!isset($action)) {
+    $action = 'list';
 }
 ?>
 </div>

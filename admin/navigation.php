@@ -16,6 +16,16 @@ $navigation_item = null;
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // CSRF Protection
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid CSRF token. Please try again.';
+        if (!headers_sent()) {
+            header('Location: navigation.php?error=' . urlencode($error_message));
+            exit();
+        }
+    }
+    
+
     $name = sanitize($_POST['name']);
     $url = sanitize($_POST['url']);
     $display_order = (int)$_POST['display_order'];
@@ -225,6 +235,7 @@ if ($action == 'list') {
     </div>
     
     <form method="POST">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
         <div class="card mb-4">
             <div class="card-body">
                 <div class="mb-3">

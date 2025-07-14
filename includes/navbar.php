@@ -24,7 +24,8 @@
           <a class="nav-link<?php echo (basename($_SERVER['PHP_SELF']) == 'contact.php') ? ' active' : ''; ?>" href="contact.php">Contact</a>
         </li>
       </ul>
-      <?php if (function_exists('renderHeaderControls')) renderHeaderControls(); ?>
+      <?php if (function_exists('renderHeaderControls')) renderHeaderControls(); // [Dikembalikan ke dalam .navbar-collapse sesuai permintaan] ?>
     </div>
+    <?php // if (function_exists('renderHeaderControls')) renderHeaderControls(); // [Commented: sebelumnya di luar .navbar-collapse untuk fix bug collapse] ?>
   </div>
 </nav> 

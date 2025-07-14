@@ -30,38 +30,53 @@ if (isset($_GET['view'])) {
 }
 
 // Handle bulk actions
+$bulk_success = '';
+$bulk_error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'], $_POST['selected_ids']) && is_array($_POST['selected_ids'])) {
-    $ids = array_map('intval', $_POST['selected_ids']);
-    $in = str_repeat('?,', count($ids) - 1) . '?';
-    if ($_POST['bulk_action'] === 'mark_read') {
-        $conn->prepare("UPDATE contact_messages SET status='read' WHERE id IN ($in)")->execute($ids);
-    } elseif ($_POST['bulk_action'] === 'delete') {
-        $conn->prepare("DELETE FROM contact_messages WHERE id IN ($in)")->execute($ids);
-    } elseif ($_POST['bulk_action'] === 'important') {
-        $conn->prepare("UPDATE contact_messages SET important=1 WHERE id IN ($in)")->execute($ids);
-    } elseif ($_POST['bulk_action'] === 'unimportant') {
-        $conn->prepare("UPDATE contact_messages SET important=0 WHERE id IN ($in)")->execute($ids);
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $bulk_error = 'Invalid CSRF token. Please try again.';
+    } else {
+        $ids = array_map('intval', $_POST['selected_ids']);
+        $in = str_repeat('?,', count($ids) - 1) . '?';
+        if ($_POST['bulk_action'] === 'mark_read') {
+            $conn->prepare("UPDATE contact_messages SET status='read' WHERE id IN ($in)")->execute($ids);
+            $bulk_success = 'Selected messages marked as read.';
+        } elseif ($_POST['bulk_action'] === 'delete') {
+            $conn->prepare("DELETE FROM contact_messages WHERE id IN ($in)")->execute($ids);
+            $bulk_success = 'Selected messages deleted.';
+        } elseif ($_POST['bulk_action'] === 'important') {
+            $conn->prepare("UPDATE contact_messages SET important=1 WHERE id IN ($in)")->execute($ids);
+            $bulk_success = 'Selected messages marked as important.';
+        } elseif ($_POST['bulk_action'] === 'unimportant') {
+            $conn->prepare("UPDATE contact_messages SET important=0 WHERE id IN ($in)")->execute($ids);
+            $bulk_success = 'Selected messages marked as not important.';
+        }
     }
-    header('Location: contact_messages.php');
-    exit();
 }
 
 // Handle admin reply
 $reply_success = '';
+$reply_error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'], $_POST['reply_to_id'])) {
-    $reply_id = intval($_POST['reply_to_id']);
-    $reply_text = trim($_POST['reply_message']);
-    $stmt = $conn->prepare("SELECT * FROM contact_messages WHERE id=?");
-    $stmt->execute([$reply_id]);
-    $msg = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($msg && $reply_text !== '') {
-        $to = $msg['email'];
-        $subject = 'Re: ' . $msg['subject'];
-        $headers = "From: " . getSetting('contact_email', 'info@wiracenter.com') . "\r\nReply-To: " . getSetting('contact_email', 'info@wiracenter.com');
-        @mail($to, $subject, $reply_text, $headers);
-        $conn->prepare("UPDATE contact_messages SET status='replied' WHERE id=?")->execute([$reply_id]);
-        $reply_success = 'Reply sent successfully!';
-        // Optionally, log reply in a separate table
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $reply_error = 'Invalid CSRF token. Please try again.';
+    } else {
+        $reply_id = intval($_POST['reply_to_id']);
+        $reply_text = trim($_POST['reply_message']);
+        $stmt = $conn->prepare("SELECT * FROM contact_messages WHERE id=?");
+        $stmt->execute([$reply_id]);
+        $msg = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($msg && $reply_text !== '') {
+            $to = $msg['email'];
+            $subject = 'Re: ' . $msg['subject'];
+            $headers = "From: " . getSetting('contact_email', 'info@wiracenter.com') . "\r\nReply-To: " . getSetting('contact_email', 'info@wiracenter.com');
+            @mail($to, $subject, $reply_text, $headers);
+            $conn->prepare("UPDATE contact_messages SET status='replied' WHERE id=?")->execute([$reply_id]);
+            $reply_success = 'Reply sent successfully!';
+            // Optionally, log reply in a separate table
+        } else {
+            $reply_error = 'Failed to send reply.';
+        }
     }
 }
 
@@ -191,12 +206,12 @@ include 'includes/header.php';
         </div>
     </div>
     <!-- Search and Filter -->
-    <form method="get" class="row g-2 mb-3">
+    <form method="get" class="row g-2 mb-3" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
         <div class="col-md-5">
-            <input type="text" name="search" class="form-control" placeholder="Search name, email, or subject..." value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
+            <input type="text" name="search" class="form-control" placeholder="Search name, email, or subject..." value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
         </div>
         <div class="col-md-3">
-            <select name="status" class="form-select">
+            <select name="status" class="form-select" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                 <option value="">All Status</option>
                 <option value="unread" <?php if(($_GET['status'] ?? '')==='unread') echo 'selected'; ?>>Unread</option>
                 <option value="replied" <?php if(($_GET['status'] ?? '')==='replied') echo 'selected'; ?>>Replied</option>
@@ -210,11 +225,12 @@ include 'includes/header.php';
         <div class="col-lg-4">
             <div class="card shadow-sm mb-4">
                 <div class="card-body p-0">
-                    <form method="post" id="bulkActionForm">
+                    <form method="post" id="bulkActionForm" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
+                        <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                         <div class="d-flex mb-2 align-items-center gap-2">
                             <input type="checkbox" id="selectAllCheckbox" class="form-check-input me-2">
                             <label for="selectAllCheckbox" class="form-label mb-0 me-2" style="font-size:0.95em;">All</label>
-                            <select name="bulk_action" class="form-select form-select-sm w-auto" required>
+                            <select name="bulk_action" class="form-select form-select-sm w-auto" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                 <option value="">Bulk Action</option>
                                 <option value="mark_read">Mark as Read</option>
                                 <option value="delete">Delete</option>
@@ -271,10 +287,28 @@ include 'includes/header.php';
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-secondary text-white fw-bold">Message Detail</div>
                 <div class="card-body">
-                    <?php if ($reply_success): ?>
-                        <div class="alert alert-success d-flex align-items-center mb-3" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>
-                            <div><?php echo $reply_success; ?></div>
+                    <?php if (!empty($bulk_success)): ?>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <?php echo $bulk_success; ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($bulk_error)): ?>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <?php echo $bulk_error; ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($reply_success)): ?>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <?php echo $reply_success; ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($reply_error)): ?>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <?php echo $reply_error; ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     <?php endif; ?>
                     <?php if ($message): ?>
@@ -293,11 +327,12 @@ include 'includes/header.php';
                         <div class="mb-4" style="white-space:pre-line; border-left:3px solid #eee; padding-left:1rem;">
                             <?php echo nl2br(htmlspecialchars($message['message'])); ?>
                         </div>
-                        <form method="post" class="mb-3">
+                        <form method="post" class="mt-4" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
+                            <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                             <input type="hidden" name="reply_to_id" value="<?php echo $message['id']; ?>">
                             <div class="mb-2">
                                 <label for="reply_message" class="form-label fw-bold">Reply Message</label>
-                                <textarea name="reply_message" id="reply_message" class="form-control" rows="4" required placeholder="Type your reply here..."></textarea>
+                                <textarea name="reply_message" id="reply_message" class="form-control" rows="4" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"></textarea>
                             </div>
                             <button type="submit" class="btn btn-success"><i class="fas fa-reply me-1"></i>Send Reply</button>
                         </form>

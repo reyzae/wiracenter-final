@@ -31,72 +31,77 @@ $content_block_types = [];
 if ($tab === 'blocks') {
     // Handle form submissions for content blocks
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_POST['form_type'] ?? '') === 'content_block') {
-        $name = sanitize($_POST['name'] ?? '');
-        $title = sanitize($_POST['title'] ?? '');
-        $content = $_POST['content'] ?? '';
-        $type = sanitize($_POST['type'] ?? '');
-        $icon_class = sanitize($_POST['icon_class'] ?? '');
-        $display_order = (int)($_POST['display_order'] ?? 0);
-        $page_slug = sanitize($_POST['page_slug'] ?? '');
-        $status = $_POST['status'] ?? 'active';
-        
-        // Validation
-        if (empty($name)) $errors[] = 'Name is required.';
-        if (empty($type)) $errors[] = 'Type is required.';
-        if (strlen($name) > 100) $errors[] = 'Name cannot exceed 100 characters.';
-        if (strlen($title) > 255) $errors[] = 'Title cannot exceed 255 characters.';
-        if (!in_array($status, ['active', 'inactive'])) $errors[] = 'Invalid status selected.';
-        if ($display_order < 0) $errors[] = 'Display order must be 0 or greater.';
-        
-        // Check if name is unique (except for current record when editing)
-        if (empty($errors)) {
-            $check_sql = "SELECT id FROM content_blocks WHERE name = ?";
-            $check_params = [$name];
-            if ($action == 'edit' && $id) {
-                $check_sql .= " AND id != ?";
-                $check_params[] = $id;
-            }
-            $check_stmt = $conn->prepare($check_sql);
-            $check_stmt->execute($check_params);
-            if ($check_stmt->fetch()) {
-                $errors[] = 'Name must be unique.';
-            }
-        }
-
-        if (empty($errors)) {
-            if ($action == 'new') {
-                $sql = "INSERT INTO content_blocks (name, title, content, type, icon_class, display_order, page_slug, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-                $stmt = $conn->prepare($sql);
-                if ($stmt->execute([$name, $title, $content, $type, $icon_class, $display_order, $page_slug, $status])) {
-                    $success_message = 'Content block created successfully!';
-                    $action = 'list';
-                    logActivity($_SESSION['user_id'], 'Created content block', 'content_block', $conn->lastInsertId());
-                    if (!headers_sent()) {
-                        header('Location: content_blocks.php?action=list&tab=blocks&msg=' . urlencode($success_message));
-                        ob_end_clean();
-                        exit();
-                    }
-                } else {
-                    $error_message = 'Failed to create content block.';
-                }
-            } elseif ($action == 'edit' && $id) {
-                $sql = "UPDATE content_blocks SET name=?, title=?, content=?, type=?, icon_class=?, display_order=?, page_slug=?, status=? WHERE id=?";
-                $stmt = $conn->prepare($sql);
-                if ($stmt->execute([$name, $title, $content, $type, $icon_class, $display_order, $page_slug, $status, $id])) {
-                    $success_message = 'Content block updated successfully!';
-                    $action = 'list';
-                    logActivity($_SESSION['user_id'], 'Updated content block', 'content_block', $id);
-                    if (!headers_sent()) {
-                        header('Location: content_blocks.php?action=list&tab=blocks&msg=' . urlencode($success_message));
-                        ob_end_clean();
-                        exit();
-                    }
-                } else {
-                    $error_message = 'Failed to update content block.';
-                }
-            }
+        // CSRF Protection
+        if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+            $error_message = 'Invalid CSRF token. Please try again.';
         } else {
-            $error_message = implode('<br>', $errors);
+            $name = sanitize($_POST['name'] ?? '');
+            $title = sanitize($_POST['title'] ?? '');
+            $content = $_POST['content'] ?? '';
+            $type = sanitize($_POST['type'] ?? '');
+            $icon_class = sanitize($_POST['icon_class'] ?? '');
+            $display_order = (int)($_POST['display_order'] ?? 0);
+            $page_slug = sanitize($_POST['page_slug'] ?? '');
+            $status = $_POST['status'] ?? 'active';
+            
+            // Validation
+            if (empty($name)) $errors[] = 'Name is required.';
+            if (empty($type)) $errors[] = 'Type is required.';
+            if (strlen($name) > 100) $errors[] = 'Name cannot exceed 100 characters.';
+            if (strlen($title) > 255) $errors[] = 'Title cannot exceed 255 characters.';
+            if (!in_array($status, ['active', 'inactive'])) $errors[] = 'Invalid status selected.';
+            if ($display_order < 0) $errors[] = 'Display order must be 0 or greater.';
+            
+            // Check if name is unique (except for current record when editing)
+            if (empty($errors)) {
+                $check_sql = "SELECT id FROM content_blocks WHERE name = ?";
+                $check_params = [$name];
+                if ($action == 'edit' && $id) {
+                    $check_sql .= " AND id != ?";
+                    $check_params[] = $id;
+                }
+                $check_stmt = $conn->prepare($check_sql);
+                $check_stmt->execute($check_params);
+                if ($check_stmt->fetch()) {
+                    $errors[] = 'Name must be unique.';
+                }
+            }
+
+            if (empty($errors)) {
+                if ($action == 'new') {
+                    $sql = "INSERT INTO content_blocks (name, title, content, type, icon_class, display_order, page_slug, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                    $stmt = $conn->prepare($sql);
+                    if ($stmt->execute([$name, $title, $content, $type, $icon_class, $display_order, $page_slug, $status])) {
+                        $success_message = 'Content block created successfully!';
+                        $action = 'list';
+                        logActivity($_SESSION['user_id'], 'Created content block', 'content_block', $conn->lastInsertId());
+                        if (!headers_sent()) {
+                            header('Location: content_blocks.php?action=list&tab=blocks&msg=' . urlencode($success_message));
+                            ob_end_clean();
+                            exit();
+                        }
+                    } else {
+                        $error_message = 'Failed to create content block.';
+                    }
+                } elseif ($action == 'edit' && $id) {
+                    $sql = "UPDATE content_blocks SET name=?, title=?, content=?, type=?, icon_class=?, display_order=?, page_slug=?, status=? WHERE id=?";
+                    $stmt = $conn->prepare($sql);
+                    if ($stmt->execute([$name, $title, $content, $type, $icon_class, $display_order, $page_slug, $status, $id])) {
+                        $success_message = 'Content block updated successfully!';
+                        $action = 'list';
+                        logActivity($_SESSION['user_id'], 'Updated content block', 'content_block', $id);
+                        if (!headers_sent()) {
+                            header('Location: content_blocks.php?action=list&tab=blocks&msg=' . urlencode($success_message));
+                            ob_end_clean();
+                            exit();
+                        }
+                    } else {
+                        $error_message = 'Failed to update content block.';
+                    }
+                }
+            } else {
+                $error_message = implode('<br>', $errors);
+            }
         }
     }
     
@@ -179,66 +184,71 @@ $block_type = null;
 if ($tab === 'types') {
     // Handle form submissions for block types
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_POST['form_type'] ?? '') === 'block_type') {
-        $type_name = sanitize($_POST['type_name'] ?? '');
-        $display_name = sanitize($_POST['display_name'] ?? '');
-        $description = sanitize($_POST['description'] ?? '');
-        
-        // Validation
-        if (empty($type_name)) $errors[] = 'Type name is required.';
-        if (empty($display_name)) $errors[] = 'Display name is required.';
-        if (strlen($type_name) > 50) $errors[] = 'Type name cannot exceed 50 characters.';
-        if (strlen($display_name) > 100) $errors[] = 'Display name cannot exceed 100 characters.';
-        if (!preg_match('/^[a-z_]+$/', $type_name)) $errors[] = 'Type name can only contain lowercase letters and underscores.';
-        
-        // Check if type_name is unique (except for current record when editing)
-        if (empty($errors)) {
-            $check_sql = "SELECT id FROM content_block_types WHERE type_name = ?";
-            $check_params = [$type_name];
-            if ($action == 'edit' && $id) {
-                $check_sql .= " AND id != ?";
-                $check_params[] = $id;
-            }
-            $check_stmt = $conn->prepare($check_sql);
-            $check_stmt->execute($check_params);
-            if ($check_stmt->fetch()) {
-                $errors[] = 'Type name must be unique.';
-            }
-        }
-
-        if (empty($errors)) {
-            if ($action == 'new') {
-                $sql = "INSERT INTO content_block_types (type_name, display_name, description) VALUES (?, ?, ?)";
-                $stmt = $conn->prepare($sql);
-                if ($stmt->execute([$type_name, $display_name, $description])) {
-                    $success_message = 'Content block type created successfully!';
-                    $action = 'list';
-                    logActivity($_SESSION['user_id'], 'Created content block type', 'content_block_type', $conn->lastInsertId());
-                    if (!headers_sent()) {
-                        header('Location: content_blocks.php?action=list&tab=types&msg=' . urlencode($success_message));
-                        ob_end_clean();
-                        exit();
-                    }
-                } else {
-                    $error_message = 'Failed to create content block type.';
-                }
-            } elseif ($action == 'edit' && $id) {
-                $sql = "UPDATE content_block_types SET type_name=?, display_name=?, description=? WHERE id=?";
-                $stmt = $conn->prepare($sql);
-                if ($stmt->execute([$type_name, $display_name, $description, $id])) {
-                    $success_message = 'Content block type updated successfully!';
-                    $action = 'list';
-                    logActivity($_SESSION['user_id'], 'Updated content block type', 'content_block_type', $id);
-                    if (!headers_sent()) {
-                        header('Location: content_blocks.php?action=list&tab=types&msg=' . urlencode($success_message));
-                        ob_end_clean();
-                        exit();
-                    }
-                } else {
-                    $error_message = 'Failed to update content block type.';
-                }
-            }
+        // CSRF Protection
+        if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+            $error_message = 'Invalid CSRF token. Please try again.';
         } else {
-            $error_message = implode('<br>', $errors);
+            $type_name = sanitize($_POST['type_name'] ?? '');
+            $display_name = sanitize($_POST['display_name'] ?? '');
+            $description = sanitize($_POST['description'] ?? '');
+            
+            // Validation
+            if (empty($type_name)) $errors[] = 'Type name is required.';
+            if (empty($display_name)) $errors[] = 'Display name is required.';
+            if (strlen($type_name) > 50) $errors[] = 'Type name cannot exceed 50 characters.';
+            if (strlen($display_name) > 100) $errors[] = 'Display name cannot exceed 100 characters.';
+            if (!preg_match('/^[a-z_]+$/', $type_name)) $errors[] = 'Type name can only contain lowercase letters and underscores.';
+            
+            // Check if type_name is unique (except for current record when editing)
+            if (empty($errors)) {
+                $check_sql = "SELECT id FROM content_block_types WHERE type_name = ?";
+                $check_params = [$type_name];
+                if ($action == 'edit' && $id) {
+                    $check_sql .= " AND id != ?";
+                    $check_params[] = $id;
+                }
+                $check_stmt = $conn->prepare($check_sql);
+                $check_stmt->execute($check_params);
+                if ($check_stmt->fetch()) {
+                    $errors[] = 'Type name must be unique.';
+                }
+            }
+
+            if (empty($errors)) {
+                if ($action == 'new') {
+                    $sql = "INSERT INTO content_block_types (type_name, display_name, description) VALUES (?, ?, ?)";
+                    $stmt = $conn->prepare($sql);
+                    if ($stmt->execute([$type_name, $display_name, $description])) {
+                        $success_message = 'Content block type created successfully!';
+                        $action = 'list';
+                        logActivity($_SESSION['user_id'], 'Created content block type', 'content_block_type', $conn->lastInsertId());
+                        if (!headers_sent()) {
+                            header('Location: content_blocks.php?action=list&tab=types&msg=' . urlencode($success_message));
+                            ob_end_clean();
+                            exit();
+                        }
+                    } else {
+                        $error_message = 'Failed to create content block type.';
+                    }
+                } elseif ($action == 'edit' && $id) {
+                    $sql = "UPDATE content_block_types SET type_name=?, display_name=?, description=? WHERE id=?";
+                    $stmt = $conn->prepare($sql);
+                    if ($stmt->execute([$type_name, $display_name, $description, $id])) {
+                        $success_message = 'Content block type updated successfully!';
+                        $action = 'list';
+                        logActivity($_SESSION['user_id'], 'Updated content block type', 'content_block_type', $id);
+                        if (!headers_sent()) {
+                            header('Location: content_blocks.php?action=list&tab=types&msg=' . urlencode($success_message));
+                            ob_end_clean();
+                            exit();
+                        }
+                    } else {
+                        $error_message = 'Failed to update content block type.';
+                    }
+                }
+            } else {
+                $error_message = implode('<br>', $errors);
+            }
         }
     }
     
@@ -460,6 +470,7 @@ if (isset($_GET['msg'])) {
                 <div class="card">
                     <div class="card-body">
                         <form method="POST" id="bulk-form">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div class="d-flex align-items-center">
                                     <select class="form-select me-2" name="bulk_action" style="width: auto;">
@@ -668,25 +679,26 @@ if (isset($_GET['msg'])) {
                         </h5>
                     </div>
                     <div class="card-body">
-                        <form method="POST">
+                        <form method="POST" enctype="multipart/form-data" id="contentBlockForm">
                             <input type="hidden" name="form_type" value="content_block">
+                            <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                             
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="mb-3">
                                         <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($content_block['name'] ?? ''); ?>" required>
+                                        <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($content_block['name'] ?? ''); ?>" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                         <div class="form-text">Unique identifier for this block</div>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label for="title" class="form-label">Title</label>
-                                        <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($content_block['title'] ?? ''); ?>">
+                                        <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($content_block['title'] ?? ''); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label for="content" class="form-label">Content</label>
-                                        <textarea class="form-control" id="content" name="content" rows="6"><?php echo htmlspecialchars($content_block['content'] ?? ''); ?></textarea>
+                                        <textarea name="content" id="content" class="form-control tinymce" rows="8" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo isset($content_block['content']) ? htmlspecialchars_decode($content_block['content']) : ''; ?></textarea>
                                     </div>
                                 </div>
                                 
@@ -705,19 +717,19 @@ if (isset($_GET['msg'])) {
                                     
                                     <div class="mb-3">
                                         <label for="icon_class" class="form-label">Icon Class</label>
-                                        <input type="text" class="form-control" id="icon_class" name="icon_class" value="<?php echo htmlspecialchars($content_block['icon_class'] ?? ''); ?>" placeholder="fas fa-icon">
+                                        <input type="text" class="form-control" id="icon_class" name="icon_class" value="<?php echo htmlspecialchars($content_block['icon_class'] ?? ''); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                         <div class="form-text">FontAwesome icon class</div>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label for="display_order" class="form-label">Display Order</label>
-                                        <input type="number" class="form-control" id="display_order" name="display_order" value="<?php echo $content_block['display_order'] ?? 0; ?>" min="0">
+                                        <input type="number" class="form-control" id="display_order" name="display_order" value="<?php echo (int)($content_block['display_order'] ?? 0); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                         <div class="form-text">Lower numbers appear first</div>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label for="page_slug" class="form-label">Page Slug</label>
-                                        <input type="text" class="form-control" id="page_slug" name="page_slug" value="<?php echo htmlspecialchars($content_block['page_slug'] ?? ''); ?>" placeholder="contact, about, etc.">
+                                        <input type="text" class="form-control" id="page_slug" name="page_slug" value="<?php echo htmlspecialchars($content_block['page_slug'] ?? ''); ?>" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                         <div class="form-text">Leave empty for global blocks</div>
                                     </div>
                                     
@@ -755,20 +767,21 @@ if (isset($_GET['msg'])) {
                         </h5>
                     </div>
                     <div class="card-body">
-                        <form method="POST">
+                        <form method="POST" id="blockTypeForm">
                             <input type="hidden" name="form_type" value="block_type">
+                            <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                             
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="type_name" class="form-label">Type Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="type_name" name="type_name" value="<?php echo htmlspecialchars($block_type['type_name'] ?? ''); ?>" required>
+                                        <input type="text" class="form-control" id="type_name" name="type_name" value="<?php echo htmlspecialchars($block_type['type_name'] ?? ''); ?>" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                         <div class="form-text">Lowercase letters and underscores only</div>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label for="display_name" class="form-label">Display Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="display_name" name="display_name" value="<?php echo htmlspecialchars($block_type['display_name'] ?? ''); ?>" required>
+                                        <input type="text" class="form-control" id="display_name" name="display_name" value="<?php echo htmlspecialchars($block_type['display_name'] ?? ''); ?>" required style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;">
                                         <div class="form-text">Human-readable name</div>
                                     </div>
                                 </div>
@@ -776,7 +789,7 @@ if (isset($_GET['msg'])) {
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="description" class="form-label">Description</label>
-                                        <textarea class="form-control" id="description" name="description" rows="4"><?php echo htmlspecialchars($block_type['description'] ?? ''); ?></textarea>
+                                        <textarea class="form-control" id="description" name="description" rows="3" style="font-family: 'Fira Sans', Arial, Helvetica, sans-serif;"><?php echo htmlspecialchars($block_type['description'] ?? ''); ?></textarea>
                                         <div class="form-text">Brief description of this block type</div>
                                     </div>
                                 </div>
@@ -841,6 +854,38 @@ document.addEventListener('DOMContentLoaded', function() {
             textarea.dispatchEvent(new Event('input'));
         }
     });
+
+    var form = document.getElementById('contentBlockForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (typeof tinymce !== 'undefined') {
+                tinymce.triggerSave();
+                var content = tinymce.get('content').getContent({ format: 'text' }).trim();
+                if (!content) {
+                    alert('Content is required.');
+                    tinymce.get('content').focus();
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    }
+
+    var blockTypeForm = document.getElementById('blockTypeForm');
+    if (blockTypeForm) {
+        blockTypeForm.addEventListener('submit', function(e) {
+            if (typeof tinymce !== 'undefined') {
+                tinymce.triggerSave();
+                var description = tinymce.get('description').getContent({ format: 'text' }).trim();
+                if (!description) {
+                    alert('Description is required.');
+                    tinymce.get('description').focus();
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    }
 });
 </script>
 
