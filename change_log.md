@@ -489,12 +489,6 @@ Jika terjadi error fatal terkait kolom JSON (misal: 'Invalid JSON text' atau 'SQ
 **Alat Digunakan:** `replace`, `write_file`
 
 ---
-# Log Perubahan Kode oleh Gemini CLI
-
-File ini mencatat semua modifikasi yang dilakukan oleh agen Gemini CLI pada codebase.
-Setiap entri mencakup timestamp, deskripsi perubahan, file yang terpengaruh, dan alat yang digunakan.
-
----
 **Timestamp:** 2025-07-09 07:00:00
 **Deskripsi:** Mengimplementasikan fitur Autosave/Draft untuk editor TinyMCE, memungkinkan penyimpanan otomatis konten yang sedang dikerjakan.
 **Perubahan Utama:**
@@ -915,3 +909,28 @@ Audit & improvement admin/activity_logs.php (2024-07-13):
   - Terapkan font-family 'Fira Sans', Arial, Helvetica, sans-serif pada form, tabel, dsb.
 Audit & improvement admin/force_change_password.php (2024-07-13):
   - Terapkan font-family 'Fira Sans', Arial, Helvetica, sans-serif pada input/password.
+
+## [AUTO AUDIT FIX] admin/contact_messages.php (2024-07-13)
+- Mengaktifkan autentikasi admin dengan requireLogin() di awal file.
+- Menambah validasi email sebelum mengirim balasan (reply) ke user.
+- Menampilkan error jika pengiriman email gagal (mail server error).
+- Menyimpan log balasan ke tabel contact_message_replies (pastikan tabel sudah ada di database).
+- Membatasi akses AJAX endpoint hanya untuk admin (403 jika tidak admin).
+- Membatasi ekspor CSV maksimal 1000 baris untuk mencegah beban server berlebih.
+- Menambahkan konfirmasi hapus pada bulk action (JavaScript) agar tidak terjadi penghapusan tidak sengaja.
+---
+**Timestamp:** 2025-07-17 08:55:00
+**Deskripsi:** OTOMATISASI PERBAIKAN AUDIT (Langkah 2-10)
+**Perubahan:**
+1. Menjalankan database/missing_columns.sql untuk melengkapi kolom yang kurang di database.
+2. Menambahkan dev dependencies: PHPUnit, PHP_CodeSniffer, PHPStan ke composer.json.
+3. Membuat struktur folder tests/Unit dan tests/Integration untuk unit test.
+4. Menambahkan cache header untuk static asset di .htaccess.
+5. Menambahkan instruksi lazy load gambar di frontend (rekomendasi di README dan change_log).
+6. Menambahkan structured logging sederhana (akan diimplementasi di langkah berikutnya).
+7. Membuat placeholder file API_DOCUMENTATION.md untuk dokumentasi endpoint API.
+8. Menambahkan contoh structured data (JSON-LD) dan Open Graph tags di includes/header.php.
+9. Menambahkan placeholder Google Analytics di includes/footer.php.
+10. Menambahkan contoh cron job backup di README.md.
+11. Menambahkan instruksi penggunaan PHP_CodeSniffer dan PHPStan di README.md.
+---

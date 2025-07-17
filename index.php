@@ -594,8 +594,8 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
         <div class="container">
             <div class="about-content">
                 <h2 class="section-title" data-i18n="home.about_wiracenter">About Wiracenter</h2>
-                <p class="lead" data-i18n="home.main_description"><?php echo getSetting('site_description', 'Wiracenter is a digital playground for tech enthusiasts, learners, and makers. Here, you\'ll find hands-on experiments, practical guides, and real project showcases—built to inspire curiosity, share knowledge, and connect with fellow explorers in the world of technology.'); ?></p>
-                <a href="about.php" class="cta-button" data-i18n="home.learn_more">Learn More</a>
+                <p class="lead" data-i18n="home.main_description">Wiracenter is a digital platform providing technology articles, project showcases, and a variety of online tools to support learning, experimentation, and collaboration in the digital world. Discover inspiration, knowledge, and practical resources to help your journey in technology and innovation.</p>
+                <a href="page.php?slug=about" class="cta-button">Learn More</a>
             </div>
         </div>
     </section>
@@ -668,6 +668,45 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
                 }
             });
         });
+    </script>
+
+    <!-- Cookie Consent Banner (Manual - Backup) -->
+    <script>
+        // Cookie Consent Banner (Manual)
+        (function() {
+            function hideCookieBanner() {
+                var banner = document.getElementById('cookie-consent-banner');
+                if (banner) banner.style.display = 'none';
+            }
+            
+            // Cek jika sudah pernah klik OK
+            if (!localStorage.getItem('cookieConsent')) {
+                var consent = document.createElement('div');
+                consent.id = 'cookie-consent-banner';
+                consent.style.position = 'fixed';
+                consent.style.bottom = '0';
+                consent.style.left = '0';
+                consent.style.width = '100%';
+                consent.style.background = '#222';
+                consent.style.color = '#fff';
+                consent.style.padding = '16px';
+                consent.style.textAlign = 'center';
+                consent.style.zIndex = '9999';
+                consent.innerHTML = 'Website ini menggunakan cookie untuk meningkatkan pengalaman Anda. <button id="accept-cookie" style="margin-left:16px;padding:6px 18px;background:#1e90ff;color:#fff;border:none;border-radius:4px;cursor:pointer;">OK, Saya Mengerti</button>';
+                document.body.appendChild(consent);
+                
+                var btn = document.getElementById('accept-cookie');
+                if (btn) {
+                    btn.onclick = function() {
+                        localStorage.setItem('cookieConsent', '1');
+                        hideCookieBanner();
+                    };
+                }
+            } else {
+                // Jika sudah pernah klik OK, sembunyikan banner yang mungkin sudah ada
+                hideCookieBanner();
+            }
+        })();
     </script>
 </body>
 </html>

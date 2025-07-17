@@ -62,94 +62,8 @@ $social_media_json = getSetting('social_media', '{}');
 $social_media = json_decode($social_media_json, true) ?: [];
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error_message)) {
-    // Sanitize and validate input
-    $name = trim($_POST['name'] ?? '');
-    $name = filter_var($name, FILTER_SANITIZE_STRING);
-    $email = trim($_POST['email'] ?? '');
-    $email = filter_var($email, FILTER_SANITIZE_EMAIL);
-    $subject = trim($_POST['subject'] ?? '');
-    $subject = filter_var($subject, FILTER_SANITIZE_STRING);
-    $message = trim($_POST['message'] ?? '');
-    $message = filter_var($message, FILTER_SANITIZE_STRING);
-    
-    // Validation
-    $errors = [];
-    
-    if (empty($name)) {
-        $errors[] = 'Name is required';
-    } elseif (strlen($name) > 100) {
-        $errors[] = 'Name is too long (max 100 characters)';
-    }
-    
-    if (empty($email)) {
-        $errors[] = 'Email is required';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Please enter a valid email address';
-    } elseif (strlen($email) > 255) {
-        $errors[] = 'Email is too long';
-    }
-    
-    if (empty($subject)) {
-        $errors[] = 'Subject is required';
-    } elseif (strlen($subject) > 200) {
-        $errors[] = 'Subject is too long (max 200 characters)';
-    }
-    
-    if (empty($message)) {
-        $errors[] = 'Message is required';
-    } elseif (strlen($message) > 2000) {
-        $errors[] = 'Message is too long (max 2000 characters)';
-    }
-    
-    // If no errors, save to database
-    if (empty($errors) && $conn) {
-        try {
-            $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, subject, message, ip_address) VALUES (?, ?, ?, ?, ?)");
-            
-            if ($stmt->execute([$name, $email, $subject, $message, $_SERVER['REMOTE_ADDR'] ?? ''])) {
-                // Update rate limiting
-                $_SESSION[$rate_limit_key] = [
-                    'count' => ($_SESSION[$rate_limit_key]['count'] ?? 0) + 1,
-                    'time' => time()
-                ];
-                
-                // Send email notification (improved security)
-                $to = $contact_email;
-                $email_subject = "New Contact Form Message: " . substr($subject, 0, 50);
-                $email_body = "Name: " . htmlspecialchars($name) . "\n";
-                $email_body .= "Email: " . htmlspecialchars($email) . "\n";
-                $email_body .= "Subject: " . htmlspecialchars($subject) . "\n";
-                $email_body .= "IP Address: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unknown') . "\n";
-                $email_body .= "Date: " . date('Y-m-d H:i:s') . "\n\n";
-                $email_body .= "Message:\n" . htmlspecialchars($message) . "\n";
-                
-                // Secure headers
-                $headers = "From: " . $contact_email . "\r\n";
-                $headers .= "Reply-To: " . $email . "\r\n";
-                $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
-                $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-                
-                // Use error suppression but log errors
-                if (!@mail($to, $email_subject, $email_body, $headers)) {
-                    error_log("Failed to send contact form email to: " . $to);
-                }
-                
-                $success_message = 'Thank you! Your message has been sent successfully. I\'ll get back to you soon.';
-                
-                // Clear form data
-                $name = $email = $subject = $message = '';
-            } else {
-                $error_message = 'Sorry, there was an error sending your message. Please try again.';
-            }
-        } catch (Exception $e) {
-            error_log("Error saving contact message: " . $e->getMessage());
-            $error_message = 'Sorry, there was an error sending your message. Please try again.';
-        }
-    } else {
-        $error_message = implode('<br>', $errors);
-    }
-}
+// HAPUS/COMMENT seluruh blok: if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error_message)) { ... }
+// Sisakan hanya tampilan form dan variabel $success_message, $error_message untuk notifikasi dari JS.
 
 // Set page variables
 $page_title = 'Contact | Wiracenter';
@@ -386,8 +300,8 @@ $page_description = "Get in touch with us. We'd love to hear from you and answer
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/script.js"></script>
-    <script src="assets/js/contact.js"></script>
+    <script src="assets/js/script-v2.js"></script>
+    <script src="assets/js/contact-v2.js"></script>
     
 <!-- AUTO HIDE NAVBAR COLLAPSE (khusus contact.php, dengan animasi fade out) -->
     <script>

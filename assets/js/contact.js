@@ -66,20 +66,33 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Form submission
     form.addEventListener('submit', function(e) {
+        e.preventDefault();
         if (!validateForm()) {
-            e.preventDefault();
             return;
         }
-        
-        // Show loading state
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
-        
-        // Re-enable after a delay (in case of errors)
-        setTimeout(() => {
+        const formData = new FormData(form);
+        fetch('api/contact.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Message sent successfully!', 'success', 6000);
+                form.reset();
+            } else {
+                showToast(data.message || 'Failed to send message.', 'error', 8000);
+            }
+        })
+        .catch(() => {
+            showToast('Network error. Please try again.', 'error', 8000);
+        })
+        .finally(() => {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send Message';
-        }, 10000);
+        });
     });
     
     // Smooth scrolling for anchor links

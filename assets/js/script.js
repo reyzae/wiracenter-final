@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize all components
     initSidebar();
     initScrollEffects();
-    initContactForm();
+    // initContactForm(); // Nonaktifkan initContactForm()
     initFileUpload();
     initSearchFilter();
     initTooltips();
@@ -60,25 +60,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- [END DISABLED navbar toggler fix] ---
 
     // Cookie Consent Banner
-    if (!localStorage.getItem('cookieConsent')) {
-        var consent = document.createElement('div');
-        consent.id = 'cookie-consent-banner';
-        consent.style.position = 'fixed';
-        consent.style.bottom = '0';
-        consent.style.left = '0';
-        consent.style.width = '100%';
-        consent.style.background = '#222';
-        consent.style.color = '#fff';
-        consent.style.padding = '16px';
-        consent.style.textAlign = 'center';
-        consent.style.zIndex = '9999';
-        consent.innerHTML = 'Website ini menggunakan cookie untuk meningkatkan pengalaman Anda. <button id="accept-cookie" style="margin-left:16px;padding:6px 18px;background:#1e90ff;color:#fff;border:none;border-radius:4px;cursor:pointer;">OK, Saya Mengerti</button>';
-        document.body.appendChild(consent);
-        document.getElementById('accept-cookie').onclick = function() {
-            localStorage.setItem('cookieConsent', '1');
-            consent.remove();
-        };
-    }
+    (function() {
+        function hideCookieBanner() {
+            var banner = document.getElementById('cookie-consent-banner');
+            if (banner) banner.style.display = 'none';
+        }
+        if (!localStorage.getItem('cookieConsent')) {
+            var consent = document.createElement('div');
+            consent.id = 'cookie-consent-banner';
+            consent.style.position = 'fixed';
+            consent.style.bottom = '0';
+            consent.style.left = '0';
+            consent.style.width = '100%';
+            consent.style.background = '#222';
+            consent.style.color = '#fff';
+            consent.style.padding = '16px';
+            consent.style.textAlign = 'center';
+            consent.style.zIndex = '9999';
+            consent.innerHTML = 'Website ini menggunakan cookie untuk meningkatkan pengalaman Anda. <button id="accept-cookie" style="margin-left:16px;padding:6px 18px;background:#1e90ff;color:#fff;border:none;border-radius:4px;cursor:pointer;">OK, Saya Mengerti</button>';
+            document.body.appendChild(consent);
+            var btn = document.getElementById('accept-cookie');
+            if (btn) {
+                btn.onclick = function() {
+                    localStorage.setItem('cookieConsent', '1');
+                    hideCookieBanner();
+                };
+            }
+        } else {
+            hideCookieBanner();
+        }
+    })();
 });
 
 
@@ -270,46 +281,46 @@ function initScrollEffects() {
     });
 }
 
-// Contact form handling
-function initContactForm() {
-    const contactForm = document.querySelector('#contactForm');
-    if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+// Semua event handler submit untuk #contactForm di-nonaktifkan
+// function initContactForm() {
+//     const contactForm = document.querySelector('#contactForm');
+//     if (contactForm) {
+//         contactForm.addEventListener('submit', function(e) {
+//             e.preventDefault();
             
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
+//             const formData = new FormData(this);
+//             const submitBtn = this.querySelector('button[type="submit"]');
+//             const originalText = submitBtn.textContent;
             
-            // Show loading state
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+//             // Show loading state
+//             submitBtn.disabled = true;
+//             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
             
-            // Submit form
-            fetch('api/contact.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert('success', 'Message sent successfully!');
-                    this.reset();
-                } else {
-                    showAlert('danger', data.message || 'Failed to send message');
-                }
-            })
-            .catch(error => {
-                showAlert('danger', 'Network error. Please try again.');
-                console.error('Error:', error);
-            })
-            .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            });
-        });
-    }
-}
+//             // Submit form
+//             fetch('api/contact.php', {
+//                 method: 'POST',
+//                 body: formData
+//             })
+//             .then(response => response.json())
+//             .then(data => {
+//                 if (data.success) {
+//                     showAlert('success', 'Message sent successfully!');
+//                     this.reset();
+//                 } else {
+//                     showAlert('danger', data.message || 'Failed to send message');
+//                 }
+//             })
+//             .catch(error => {
+//                 showAlert('danger', 'Network error. Please try again.');
+//                 console.error('Error:', error);
+//             })
+//             .finally(() => {
+//                 submitBtn.disabled = false;
+//                 submitBtn.textContent = originalText;
+//             });
+//         });
+//     }
+// }
 
 // File upload handling
 function initFileUpload() {
@@ -648,6 +659,7 @@ window.translations = window.translations || {
     'terms.contact_title': 'Kontak',
     'terms.contact': 'Jika ada pertanyaan tentang syarat layanan, silakan hubungi kami melalui halaman <a href="contact.php">Kontak</a>.',
     // HAPUS seluruh key about.* dan aboutme.*
+    'home.main_description': 'Wiracenter is a digital platform providing technology articles, project showcases, and a variety of online tools to support learning, experimentation, and collaboration in the digital world. Discover inspiration, knowledge, and practical resources to help your journey in technology and innovation.',
   },
   en: {
     'privacy.title': 'Privacy Policy',
@@ -677,6 +689,7 @@ window.translations = window.translations || {
     'terms.contact_title': 'Contact',
     'terms.contact': 'If you have questions about the terms of service, please contact us via the <a href="contact.php">Contact</a> page.',
     // HAPUS seluruh key about.* dan aboutme.*
+    'home.main_description': 'Wiracenter is a digital platform providing technology articles, project showcases, and a variety of online tools to support learning, experimentation, and collaboration in the digital world. Discover inspiration, knowledge, and practical resources to help your journey in technology and innovation.',
   }
 };
 

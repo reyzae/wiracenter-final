@@ -345,7 +345,7 @@ $recent_tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         </td>
                                         <td><?php echo formatDateTime($message['created_at']); ?></td>
                                         <td>
-                                            <a href="messages.php?id=<?php echo $message['id']; ?>" class="btn btn-sm btn-outline-primary">View</a>
+                                            <a href="contact_messages.php?id=<?php echo $message['id']; ?>" class="btn btn-sm btn-outline-primary">View</a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -353,7 +353,7 @@ $recent_tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </table>
                     </div>
                     <div class="text-center mt-3">
-                        <a href="messages.php" class="btn btn-sm btn-outline-primary">View All Messages</a>
+                        <a href="contact_messages.php" class="btn btn-sm btn-outline-primary">View All Messages</a>
                     </div>
                 <?php else: ?>
                     <div class="text-center text-muted py-4">

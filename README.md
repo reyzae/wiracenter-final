@@ -266,3 +266,16 @@ wiracenter-v1-main/
   2. Jalankan skrip `php translate_articles_deepl.php` untuk mengisi kolom EN di database.
   3. Cek hasil di frontend dengan toggle bahasa.
 - Jika ingin pakai API lain (misal LibreTranslate), tinggal ganti endpoint dan parameter di skrip.
+
+## 🔄 Backup Otomatis (Contoh Cron Job)
+```bash
+0 2 * * * /path/to/backup_script.sh
+```
+
+## 🧪 Testing & Code Quality
+- Jalankan unit test: `vendor/bin/phpunit`
+- Cek coding standard: `vendor/bin/phpcs --standard=PSR12 .`
+- Static analysis: `vendor/bin/phpstan analyse src/`
+
+## ⚡ Optimasi Gambar
+- Gunakan atribut `loading="lazy"` pada tag `<img>` di frontend untuk lazy load gambar.

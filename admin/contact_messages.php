@@ -1,6 +1,7 @@
 <?php
 require_once '../config/config.php';
 require_once '../config/database.php';
+requireLogin(); // Pastikan hanya admin yang bisa akses
 
 // Auth check (optional, add if needed)
 // requireLogin();
@@ -54,6 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'], $_POST
     }
 }
 
+// Helper validasi email sederhana
+function isValidEmail($email) {
+    return filter_var($email, FILTER_VALIDATE_EMAIL);
+}
+
 // Handle admin reply
 $reply_success = '';
 $reply_error = '';
@@ -68,12 +74,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'], $_PO
         $msg = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($msg && $reply_text !== '') {
             $to = $msg['email'];
-            $subject = 'Re: ' . $msg['subject'];
-            $headers = "From: " . getSetting('contact_email', 'info@wiracenter.com') . "\r\nReply-To: " . getSetting('contact_email', 'info@wiracenter.com');
-            @mail($to, $subject, $reply_text, $headers);
-            $conn->prepare("UPDATE contact_messages SET status='replied' WHERE id=?")->execute([$reply_id]);
-            $reply_success = 'Reply sent successfully!';
-            // Optionally, log reply in a separate table
+            if (!isValidEmail($to)) {
+                $reply_error = 'Invalid recipient email address.';
+            } else {
+                $subject = 'Re: ' . $msg['subject'];
+                $headers = "From: " . getSetting('contact_email', 'info@wiracenter.com') . "\r\nReply-To: " . getSetting('contact_email', 'info@wiracenter.com');
+                $mailResult = @mail($to, $subject, $reply_text, $headers);
+                if ($mailResult) {
+                    $conn->prepare("UPDATE contact_messages SET status='replied' WHERE id=?")->execute([$reply_id]);
+                    // Log reply ke tabel baru (jika belum ada, buat manual di DB)
+                    $conn->prepare("INSERT INTO contact_message_replies (contact_message_id, reply_text, replied_by, replied_at) VALUES (?, ?, ?, NOW())")
+                        ->execute([$reply_id, $reply_text, $_SESSION['user_id'] ?? 0]);
+                    $reply_success = 'Reply sent successfully!';
+                } else {
+                    $reply_error = 'Failed to send reply. Email server error.';
+                }
+            }
         } else {
             $reply_error = 'Failed to send reply.';
         }
@@ -82,6 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'], $_PO
 
 // AJAX endpoint for real-time notification
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'check_new') {
+    // Batasi hanya admin yang bisa akses
+    if (!isset($_SESSION['user_id']) || !hasPermission('admin')) {
+        http_response_code(403);
+        echo json_encode(['error'=>'Forbidden']);
+        exit();
+    }
     $last_id = intval($_GET['last_id'] ?? 0);
     $stmt = $conn->prepare("SELECT * FROM contact_messages WHERE id > ? ORDER BY id DESC");
     $stmt->execute([$last_id]);
@@ -142,11 +164,15 @@ $important_count = $conn->query("SELECT COUNT(*) FROM contact_messages WHERE imp
 
 // Export to CSV
 if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+    // Batasi maksimal 1000 baris
+    $export_limit = 1000;
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="contact_messages.csv"');
     $out = fopen('php://output', 'w');
     fputcsv($out, ['ID', 'Name', 'Email', 'Subject', 'Message', 'Status', 'Important', 'Created At']);
+    $exported = 0;
     foreach ($messages as $msg) {
+        if ($exported++ >= $export_limit) break;
         fputcsv($out, [
             $msg['id'],
             $msg['name'],
@@ -404,4 +430,48 @@ checkboxes.forEach(cb => {
     });
 });
 updateSelectedCount();
+
+// Tambahkan handler AJAX untuk tombol Delete
+// Akan mencari semua form delete di tabel dan override submit-nya
+
+document.querySelectorAll('form').forEach(function(form) {
+    if (form.querySelector('input[name="action"][value="delete"]')) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!confirm('Are you sure you want to delete this message?')) return;
+            var formData = new FormData(form);
+            var row = form.closest('tr');
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Remove row dari tabel jika sukses (atau reload jika ingin update pesan sukses)
+                if (row) row.remove();
+                // Optional: tampilkan pesan sukses
+                // Atau reload halaman jika ingin update pesan sukses/alert
+                // location.reload();
+            })
+            .catch(err => {
+                alert('Failed to delete message. Please try again.');
+                // Fallback: submit form biasa jika AJAX gagal
+                form.submit();
+            });
+        });
+    }
+});
+
+// Konfirmasi hapus bulk action
+const bulkForm = document.getElementById('bulkActionForm');
+if (bulkForm) {
+    bulkForm.addEventListener('submit', function(e) {
+        const action = bulkForm.querySelector('select[name="bulk_action"]').value;
+        if (action === 'delete') {
+            if (!confirm('Are you sure you want to delete the selected messages?')) {
+                e.preventDefault();
+            }
+        }
+    });
+}
 </script> 

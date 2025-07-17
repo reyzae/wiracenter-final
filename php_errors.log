@@ -16778,3 +16778,45 @@ Stack trace:
 [14-Jul-2025 22:08:37 Asia/Jakarta] Database connection successful to localhost
 [14-Jul-2025 22:09:37 Asia/Jakarta] Database Config - Host: localhost, DB: wiracent_db2, User: wiracent_admin
 [14-Jul-2025 22:09:37 Asia/Jakarta] Database connection successful to localhost
+[15-Jul-2025 10:25:16 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[15-Jul-2025 10:28:36 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[15-Jul-2025 11:08:09 Asia/Jakarta] admin/login.php: Login successful for user: admin
+[15-Jul-2025 11:08:50 Asia/Jakarta] Error fetching contact info: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'deleted_at' in 'where clause'
+[15-Jul-2025 11:08:50 Asia/Jakarta] Error fetching FAQs: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'deleted_at' in 'where clause'
+[15-Jul-2025 11:09:12 Asia/Jakarta] Contact API called at 2025-07-15 11:09:12 from IP: ::1
+[17-Jul-2025 09:52:14 Asia/Jakarta] Database configuration error: Missing required environment variables
+[17-Jul-2025 09:52:14 Asia/Jakarta] PHP Fatal error:  Uncaught Exception: Database configuration incomplete. Please check your .env file. in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php:24
+Stack trace:
+#0 D:\SOURCE CODE REYZA\wiracenter-final\index.php(7): Database->__construct()
+#1 {main}
+  thrown in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php on line 24
+[17-Jul-2025 09:52:15 Asia/Jakarta] Database configuration error: Missing required environment variables
+[17-Jul-2025 09:52:15 Asia/Jakarta] PHP Fatal error:  Uncaught Exception: Database configuration incomplete. Please check your .env file. in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php:24
+Stack trace:
+#0 D:\SOURCE CODE REYZA\wiracenter-final\index.php(7): Database->__construct()
+#1 {main}
+  thrown in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php on line 24
+[17-Jul-2025 09:52:19 Asia/Jakarta] Database configuration error: Missing required environment variables
+[17-Jul-2025 09:52:19 Asia/Jakarta] PHP Fatal error:  Uncaught Exception: Database configuration incomplete. Please check your .env file. in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php:24
+Stack trace:
+#0 D:\SOURCE CODE REYZA\wiracenter-final\index.php(7): Database->__construct()
+#1 {main}
+  thrown in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php on line 24
+[17-Jul-2025 09:52:19 Asia/Jakarta] Database configuration error: Missing required environment variables
+[17-Jul-2025 09:52:19 Asia/Jakarta] PHP Fatal error:  Uncaught Exception: Database configuration incomplete. Please check your .env file. in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php:24
+Stack trace:
+#0 D:\SOURCE CODE REYZA\wiracenter-final\index.php(7): Database->__construct()
+#1 {main}
+  thrown in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php on line 24
+[17-Jul-2025 09:52:28 Asia/Jakarta] Database configuration error: Missing required environment variables
+[17-Jul-2025 09:52:28 Asia/Jakarta] PHP Fatal error:  Uncaught Exception: Database configuration incomplete. Please check your .env file. in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php:24
+Stack trace:
+#0 D:\SOURCE CODE REYZA\wiracenter-final\index.php(7): Database->__construct()
+#1 {main}
+  thrown in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php on line 24
+[17-Jul-2025 09:52:28 Asia/Jakarta] Database configuration error: Missing required environment variables
+[17-Jul-2025 09:52:28 Asia/Jakarta] PHP Fatal error:  Uncaught Exception: Database configuration incomplete. Please check your .env file. in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php:24
+Stack trace:
+#0 D:\SOURCE CODE REYZA\wiracenter-final\index.php(7): Database->__construct()
+#1 {main}
+  thrown in D:\SOURCE CODE REYZA\wiracenter-final\config\database.php on line 24

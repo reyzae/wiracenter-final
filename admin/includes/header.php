@@ -122,7 +122,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
                 </a>
             </div>
             <div class="sidebar-footer text-white-50 text-center py-3">
-                &copy; <?php echo date('Y'); ?> <?php echo getSetting('site_name', 'Wiracenter'); ?>. All rights reserved.
+                @ 2025 Wiracenter. All rights reserved
             </div>
         </div>
         <!-- /#sidebar-wrapper -->

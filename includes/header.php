@@ -145,6 +145,31 @@
             }
         }
     </style>
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="WiraCenter Portfolio & CMS" />
+    <meta property="og:description" content="A modern personal portfolio and CMS with bilingual, dark mode, and advanced security." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="<?php echo SITE_URL; ?>" />
+    <meta property="og:image" content="<?php echo SITE_URL; ?>/assets/images/support-profile.jpg" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="WiraCenter Portfolio & CMS" />
+    <meta name="twitter:description" content="A modern personal portfolio and CMS with bilingual, dark mode, and advanced security." />
+    <meta name="twitter:image" content="<?php echo SITE_URL; ?>/assets/images/support-profile.jpg" />
+    <!-- Structured Data JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "WiraCenter Portfolio & CMS",
+      "url": "<?php echo SITE_URL; ?>",
+      "description": "A modern personal portfolio and CMS with bilingual, dark mode, and advanced security.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "WiraCenter"
+      }
+    }
+    </script>
 </head>
 <body>
     <!-- Integrated Language & Theme Controls -->
@@ -231,7 +256,7 @@
                 'home.view_all_tools': 'View All Tools',
                 'home.about_wiracenter': 'About Wiracenter',
                 'home.learn_more': 'Learn More',
-                'home.main_description': 'Wiracenter is a digital platform dedicated to supporting the growth of Indonesian entrepreneurs. We provide informative articles, inspiring project showcases, and practical tools to help you grow your business from idea to successful execution.',
+                'home.main_description': 'Wiracenter is a digital platform providing technology articles, project showcases, and a variety of online tools to support learning, experimentation, and collaboration in the digital world. Discover inspiration, knowledge, and practical resources to help your journey in technology and innovation.',
                 // Contact page translations
                 'contact.title': 'Contact Me',
                 'contact.subtitle': 'We are ready to help you. Please fill out the form below to contact us.',
@@ -307,7 +332,7 @@
                 'home.view_all_tools': 'Lihat Semua Tools',
                 'home.about_wiracenter': 'Tentang Wiracenter',
                 'home.learn_more': 'Pelajari Lebih Lanjut',
-                'home.main_description': 'Wiracenter adalah platform digital yang didedikasikan untuk mendukung pertumbuhan wirausaha Indonesia. Kami menyediakan artikel informatif, showcase proyek inspiratif, dan tools praktis yang dapat membantu Anda mengembangkan bisnis dari ide hingga eksekusi yang sukses.',
+                'home.main_description': 'Wiracenter adalah platform digital yang menyediakan artikel teknologi, showcase proyek, dan berbagai tools online untuk mendukung pembelajaran, eksperimen, dan kolaborasi di dunia digital. Temukan inspirasi, pengetahuan, dan alat praktis untuk membantu perjalanan Anda di bidang teknologi dan inovasi.',
                 // Contact page translations
                 'contact.title': 'Hubungi Saya',
                 'contact.subtitle': 'Kami siap membantu Anda. Silakan isi form di bawah ini untuk menghubungi kami.',
