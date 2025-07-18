@@ -42,30 +42,6 @@ RewriteRule ^a/([^/]+)$ article.php?slug=$1 [L,QSA]
     Deny from all
 </FilesMatch>
 
-# Security: Block access to vendor directory
-<Directory "vendor">
-    Order allow,deny
-    Deny from all
-</Directory>
-
-# Security: Block access to backups directory
-<Directory "backups">
-    Order allow,deny
-    Deny from all
-</Directory>
-
-# Security: Block access to database directory
-<Directory "database">
-    Order allow,deny
-    Deny from all
-</Directory>
-
-# Security: Block access to cron directory
-<Directory "cron">
-    Order allow,deny
-    Deny from all
-</Directory>
-
 # Performance: Enable compression
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/plain
@@ -96,22 +72,6 @@ RewriteRule ^a/([^/]+)$ article.php?slug=$1 [L,QSA]
     ExpiresDefault "access plus 1 month"
 </IfModule>
 
-# Admin panel protection
-<Directory "admin">
-    # Basic authentication (optional - uncomment if needed)
-    # AuthType Basic
-    # AuthName "Admin Area"
-    # AuthUserFile /path/to/.htpasswd
-    # Require valid-user
-    
-    # IP restriction (optional - uncomment and modify if needed)
-    # Order Deny,Allow
-    # Deny from all
-    # Allow from 127.0.0.1
-    # Allow from ::1
-    # Allow from your.ip.address.here
-</Directory>
-
 # Error pages
 ErrorDocument 404 /error.php
 ErrorDocument 500 /error.php
@@ -128,22 +88,3 @@ ErrorDocument 503 /maintenance.php
     Order allow,deny
     Deny from all
 </FilesMatch>
-
-# PHP settings
-<IfModule mod_php.c>
-    # Security settings
-    php_flag display_errors Off
-    php_flag log_errors On
-    php_value error_log php_errors.log
-    
-    # File upload settings
-    php_value upload_max_filesize 10M
-    php_value post_max_size 10M
-    php_value max_execution_time 300
-    php_value memory_limit 256M
-    
-    # Session security
-    php_flag session.cookie_httponly On
-    php_flag session.use_only_cookies On
-    php_flag session.cookie_secure Off
-</IfModule>

@@ -395,6 +395,18 @@ $slider_items = array_merge($featured_articles, $featured_projects, $featured_to
 <body>
     <?php include 'includes/header.php'; ?>
 
+    <!-- Banner Hero Section Start -->
+<div class="banner-hero" style="background: url('assets/images/banner-hero.png') center center/cover no-repeat; border-radius: 20px; min-height: 400px; display: flex; align-items: center; justify-content: flex-start; padding: 40px 60px; margin-bottom: 32px;">
+  <div style="max-width: 600px; color: #fff;">
+    <h1 style="font-size: 2.8rem; font-weight: bold; margin-bottom: 20px; text-shadow: 0 2px 8px rgba(0,0,0,0.18);">TexEzy – Text Tools Simplified (Under Development)</h1>
+    <p style="font-size: 1.25rem; margin-bottom: 32px; text-shadow: 0 1px 4px rgba(0,0,0,0.12);">
+      TexEzy is an online tool I created to make processing text quick and easy. It's perfect for writers, students, office workers, or anyone who ...
+    </p>
+    <a href="#" class="btn btn-info btn-lg fw-bold px-5 py-2" style="border-radius: 30px;">Read More</a>
+  </div>
+</div>
+<!-- Banner Hero Section End -->
+
     <!-- Hero Section with Slider -->
     <section class="hero-section">
         <div class="hero-slider">

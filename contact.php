@@ -53,7 +53,7 @@ try {
 // Get site settings
 $site_name = getSetting('site_name', 'Wiracenter');
 $contact_email = getSetting('contact_email', 'info@wiracenter.com');
-$contact_phone = getSetting('contact_phone', '+6281313099914');
+$contact_phone = '+6285121010199'; // OVERRIDE nomor telepon baru
 $contact_address = getSetting('contact_address', 'Central Jakarta, Indonesia');
 $operating_hours = getSetting('operating_hours', 'Mon-Fri: 9 AM - 5 PM');
 

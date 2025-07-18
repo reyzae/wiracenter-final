@@ -303,16 +303,16 @@ function validateUploadedFile($file, $allowed_types = ['image/jpeg', 'image/png'
     return in_array($mime_type, $allowed_types);
 }
 
-// Structured logging (audit improvement)
-function logStructured($level, $message, $context = []) {
-    $log_entry = [
-        'timestamp' => date('Y-m-d H:i:s'),
-        'level' => $level,
-        'message' => $message,
-        'context' => $context,
-        'user_id' => $_SESSION['user_id'] ?? null,
-        'ip' => $_SERVER['REMOTE_ADDR'] ?? null
-    ];
-    error_log(json_encode($log_entry) . "\n", 3, __DIR__ . '/../logs/app.log');
-}
+// Structured logging (audit improvement) - DISABLED SEMENTARA
+// function logStructured($level, $message, $context = []) {
+//     $log_entry = [
+//         'timestamp' => date('Y-m-d H:i:s'),
+//         'level' => $level,
+//         'message' => $message,
+//         'context' => $context,
+//         'user_id' => $_SESSION['user_id'] ?? null,
+//         'ip' => $_SERVER['REMOTE_ADDR'] ?? null
+//     ];
+//     error_log(json_encode($log_entry) . "\n", 3, __DIR__ . '/../logs/app.log');
+// }
 ?>

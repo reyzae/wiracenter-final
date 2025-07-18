@@ -2,10 +2,17 @@
   <div class="container">
     <div class="row align-items-center">
       <div class="col-12 col-md-6 mb-2 mb-md-0 text-md-start">
-        <span data-i18n="footer.copyright">© 2024 Wiracenter. All rights reserved.</span>
+        <span data-i18n="footer.copyright">&copy; <?php echo date('Y'); ?> Wiracenter. All rights reserved.</span>
       </div>
       <div class="col-12 col-md-6 text-md-end">
-        <span>Contact: <a href="mailto:<?php echo getSetting('site_email', 'info@wiracenter.com'); ?>" class="text-primary text-decoration-none"><?php echo getSetting('site_email', 'info@wiracenter.com'); ?></a></span>
+        <?php
+          // Ambil email dari site_email, fallback ke contact_email, lalu default
+          $footer_email = getSetting('site_email');
+          if (!$footer_email) {
+            $footer_email = getSetting('contact_email', 'info@wiracenter.com');
+          }
+        ?>
+        <span>Contact: <a href="mailto:<?php echo $footer_email; ?>" class="text-primary text-decoration-none"><?php echo $footer_email; ?></a></span>
         <!-- Sosial media opsional -->
         <?php if (getSetting('site_twitter')): ?>
           <a href="<?php echo getSetting('site_twitter'); ?>" class="ms-2 text-secondary" target="_blank"><i class="fab fa-twitter"></i></a>
